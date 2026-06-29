@@ -1,0 +1,21 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/arnavbhure/ai-mock-interviewer#readme",
+  "bugs": {
+    "url": "https://github.com/arnavbhure/ai-mock-interviewer/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arnavbhure/ai-mock-interviewer.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "test": "nodemon app.js",
+    "start": "node app.js"
+  }
+}
