@@ -1,0 +1,34 @@
+const { pool } = require("../../config/db.js");
+
+const saveResumeModel = async (data) => {
+  const query = `INSERT INTO candidate_resumes (
+    full_name,
+    phone,
+    summary,
+    skills,
+    education,
+    experience,
+    projects,
+    achievements
+)
+VALUES (
+    $1,$2,$3,$4,$5,$6,$7,$8
+)
+RETURNING *;`;
+
+  const values = [
+    data.fullName,
+    data.phone,
+    data.summary,
+    data.skills,
+    data.education,
+    data.experience,
+    data.projects,
+    data.achievements,
+  ];
+
+  const { rows } = await pool.query(query, values);
+  return rows[0];
+};
+
+module.exports = { saveResumeModel };

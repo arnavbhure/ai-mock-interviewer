@@ -25,6 +25,7 @@ const GenerateEmbeddingsRunnable = RunnableLambda.from(async ({ chunks }) => {
 const FormatEmbeddingsRunnable = RunnableLambda.from(
   async ({ chunks, vectors }) => {
     return chunks.map((chunk, index) => ({
+      chunkIndex: index,
       text: chunk.pageContent,
       embedding: vectors[index],
       metadata: chunk.metadata,

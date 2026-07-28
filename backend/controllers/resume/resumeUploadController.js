@@ -2,6 +2,10 @@ const { processResume } = require("../../services/resume/resumeService");
 const {
   ResumePreprocessingChain,
 } = require("../../components/langchain/chains/ResumePreProcessing.parallel.chain");
+const { saveResumeModel } = require("../../models/resume/saveResume.model");
+const {
+  saveResumeEmbeddingsModel,
+} = require("../../models/resume/saveResumeEmbeddings.model");
 
 const resumeUploadController = async (req, res) => {
   try {
@@ -14,25 +18,39 @@ const resumeUploadController = async (req, res) => {
     // returns the cleaned resume text from the pdf buffer with no extra tabs or spaces and also removes any extra new lines
     const cleanResume = await processResume(req.file.buffer);
 
+    const result = await ResumePreprocessingChain.invoke({
+      resume: cleanResume,
+    });
+
     /*
       result returns an object with the following structure:
       result.structuredResume is an object containing the structured resume data
       and result.embeddings is an array of embeddings for the resume
     */
-    const result = await ResumePreprocessingChain.invoke({
-      resume: cleanResume,
-    });
 
-    /*todo: Here we have to implement storing of this structured output into the pg db and same goes for embedding*/
+    const [resumeStored, embeddingsStored] = await Promise.all([
+      await saveResumeModel(result.structuredResume),
+      await saveResumeEmbeddingsModel(result.embeddings),
+    ]);
 
-    return res.status(200).json({
-      success: true,
-      cleanResume,
-      message: "Resume processed successfully",
+    if (resumeStored && embeddingsStored.stored) {
+      return res.status(200).json({
+        success: true,
+        resume_json: result?.structuredResume,
+        message: "Resume processed successfully",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Error in Saving Resume , Please try again later",
     });
   } catch (err) {
     console.log("Error in resumeUploadController:", err);
-    return { success: false, message: "Error in resumeUploadController" };
+    return res.status(500).json({
+      success: false,
+      message: "Error in Saving Resume , Please try again later",
+    });
   }
 };
 
