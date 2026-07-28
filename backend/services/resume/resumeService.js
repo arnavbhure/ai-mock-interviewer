@@ -1,6 +1,4 @@
-const {
-  cleanResumeText,
-} = require("../../utils/resume/cleanResumeText.js.util");
+const { cleanResumeText } = require("../../utils/resume/cleanResumeText.util");
 const {
   extractResumeText,
 } = require("../../utils/resume/extractResumeText.util");
