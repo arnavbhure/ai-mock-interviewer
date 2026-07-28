@@ -10,19 +10,20 @@ const resumeUploadController = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Resume pdf is required" });
     }
+
+    // returns the cleaned resume text from the pdf buffer with no extra tabs or spaces and also removes any extra new lines
     const cleanResume = await processResume(req.file.buffer);
-
-    const result = await ResumePreprocessingChain.invoke({
-      resume: cleanResume,
-    });
-
-    /* Here we have to implement storing of this structured output into the pg db and same goes for embedding*/
 
     /*
       result returns an object with the following structure:
       result.structuredResume is an object containing the structured resume data
       and result.embeddings is an array of embeddings for the resume
     */
+    const result = await ResumePreprocessingChain.invoke({
+      resume: cleanResume,
+    });
+
+    /*todo: Here we have to implement storing of this structured output into the pg db and same goes for embedding*/
 
     return res.status(200).json({
       success: true,

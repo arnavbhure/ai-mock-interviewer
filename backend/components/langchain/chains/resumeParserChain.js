@@ -5,6 +5,7 @@ const { ResumeSchema } = require("../schemas/resume.schema");
 
 const structuredLLM = resumeParserLLM.withStructuredOutput(ResumeSchema);
 
+// this chain returns the structured resume data from the cleaned resume text
 const ResumeParserChain = RunnableSequence.from([
   resumeParserPrompt,
   structuredLLM,

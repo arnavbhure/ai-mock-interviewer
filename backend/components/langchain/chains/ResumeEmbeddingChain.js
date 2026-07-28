@@ -32,6 +32,7 @@ const FormatEmbeddingsRunnable = RunnableLambda.from(
   },
 );
 
+// this chain returns an array of embeddings for the resume
 const ResumeEmbeddingChain = RunnableSequence.from([
   SplitResumeRunnable,
   GenerateEmbeddingsRunnable,
