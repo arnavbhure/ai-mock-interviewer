@@ -6,6 +6,7 @@ const { server, app } = require("./config/socket");
 const { corsOptions } = require("./config/corsOption");
 const { errorHandler } = require("./middlewares/error.middleware");
 const { resumeRouter } = require("./routes/resumeRouter");
+const { authRouter } = require("./routes/auth.router");
 
 dotenv.config();
 
@@ -20,6 +21,9 @@ app.set("trust proxy", 1);
 
 // For resume upload
 app.use("/api/resume", resumeRouter);
+
+// auth route
+app.use("/api/auth", authRouter);
 
 app.get("/ping", (req, res) => {
   res.send("pong");
