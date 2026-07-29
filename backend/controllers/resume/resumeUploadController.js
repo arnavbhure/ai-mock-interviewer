@@ -33,6 +33,11 @@ const resumeUploadController = async (req, res) => {
       await saveResumeEmbeddingsModel(result.embeddings),
     ]);
 
+    /*in above step ,
+      we are saving the structured resume data 
+      and embeddings to the database in parallel 
+    */
+
     if (resumeStored && embeddingsStored.stored) {
       return res.status(200).json({
         success: true,
