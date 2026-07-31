@@ -25,6 +25,8 @@ app.use("/api/resume", resumeRouter);
 // auth route
 app.use("/api/auth", authRouter);
 
+// todo : have to imlelemnt is_verified in login and authmiddleware
+
 app.get("/ping", (req, res) => {
   res.send("pong");
 });

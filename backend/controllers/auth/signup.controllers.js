@@ -1,4 +1,4 @@
-const { getUserByEmail } = require("../../models/user/getUserbyEmail");
+const { getUserByEmail } = require("../../models/user/getUserModel");
 const { otpGenerator } = require("../../services/auth/otpGenerator");
 const { sendEmail } = require("../../services/email/email.service");
 const {

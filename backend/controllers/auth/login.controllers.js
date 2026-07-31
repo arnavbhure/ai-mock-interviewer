@@ -1,4 +1,5 @@
-const { getUserByEmail } = require("../../models/user/getUserbyEmail");
+const { getUserByEmail } = require("../../models/user/getUserModel");
+const { createAuthToken } = require("../../services/auth/authTokenGenerator");
 const { comparePassword } = require("../../services/auth/password.service");
 
 const loginController = async (req, res) => {
@@ -12,6 +13,13 @@ const loginController = async (req, res) => {
         success: false,
         message:
           "Account with this email does not exist. Please sign up first.",
+      });
+    }
+
+    if (!existingUser.is_verified) {
+      return res.status(403).json({
+        success: false,
+        message: "Account is not verified. Please verify your account first.",
       });
     }
 
