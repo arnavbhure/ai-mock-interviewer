@@ -7,6 +7,8 @@ const { corsOptions } = require("./config/corsOption");
 const { errorHandler } = require("./middlewares/error.middleware");
 const { resumeRouter } = require("./routes/resumeRouter");
 const { authRouter } = require("./routes/auth.router");
+const { interviewRouter } = require("./routes/interview.router");
+const { authMiddleware } = require("./middlewares/auth.middleware");
 
 dotenv.config();
 
@@ -20,12 +22,13 @@ app.use(cookieParser());
 app.set("trust proxy", 1);
 
 // For resume upload
-app.use("/api/resume", resumeRouter);
+app.use("/api/resume", authMiddleware, resumeRouter);
 
 // auth route
 app.use("/api/auth", authRouter);
 
-// todo : have to imlelemnt is_verified in login and authmiddleware
+//interview route
+app.use("/api/interview", authMiddleware, interviewRouter);
 
 app.get("/ping", (req, res) => {
   res.send("pong");
