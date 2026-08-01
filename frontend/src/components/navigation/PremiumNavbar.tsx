@@ -16,9 +16,8 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { label: "Features", href: "#features" },
   { label: "How It Works", href: "#how-it-works" },
-  { label: "Demo", href: "#demo" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "FAQ", href: "#faq" },
+  { label: "Login", href: "/login" },
+  { label: "Sign Up", href: "/register" },
 ];
 
 function NavPill({

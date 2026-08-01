@@ -1,6 +1,7 @@
 import { HeroSection } from "@/components/hero";
 import { FeaturesSection } from "@/components/features-section";
 import { HowItWorksSection } from "@/components/how-it-works";
+import { Footer } from "@/components/footer";
 import { PremiumNavbar } from "@/components/navigation/PremiumNavbar";
 
 export function FoundationStatusPage() {
@@ -12,6 +13,7 @@ export function FoundationStatusPage() {
       <HeroSection />
       <FeaturesSection />
       <HowItWorksSection />
+      <Footer />
     </main>
   );
 }
