@@ -25,6 +25,25 @@ RULES:-
 1.
 The interview MUST contain exactly 4 rounds.
 
+Each round must also include:
+
+- difficulty
+
+Allowed values:
+
+easy
+medium
+hard
+
+The planner should assign a realistic difficulty for each round based on the interview progression.
+
+General guideline:
+
+- Resume Overview → easy
+- DSA → medium (or hard for experienced candidates)
+- Technical → medium or hard depending on the candidate's experience
+- Behavioral → easy or medium
+
 Round 1
 Resume Overview
 

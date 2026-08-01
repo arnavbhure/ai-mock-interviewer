@@ -1,13 +1,24 @@
 const {
   generateInterviewRoundChain,
 } = require("../../components/langchain/chains/generateInterviewRoundChain");
+const {
+  storeInterviewPlanModel,
+} = require("../../models/interview/storeInterviewPlanModel");
 const { getResumeModel } = require("../../models/resume/getResume.model");
 
 const createInterviewController = async (req, res) => {
   try {
     const user = req.user;
+
     if (!user) {
       return res.status(401).json({ message: "Unauthorized", success: false });
+    }
+
+    const { role, difficulty } = req.body;
+    if (!role || !difficulty) {
+      return res
+        .status(400)
+        .json({ message: "Role and difficulty are required", success: false });
     }
 
     const resumeData = await getResumeModel(user.id);
@@ -22,6 +33,19 @@ const createInterviewController = async (req, res) => {
     });
 
     // storing the interview plan in the db
+
+    const store_result = await storeInterviewPlanModel(
+      user?.id,
+      interviewPlan,
+      role,
+      difficulty,
+    );
+
+    return res.status(200).json({
+      message: "Interview plan created successfully",
+      success: true,
+      data: store_result,
+    });
   } catch (err) {
     console.log("Error in interviewController : ", err);
     return res
