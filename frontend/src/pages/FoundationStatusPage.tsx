@@ -1,5 +1,6 @@
 import { HeroSection } from "@/components/hero";
 import { FeaturesSection } from "@/components/features-section";
+import { HowItWorksSection } from "@/components/how-it-works";
 import { PremiumNavbar } from "@/components/navigation/PremiumNavbar";
 
 export function FoundationStatusPage() {
@@ -10,6 +11,7 @@ export function FoundationStatusPage() {
       </div>
       <HeroSection />
       <FeaturesSection />
+      <HowItWorksSection />
     </main>
   );
 }
