@@ -1,0 +1,30 @@
+import { motion } from "framer-motion";
+import { Moon, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useTheme } from "@/hooks/use-theme";
+
+export function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
+  const Icon = isDark ? Sun : Moon;
+
+  return (
+    <Button
+      type="button"
+      variant="icon"
+      size="icon"
+      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      onClick={toggleTheme}
+    >
+      <motion.span
+        key={theme}
+        aria-hidden="true"
+        initial={{ opacity: 0, rotate: -8, scale: 0.96 }}
+        animate={{ opacity: 1, rotate: 0, scale: 1 }}
+        transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <Icon size={20} strokeWidth={1.75} />
+      </motion.span>
+    </Button>
+  );
+}

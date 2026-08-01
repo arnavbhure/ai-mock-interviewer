@@ -3,10 +3,36 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Powered Mock Interviewer</title>
+    <meta
+      name="description"
+      content="InterviewAI is a premium AI-powered mock interview platform for focused technical interview preparation."
+    />
+    <title>InterviewAI</title>
+    <script>
+      (function () {
+        try {
+          var storageKey = "interviewai-theme";
+          var storedTheme = window.localStorage.getItem(storageKey);
+          var routeTheme =
+            window.location.pathname.startsWith("/dashboard") ||
+            window.location.pathname.startsWith("/app")
+              ? "dark"
+              : "light";
+          var theme =
+            storedTheme === "light" || storedTheme === "dark" ? storedTheme : routeTheme;
+
+          document.documentElement.classList.toggle("dark", theme === "dark");
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.colorScheme = theme;
+        } catch {
+          document.documentElement.dataset.theme = "light";
+          document.documentElement.style.colorScheme = "light";
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
