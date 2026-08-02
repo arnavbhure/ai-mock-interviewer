@@ -42,7 +42,7 @@ const loginController = async (req, res) => {
       ...userWithoutPassword
     } = existingUser;
 
-    const { token, expiresAt } = createAuthToken(safeUser, "login");
+    const { token, expiresAt } = createAuthToken(userWithoutPassword, "login");
 
     res.cookie("token", token, {
       httpOnly: true,

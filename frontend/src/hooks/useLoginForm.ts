@@ -4,10 +4,15 @@ import { useNavigate } from "react-router-dom";
 import { loginFormSchema } from "@/constants/auth.constants";
 import { createZodResolver } from "@/lib/zod-resolver";
 import type { LoginFormValues } from "@/types/auth.types";
+import { toast } from "sonner";
+import { login } from "@/api/auth.api";
+import { useAuthStore } from "@/store/auth.store";
 
 const loginResolver = createZodResolver(loginFormSchema);
 
 export function useLoginForm() {
+  const setUser = useAuthStore((state) => state.setUser);
+  const clearUser = useAuthStore((state) => state.clearUser);
   const navigate = useNavigate();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -23,14 +28,31 @@ export function useLoginForm() {
 
   const isSubmitting = form.formState.isSubmitting;
 
-  const onSubmit = form.handleSubmit(async () => {
+  const onSubmit = form.handleSubmit(async (values) => {
     setSubmitError(null);
 
-    // Simulate a short network round-trip.
-    // TODO: Replace with the real auth API call.
-    await new Promise((resolve) => window.setTimeout(resolve, 900));
+    try {
+      const toastId = toast.loading("Logging in...", { duration: 2000 });
 
-    navigate("/dashboard");
+      const response = await login(values);
+      toast.dismiss(toastId);
+
+      if (!response.success) {
+        toast.error(response.message, {
+          id: toastId,
+        });
+        clearUser();
+        return;
+      }
+      setUser(response.user);
+      toast.success(response.message, {
+        id: toastId,
+      });
+      navigate("/dashboard");
+    } catch (error) {
+      setSubmitError("Invalid email or password");
+      console.error(error);
+    }
   });
 
   return {
@@ -44,4 +66,3 @@ export function useLoginForm() {
     onSubmit,
   };
 }
-

@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { registerFormSchema } from "@/constants/auth.constants";
 import { createZodResolver } from "@/lib/zod-resolver";
 import type { RegisterFormValues } from "@/types/auth.types";
+import { register } from "@/api/auth.api";
+import { toast } from "sonner";
 
 const registerResolver = createZodResolver(registerFormSchema);
 
@@ -24,14 +26,40 @@ export function useRegisterForm() {
 
   const isSubmitting = form.formState.isSubmitting;
 
-  const onSubmit = form.handleSubmit(async () => {
+  const onSubmit = form.handleSubmit(async (values) => {
     setSubmitError(null);
 
-    // Simulate a short network round-trip.
-    // TODO: Replace with the real auth API call.
-    await new Promise((resolve) => window.setTimeout(resolve, 900));
+    const toastId = toast.loading("Signing up...");
 
-    navigate("/dashboard");
+    try {
+      const response = await register({
+        name: values.fullName,
+        email: values.email,
+        password: values.password,
+        confirmPassword: values.confirmPassword,
+      });
+
+      if (!response.success) {
+        toast.error(response.message, {
+          id: toastId,
+        });
+        return;
+      }
+
+      toast.success(response.message, {
+        id: toastId,
+      });
+
+      navigate("/verify-otp");
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Something went wrong. Please try again.", {
+        id: toastId,
+      });
+
+      setSubmitError("Registration failed.");
+    }
   });
 
   return {
@@ -45,4 +73,3 @@ export function useRegisterForm() {
     onSubmit,
   };
 }
-
