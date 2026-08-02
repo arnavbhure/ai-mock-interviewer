@@ -1,0 +1,21 @@
+import { forwardRef, type HTMLAttributes } from "react";
+import { cn } from "@/lib/utils";
+
+export type CardProps = HTMLAttributes<HTMLDivElement>;
+
+export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
+  { className, ...props },
+  ref,
+) {
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "rounded-card border border-border/70 bg-card text-card-foreground shadow-card",
+        className,
+      )}
+      {...props}
+    />
+  );
+});
+

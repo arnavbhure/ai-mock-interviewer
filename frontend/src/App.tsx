@@ -1,17 +1,15 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/contexts/theme-provider";
-import { FoundationStatusPage } from "@/pages/FoundationStatusPage";
+import { AppRouter } from "@/router/AppRouter";
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <ThemeProvider>
-          <Routes>
-            <Route path="*" element={<FoundationStatusPage />} />
-          </Routes>
+          <AppRouter />
           <Toaster richColors position="top-right" />
         </ThemeProvider>
       </BrowserRouter>
@@ -29,3 +27,4 @@ const queryClient = new QueryClient({
 });
 
 export default App;
+

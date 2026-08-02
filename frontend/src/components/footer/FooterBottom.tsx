@@ -11,6 +11,20 @@ export function FooterBottom() {
         <p>Made with <span aria-hidden="true">♥</span> for future engineers.</p>
       </div>
 
+      <div className="text-sm text-muted-foreground">
+        <p>
+          Developed with <span role="img" aria-label="love">❤️</span> by{" "}
+          <a
+            href="https://linkedin.com/in/arnavbhure"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-foreground hover:underline"
+          >
+            ~arnavbhure
+          </a>
+        </p>
+      </div>
+
       <div className="flex items-center gap-3">
         <div className="rounded-full border border-border/70 bg-card px-3 py-1 text-xs font-medium uppercase tracking-[0.22em] text-muted-foreground">
           v1.0.0
