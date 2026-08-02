@@ -20,13 +20,13 @@ const signupController = async (req, res) => {
       });
     }
 
-    const { otp, otpExpiresAt } = otpGenerator();
+    const { user_otp, otpExpiresAt } = otpGenerator();
 
     const userDetails = {
       name,
       email,
       password_hash: await hashPassword(password),
-      otp,
+      otp: user_otp,
       otpExpiresAt,
     };
 
@@ -34,14 +34,18 @@ const signupController = async (req, res) => {
       await sendEmail({
         to: email,
         subject: "Verify Your Ai Mock Interviewer Account",
-        htmlContent: verificationEmailTemplate(otp),
+        htmlContent: verificationEmailTemplate(user_otp),
       });
 
       const newUser = await createUserModel(userDetails);
 
+      const { password_hash, otp, otp_expires_at, updated_at, ...safeUser } =
+        newUser;
+
       return res.status(201).json({
         message: "Verification OTP has been sent to your email.",
         success: true,
+        user: safeUser,
       });
     } catch (err) {
       console.error("Error sending verification email:", err);
