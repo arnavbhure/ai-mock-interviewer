@@ -13,6 +13,10 @@ export type RegisterFormValues = {
   confirmPassword: string;
 };
 
+export type VerifyOtpFormValues = {
+  otp: string;
+};
+
 export type LoginFormStatus = "idle" | "submitting" | "success" | "error";
 
 export type LoginFeatureChip = {
@@ -29,4 +33,3 @@ export type LoginResponse = {
     full_name: string;
   };
 };
-

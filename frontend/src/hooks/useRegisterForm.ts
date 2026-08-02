@@ -50,7 +50,11 @@ export function useRegisterForm() {
         id: toastId,
       });
 
-      navigate("/verify-otp");
+      navigate("/verify-otp", {
+        state: {
+          email: values.email,
+        },
+      });
     } catch (error) {
       console.error(error);
 

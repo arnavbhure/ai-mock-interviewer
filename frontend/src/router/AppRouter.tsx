@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import { LoginPage } from "@/auth/login";
 import { RegisterPage } from "@/auth/register";
+import { VerifyOtpPage } from "@/auth/verify-otp";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { DashboardPage } from "@/pages/DashboardPage";
@@ -13,6 +14,7 @@ export function AppRouter() {
         <Route path="/" element={<FoundationStatusPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-otp" element={<VerifyOtpPage />} />
       </Route>
 
       <Route path="/dashboard" element={<DashboardLayout />}>

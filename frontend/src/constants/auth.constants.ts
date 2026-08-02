@@ -84,3 +84,7 @@ export const REGISTER_PREVIEW_HEADLINE = "Start Your Interview Journey";
 export const REGISTER_PREVIEW_DESCRIPTION =
   "Create your InterviewAI account and begin practicing personalized mock interviews designed to improve your confidence and technical skills.";
 
+export const VERIFY_OTP_HEADLINE = "Verify your email";
+export const VERIFY_OTP_DESCRIPTION =
+  "Enter the 6-digit verification code sent to";
+export const VERIFY_OTP_BUTTON = "Verify & Continue";

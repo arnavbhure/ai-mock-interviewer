@@ -16,3 +16,8 @@ export const register = async (payload: RegisterPayload) => {
   const response = await api.post("/auth/signup", payload);
   return response.data;
 };
+
+export const verifyOtp = async (payload: { email: string; otp: string }) => {
+  const response = await api.post("/auth/verify-otp", payload);
+  return response.data;
+};

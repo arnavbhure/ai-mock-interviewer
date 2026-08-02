@@ -1,15 +1,18 @@
-# Register Page
+# Verify OTP Page
 
 ## Steps
 
-- [x] 1. Create `src/auth/shared/AuthCard.tsx` (extracted from LoginCard)
-- [x] 2. Create `src/auth/shared/FieldError.tsx` (extracted from LoginForm)
-- [x] 3. Update `LoginCard.tsx` to delegate to AuthCard
-- [x] 4. Update `LoginForm.tsx` to use shared FieldError
-- [x] 5. Update `LoginPreview.tsx` to accept headline/description props
-- [x] 6. Add `registerFormSchema` + register constants to `auth.constants.ts`
-- [x] 7. Add `RegisterFormValues` to `auth.types.ts`
-- [x] 8. Create `useRegisterForm.ts`
-- [x] 9. Create Register components (Page, Card, Header, Form, index)
-- [x] 10. Update `AppRouter.tsx`; delete old `pages/RegisterPage.tsx`
-- [ ] 11. Run typecheck, lint, build, dev check
+- [x] 1. Add `VerifyOtpFormValues` to `src/types/auth.types.ts`
+- [x] 2. Create `src/validation/verifyOtp.schema.ts`
+- [x] 3. Create `src/hooks/useVerifyOtpForm.ts`
+- [x] 4. Create `src/auth/verify-otp/OtpInput.tsx`
+- [x] 5. Add `verifyOtp` call to `src/api/auth.api.ts`
+- [x] 6. Wire `useVerifyOtpForm` to the real API
+- [x] 7. Create `src/auth/verify-otp/ResendTimer.tsx`
+- [x] 8. Create `src/auth/verify-otp/VerifyOtpCard.tsx`
+- [x] 9. Create `src/auth/verify-otp/VerifyOtpHeader.tsx`
+- [x] 10. Create `src/auth/verify-otp/VerifyOtpForm.tsx`
+- [x] 11. Create `src/auth/verify-otp/VerifyOtpPage.tsx`
+- [x] 12. Create `src/auth/verify-otp/index.ts`
+- [x] 13. Add `/verify-otp` route to `src/router/AppRouter.tsx`
+- [ ] 14. Run typecheck, build, dev check
