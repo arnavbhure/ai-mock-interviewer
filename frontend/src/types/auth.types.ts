@@ -6,6 +6,13 @@ export type LoginFormValues = {
   rememberMe: boolean;
 };
 
+export type RegisterFormValues = {
+  fullName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
+
 export type LoginFormStatus = "idle" | "submitting" | "success" | "error";
 
 export type LoginFeatureChip = {

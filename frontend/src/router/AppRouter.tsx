@@ -1,10 +1,10 @@
 import { Route, Routes } from "react-router-dom";
 import { LoginPage } from "@/auth/login";
+import { RegisterPage } from "@/auth/register";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { FoundationStatusPage } from "@/pages/FoundationStatusPage";
-import { RegisterPage } from "@/pages/RegisterPage";
 
 export function AppRouter() {
   return (

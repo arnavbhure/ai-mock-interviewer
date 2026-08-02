@@ -14,6 +14,11 @@ const PREVIEW_QUESTION =
 
 const PREVIEW_BARS = [32, 48, 36, 58, 44, 62, 40, 54, 46, 34];
 
+type LoginPreviewProps = {
+  headline?: string;
+  description?: string;
+};
+
 function PreviewFloatingCard() {
   return (
     <motion.div
@@ -45,7 +50,7 @@ function PreviewFloatingCard() {
   );
 }
 
-export function LoginPreview() {
+export function LoginPreview({ headline, description }: LoginPreviewProps) {
   const reducedMotion = useReducedMotion();
 
   return (
@@ -64,10 +69,10 @@ export function LoginPreview() {
           InterviewAI Workspace
         </p>
         <h2 className="mt-4 text-balance text-2xl font-semibold tracking-[-0.03em] text-foreground sm:text-3xl">
-          {LOGIN_PREVIEW_HEADLINE}
+          {headline ?? LOGIN_PREVIEW_HEADLINE}
         </h2>
         <p className="mt-3 max-w-xl text-base leading-7 text-muted-foreground">
-          {LOGIN_PREVIEW_DESCRIPTION}
+          {description ?? LOGIN_PREVIEW_DESCRIPTION}
         </p>
       </motion.div>
 

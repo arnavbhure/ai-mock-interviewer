@@ -3,6 +3,7 @@ import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { RememberMe } from "@/auth/login/RememberMe";
+import { FieldError } from "@/auth/shared/FieldError";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,24 +11,6 @@ import {
   LOGIN_FIELD_PLACEHOLDERS,
 } from "@/constants/auth.constants";
 import { useLoginForm } from "@/hooks/useLoginForm";
-
-function FieldError({ message }: { message?: string }) {
-  if (!message) {
-    return null;
-  }
-
-  return (
-    <motion.p
-      role="alert"
-      initial={{ opacity: 0, y: -4 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-      className="text-xs leading-5 text-destructive"
-    >
-      {message}
-    </motion.p>
-  );
-}
 
 export function LoginForm() {
   const { register, formState, isSubmitting, onSubmit } = useLoginForm();
