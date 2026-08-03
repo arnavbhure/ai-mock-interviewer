@@ -6,6 +6,7 @@ import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { FoundationStatusPage } from "@/pages/FoundationStatusPage";
+import ProtectedRoute from "./ProtectedRoute";
 
 export function AppRouter() {
   return (
@@ -17,8 +18,10 @@ export function AppRouter() {
         <Route path="/verify-otp" element={<VerifyOtpPage />} />
       </Route>
 
-      <Route path="/dashboard" element={<DashboardLayout />}>
-        <Route index element={<DashboardPage />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<DashboardPage />} />
+        </Route>
       </Route>
 
       <Route path="*" element={<PublicLayout />}>
@@ -27,4 +30,3 @@ export function AppRouter() {
     </Routes>
   );
 }
-

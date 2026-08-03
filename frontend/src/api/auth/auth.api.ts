@@ -1,4 +1,4 @@
-import api from "./axios";
+import api from "../axios";
 
 export const login = async (payload: { email: string; password: string }) => {
   const response = await api.post("/auth/login", payload);
@@ -19,5 +19,10 @@ export const register = async (payload: RegisterPayload) => {
 
 export const verifyOtp = async (payload: { email: string; otp: string }) => {
   const response = await api.post("/auth/verify-otp", payload);
+  return response.data;
+};
+
+export const getUserProfile = async () => {
+  const response = await api.get("/auth/get-user");
   return response.data;
 };

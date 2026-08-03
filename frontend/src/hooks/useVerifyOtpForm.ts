@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { verifyOtp } from "@/api/auth.api";
+import { verifyOtp } from "@/api/auth/auth.api";
 import { verifyOtpSchema } from "@/validation/verifyOtp.schema";
 import { createZodResolver } from "@/lib/zod-resolver";
 import type { VerifyOtpFormValues } from "@/types/auth.types";

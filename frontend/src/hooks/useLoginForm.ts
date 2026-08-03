@@ -5,7 +5,7 @@ import { loginFormSchema } from "@/constants/auth.constants";
 import { createZodResolver } from "@/lib/zod-resolver";
 import type { LoginFormValues } from "@/types/auth.types";
 import { toast } from "sonner";
-import { login } from "@/api/auth.api";
+import { login } from "@/api/auth/auth.api";
 import { useAuthStore } from "@/store/auth.store";
 
 const loginResolver = createZodResolver(loginFormSchema);

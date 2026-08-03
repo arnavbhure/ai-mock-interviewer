@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { registerFormSchema } from "@/constants/auth.constants";
 import { createZodResolver } from "@/lib/zod-resolver";
 import type { RegisterFormValues } from "@/types/auth.types";
-import { register } from "@/api/auth.api";
+import { register } from "@/api/auth/auth.api";
 import { toast } from "sonner";
 
 const registerResolver = createZodResolver(registerFormSchema);
