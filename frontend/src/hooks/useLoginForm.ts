@@ -4,7 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { loginFormSchema } from "@/constants/auth.constants";
 import { createZodResolver } from "@/lib/zod-resolver";
 import type { LoginFormValues } from "@/types/auth.types";
-import { toast } from "sonner";
+import {
+  toastDismiss,
+  toastError,
+  toastLoading,
+  toastSuccess,
+} from "@/components/ui/toast";
 import { login } from "@/api/auth/auth.api";
 import { useAuthStore } from "@/store/auth.store";
 
@@ -32,20 +37,20 @@ export function useLoginForm() {
     setSubmitError(null);
 
     try {
-      const toastId = toast.loading("Logging in...", { duration: 2000 });
+      const toastId = toastLoading("Logging in...");
 
       const response = await login(values);
-      toast.dismiss(toastId);
+      toastDismiss(toastId);
 
       if (!response.success) {
-        toast.error(response.message, {
+        toastError(response.message, {
           id: toastId,
         });
         clearUser();
         return;
       }
       setUser(response.user);
-      toast.success(response.message, {
+      toastSuccess(response.message, {
         id: toastId,
       });
       navigate("/dashboard");

@@ -1,6 +1,6 @@
 import axios from "axios";
+import { toastError } from "@/components/ui/toast";
 const BASE_URL = import.meta.env.VITE_API_URL;
-import { toast } from "sonner";
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -16,7 +16,7 @@ api.interceptors.response.use(
     const skipToast = error.config?.skipErrorToast;
 
     if (!skipToast) {
-      toast.error(error.response?.data?.message || "Something went wrong.");
+      toastError(error.response?.data?.message || "Something went wrong.");
     }
 
     return Promise.reject(error);

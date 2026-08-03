@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
-import { Toaster } from "sonner";
 import { ThemeProvider } from "@/contexts/theme-provider";
+import { ToastProvider } from "@/components/ui/toast";
 import { AppRouter } from "@/router/AppRouter";
 
 function App() {
@@ -9,8 +9,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <ThemeProvider>
-          <AppRouter />
-          <Toaster richColors position="top-right" />
+          <ToastProvider>
+            <AppRouter />
+          </ToastProvider>
         </ThemeProvider>
       </BrowserRouter>
     </QueryClientProvider>
@@ -27,4 +28,3 @@ const queryClient = new QueryClient({
 });
 
 export default App;
-

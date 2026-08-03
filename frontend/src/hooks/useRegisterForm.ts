@@ -5,7 +5,7 @@ import { registerFormSchema } from "@/constants/auth.constants";
 import { createZodResolver } from "@/lib/zod-resolver";
 import type { RegisterFormValues } from "@/types/auth.types";
 import { register } from "@/api/auth/auth.api";
-import { toast } from "sonner";
+import { toastError, toastLoading, toastSuccess } from "@/components/ui/toast";
 
 const registerResolver = createZodResolver(registerFormSchema);
 
@@ -29,7 +29,7 @@ export function useRegisterForm() {
   const onSubmit = form.handleSubmit(async (values) => {
     setSubmitError(null);
 
-    const toastId = toast.loading("Signing up...");
+    const toastId = toastLoading("Signing up...");
 
     try {
       const response = await register({
@@ -40,13 +40,13 @@ export function useRegisterForm() {
       });
 
       if (!response.success) {
-        toast.error(response.message, {
+        toastError(response.message, {
           id: toastId,
         });
         return;
       }
 
-      toast.success(response.message, {
+      toastSuccess(response.message, {
         id: toastId,
       });
 
@@ -58,7 +58,7 @@ export function useRegisterForm() {
     } catch (error) {
       console.error(error);
 
-      toast.error("Something went wrong. Please try again.", {
+      toastError("Something went wrong. Please try again.", {
         id: toastId,
       });
 

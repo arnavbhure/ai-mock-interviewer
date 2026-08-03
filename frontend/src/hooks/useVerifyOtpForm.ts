@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { toastError, toastLoading, toastSuccess } from "@/components/ui/toast";
 import { verifyOtp } from "@/api/auth/auth.api";
 import { verifyOtpSchema } from "@/validation/verifyOtp.schema";
 import { createZodResolver } from "@/lib/zod-resolver";
@@ -24,21 +24,21 @@ export function useVerifyOtpForm(email: string) {
   const isSubmitting = form.formState.isSubmitting;
 
   const onSubmit = form.handleSubmit(async (values) => {
-    const toastId = toast.loading("Verifying code...");
+    const toastId = toastLoading("Verifying code...");
 
     try {
       const response = await verifyOtp({ email, otp: values.otp });
 
       if (!response.success) {
-        toast.error(response.message, { id: toastId });
+        toastError(response.message, { id: toastId });
         return;
       }
 
-      toast.success(response.message, { id: toastId });
+      toastSuccess(response.message, { id: toastId });
       navigate("/login");
     } catch (error) {
       console.error(error);
-      toast.error("Unable to verify the code. Please try again.", {
+      toastError("Unable to verify the code. Please try again.", {
         id: toastId,
       });
     }
@@ -53,14 +53,14 @@ export function useVerifyOtpForm(email: string) {
     //
     // const response = await resendOtp({ email });
     // if (!response.success) {
-    //   toast.error(response.message);
+    //   toastError(response.message);
     //   return;
     // }
-    // toast.success("Verification code resent.");
+    // toastSuccess("Verification code resent.");
 
     // Placeholder until the API is integrated.
     await new Promise((resolve) => window.setTimeout(resolve, 600));
-    toast.success("Verification code resent.");
+    toastSuccess("Verification code resent.");
 
     setIsResending(false);
   }, [email]);
