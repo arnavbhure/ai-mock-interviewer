@@ -5,11 +5,14 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-primary text-primary-foreground hover:bg-primary/90",
+        primary:
+          "bg-gradient-to-b from-primary to-primary/85 text-primary-foreground shadow-[0_1px_2px_rgba(15,23,42,0.08)] transition-all duration-250 ease-premium hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(79,124,255,0.35)] active:translate-y-0 active:shadow-[0_1px_2px_rgba(15,23,42,0.08)] disabled:hover:translate-y-0 disabled:hover:shadow-none",
         secondary:
           "border border-border bg-secondary text-secondary-foreground hover:border-[var(--border-hover)] hover:bg-accent",
-        ghost: "bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-        danger: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        ghost:
+          "bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+        danger:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         icon: "size-12 rounded-button border border-border bg-card text-foreground hover:bg-accent",
       },
       size: {

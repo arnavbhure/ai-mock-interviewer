@@ -1,9 +1,10 @@
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
+import { Loader2, Lock, Mail } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { RememberMe } from "@/auth/login/RememberMe";
 import { FieldError } from "@/auth/shared/FieldError";
+import { PasswordToggle } from "@/auth/shared/PasswordToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,7 +47,10 @@ export function LoginForm() {
 
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-4">
-          <label htmlFor="password" className="text-sm font-medium text-foreground">
+          <label
+            htmlFor="password"
+            className="text-sm font-medium text-foreground"
+          >
             {LOGIN_FIELD_LABELS.password}
           </label>
           <Link
@@ -73,18 +77,10 @@ export function LoginForm() {
             aria-describedby={errors.password ? "password-error" : undefined}
             {...register("password")}
           />
-          <button
-            type="button"
-            onClick={() => setShowPassword((value) => !value)}
-            aria-label={showPassword ? "Hide password" : "Show password"}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground transition-colors duration-250 ease-premium hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {showPassword ? (
-              <EyeOff size={18} strokeWidth={1.75} />
-            ) : (
-              <Eye size={18} strokeWidth={1.75} />
-            )}
-          </button>
+          <PasswordToggle
+            showPassword={showPassword}
+            onToggle={() => setShowPassword((value) => !value)}
+          />
         </div>
         <FieldError message={errors.password?.message} />
       </div>
@@ -123,4 +119,3 @@ export function LoginForm() {
     </form>
   );
 }
-

@@ -18,11 +18,10 @@ export function AuthCard({ children }: AuthCardProps) {
         initial={reducedMotion ? false : { opacity: 0, y: 20 }}
         animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="rounded-card border border-border/70 bg-card p-6 shadow-card sm:p-8 lg:p-10"
+        className="rounded-card border border-border/80 bg-card/90 p-6 shadow-modal backdrop-blur-sm transition-shadow duration-300 ease-premium hover:shadow-[0_18px_50px_rgba(15,23,42,0.14)] sm:p-8 lg:p-10"
       >
         {children}
       </motion.div>
     </div>
   );
 }
-

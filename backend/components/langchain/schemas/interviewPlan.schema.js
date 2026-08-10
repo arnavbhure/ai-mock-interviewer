@@ -23,7 +23,7 @@ const InterviewPlanSchema = z.object({
 
   totalQuestions: z.number().positive(),
 
-  rounds: z.array(RoundSchema).min(1).max(4),
+  rounds: z.array(RoundSchema).min(2).max(4),
 });
 
 module.exports = { InterviewPlanSchema };

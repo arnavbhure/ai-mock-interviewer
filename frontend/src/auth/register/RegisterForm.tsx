@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Loader2, Lock, Mail, User } from "lucide-react";
+import { Loader2, Lock, Mail, User } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { FieldError } from "@/auth/shared/FieldError";
+import { PasswordToggle } from "@/auth/shared/PasswordToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,7 +21,10 @@ export function RegisterForm() {
   return (
     <form onSubmit={onSubmit} noValidate className="mt-8 space-y-6">
       <div className="space-y-2">
-        <label htmlFor="fullName" className="text-sm font-medium text-foreground">
+        <label
+          htmlFor="fullName"
+          className="text-sm font-medium text-foreground"
+        >
           {REGISTER_FIELD_LABELS.fullName}
         </label>
         <div className="relative">
@@ -70,7 +74,10 @@ export function RegisterForm() {
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="password" className="text-sm font-medium text-foreground">
+        <label
+          htmlFor="password"
+          className="text-sm font-medium text-foreground"
+        >
           {REGISTER_FIELD_LABELS.password}
         </label>
         <div className="relative">
@@ -90,24 +97,19 @@ export function RegisterForm() {
             aria-describedby={errors.password ? "password-error" : undefined}
             {...register("password")}
           />
-          <button
-            type="button"
-            onClick={() => setShowPassword((value) => !value)}
-            aria-label={showPassword ? "Hide password" : "Show password"}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground transition-colors duration-250 ease-premium hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {showPassword ? (
-              <EyeOff size={18} strokeWidth={1.75} />
-            ) : (
-              <Eye size={18} strokeWidth={1.75} />
-            )}
-          </button>
+          <PasswordToggle
+            showPassword={showPassword}
+            onToggle={() => setShowPassword((value) => !value)}
+          />
         </div>
         <FieldError message={errors.password?.message} />
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
+        <label
+          htmlFor="confirmPassword"
+          className="text-sm font-medium text-foreground"
+        >
           {REGISTER_FIELD_LABELS.confirmPassword}
         </label>
         <div className="relative">
@@ -124,21 +126,15 @@ export function RegisterForm() {
             placeholder={REGISTER_FIELD_PLACEHOLDERS.confirmPassword}
             invalid={Boolean(errors.confirmPassword)}
             className="pl-11 pr-12"
-            aria-describedby={errors.confirmPassword ? "confirmPassword-error" : undefined}
+            aria-describedby={
+              errors.confirmPassword ? "confirmPassword-error" : undefined
+            }
             {...register("confirmPassword")}
           />
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword((value) => !value)}
-            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground transition-colors duration-250 ease-premium hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {showConfirmPassword ? (
-              <EyeOff size={18} strokeWidth={1.75} />
-            ) : (
-              <Eye size={18} strokeWidth={1.75} />
-            )}
-          </button>
+          <PasswordToggle
+            showPassword={showConfirmPassword}
+            onToggle={() => setShowConfirmPassword((value) => !value)}
+          />
         </div>
         <FieldError message={errors.confirmPassword?.message} />
       </div>
@@ -163,11 +159,13 @@ export function RegisterForm() {
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link to="/login" className="font-medium text-primary hover:text-primary/90">
+        <Link
+          to="/login"
+          className="font-medium text-primary hover:text-primary/90"
+        >
           Sign In
         </Link>
       </p>
     </form>
   );
 }
-
