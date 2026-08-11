@@ -15,6 +15,10 @@ CREATE EXTENSION IF NOT EXISTS vector;
 CREATE TABLE IF NOT EXISTS public.resume_embeddings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
+    resume_id UUID NOT NULL
+        REFERENCES public.candidate_resumes(id)
+        ON DELETE CASCADE,
+
     user_id UUID NOT NULL
         REFERENCES public.users(id)
         ON DELETE CASCADE,
@@ -30,16 +34,16 @@ CREATE TABLE IF NOT EXISTS public.resume_embeddings (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-
-Indexes: 
+# Indexes: 
 
 CREATE INDEX idx_candidate_resumes_user_id
 ON candidate_resumes(user_id);
 
--- Retrieve all chunks for a resume
 CREATE INDEX idx_resume_embeddings_resume_id
 ON public.resume_embeddings(resume_id);
 
--- Keep chunks ordered
 CREATE INDEX idx_resume_embeddings_resume_chunk
 ON public.resume_embeddings(resume_id, chunk_index);
+
+CREATE INDEX idx_resume_embeddings_user_id
+ON public.resume_embeddings(user_id);
