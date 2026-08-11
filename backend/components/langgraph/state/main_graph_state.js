@@ -72,43 +72,31 @@ const InterviewErrorSchema = z.object({
 });
 
 const InterviewState = z.object({
-  // Identity
   interviewId: z.string(),
-
   userId: z.string(),
-
   resumeId: z.string(),
 
-  // Interview Plan
+  role: z.string(),
+
   interviewPlan: InterviewPlanSchema,
 
-  // Current Position
-  currentRoundIndex: z.number().int().nonnegative(),
+  currentRoundNumber: z.number().int().positive(),
+  currentQuestionNumber: z.number().int().positive(),
 
-  currentQuestionNumber: z.number().int().nonnegative(),
-
-  // Adaptive Difficulty
   currentDifficulty: DifficultySchema,
 
-  // Performance
   questionScores: z.array(QuestionScoreSchema),
 
-  // Resume RAG Context
-  relevantResumeChunks: z.array(ResumeChunkSchema),
-
-  // Graph Execution
   phase: PhaseSchema,
 
   status: StatusSchema,
 
   shouldContinue: z.boolean(),
 
-  // Error / Recovery
   error: InterviewErrorSchema.nullable(),
 
   retryCount: z.number().int().nonnegative(),
 
-  // State Version
   stateVersion: z.number().int().positive(),
 });
 

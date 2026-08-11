@@ -34,6 +34,51 @@ CREATE TABLE IF NOT EXISTS public.resume_embeddings (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+
+# interviews :
+
+CREATE TABLE IF NOT EXISTS public.interviews
+(
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+
+    user_id uuid NOT NULL,
+
+    resume_id uuid NOT NULL,
+
+    role text NOT NULL,
+
+    difficulty text NOT NULL,
+
+    status interview_status NOT NULL DEFAULT 'planning',
+
+    current_round integer NOT NULL DEFAULT 1,
+
+    current_question integer NOT NULL DEFAULT 1,
+
+    interview_plan jsonb NOT NULL,
+
+    started_at timestamp with time zone,
+
+    completed_at timestamp with time zone,
+
+    created_at timestamp with time zone DEFAULT now(),
+
+    updated_at timestamp with time zone DEFAULT now(),
+
+    CONSTRAINT interviews_pkey
+        PRIMARY KEY (id),
+
+    CONSTRAINT interviews_resume_id_fkey
+        FOREIGN KEY (resume_id)
+        REFERENCES public.candidate_resumes (id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT interviews_user_id_fkey
+        FOREIGN KEY (user_id)
+        REFERENCES public.users (id)
+        ON DELETE CASCADE
+);
+
 # Indexes: 
 
 CREATE INDEX idx_candidate_resumes_user_id
@@ -47,3 +92,12 @@ ON public.resume_embeddings(resume_id, chunk_index);
 
 CREATE INDEX idx_resume_embeddings_user_id
 ON public.resume_embeddings(user_id);
+
+CREATE INDEX idx_interviews_user_id
+ON public.interviews(user_id);
+
+CREATE INDEX idx_interviews_resume_id
+ON public.interviews(resume_id);
+
+CREATE INDEX idx_interviews_status
+ON public.interviews(status);
