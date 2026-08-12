@@ -1,4 +1,4 @@
-export const initialState = (interview) => {
+const initialState = (interview) => {
   return {
     interviewId: interview.id,
     userId: interview.user_id,
@@ -24,3 +24,5 @@ export const initialState = (interview) => {
     stateVersion: 1,
   };
 };
+
+module.exports = { initialState };

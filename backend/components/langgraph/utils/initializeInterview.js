@@ -1,7 +1,7 @@
 const {
   getInterviewPlanModel,
-} = require("../../models/interview/getInterviewPlan");
-const { initialState } = require("./state/intialise_state");
+} = require("../../../models/interview/getInterviewPlan");
+const { initialState } = require("../state/intialise_state");
 
 const initializeInterview = async () => {
   const userId = req.user;

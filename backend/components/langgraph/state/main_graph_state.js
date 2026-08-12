@@ -83,6 +83,8 @@ const InterviewState = z.object({
   currentRoundNumber: z.number().int().positive(),
   currentQuestionNumber: z.number().int().positive(),
 
+  resumeContext: z.array(ResumeChunkSchema).default([]),
+
   currentDifficulty: DifficultySchema,
 
   questionScores: z.array(QuestionScoreSchema),
