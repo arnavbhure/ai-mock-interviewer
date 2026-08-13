@@ -1,8 +1,12 @@
 const { z } = require("zod");
+const {
+  InterviewPlanSchema,
+} = require("../../langchain/schemas/interviewPlan.schema");
 
 const DifficultySchema = z.enum(["easy", "medium", "hard"]);
 
 const RoundTypeSchema = z.enum([
+  "resume",
   "dsa",
   "technical",
   "system_design",
@@ -27,20 +31,11 @@ const StatusSchema = z.enum([
   "failed",
 ]);
 
-const InterviewRoundSchema = z.object({
-  type: RoundTypeSchema,
-
-  objective: z.string().min(1),
-
-  targetQuestions: z.number().int().positive(),
-
-  topics: z.array(z.string().min(1)).min(1),
-});
-
-const InterviewPlanSchema = z.object({
-  version: z.number().int().positive(),
-
-  rounds: z.array(InterviewRoundSchema).min(1),
+const CurrentQuestionSchema = z.object({
+  question: z.string(),
+  questionType: z.string(),
+  focusArea: z.string().nullable(),
+  expectedSkills: z.array(z.string()),
 });
 
 const QuestionScoreSchema = z.object({
@@ -71,9 +66,17 @@ const InterviewErrorSchema = z.object({
   retryable: z.boolean(),
 });
 
+const ConversationMessageSchema = z.object({
+  role: z.enum(["interviewer", "candidate"]),
+
+  content: z.string(),
+});
+
 const InterviewState = z.object({
   interviewId: z.string(),
+
   userId: z.string(),
+
   resumeId: z.string(),
 
   role: z.string(),
@@ -81,13 +84,20 @@ const InterviewState = z.object({
   interviewPlan: InterviewPlanSchema,
 
   currentRoundNumber: z.number().int().positive(),
+
   currentQuestionNumber: z.number().int().positive(),
+
+  currentQuestion: CurrentQuestionSchema.nullable(),
+
+  currentAnswer: z.string().nullable(),
 
   resumeContext: z.array(ResumeChunkSchema).default([]),
 
   currentDifficulty: DifficultySchema,
 
-  questionScores: z.array(QuestionScoreSchema),
+  questionScores: z.array(QuestionScoreSchema).default([]),
+
+  conversationHistory: z.array(ConversationMessageSchema).default([]),
 
   phase: PhaseSchema,
 
