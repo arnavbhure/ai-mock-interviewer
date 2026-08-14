@@ -1,57 +1,34 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { useLocation } from "react-router-dom";
-import {
-  THEME_STORAGE_KEY,
-  ThemeContext,
-  type Theme,
-  type ThemeContextValue,
-} from "@/contexts/theme-context";
+import { useCallback, useEffect, useMemo, type ReactNode } from "react";
+import { ThemeContext, type Theme, type ThemeContextValue } from "@/contexts/theme-context";
 
 type ThemeProviderProps = {
   children: ReactNode;
 };
 
-function getRouteTheme(pathname: string): Theme {
-  return pathname.startsWith("/dashboard") || pathname.startsWith("/app") ? "dark" : "light";
-}
-
-function getStoredTheme(): Theme | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const theme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  return theme === "light" || theme === "dark" ? theme : null;
-}
-
-function applyTheme(theme: Theme) {
-  document.documentElement.classList.toggle("dark", theme === "dark");
-  document.documentElement.dataset.theme = theme;
-  document.documentElement.style.colorScheme = theme;
+function applyTheme() {
+  document.documentElement.classList.add("dark");
+  document.documentElement.dataset.theme = "dark";
+  document.documentElement.style.colorScheme = "dark";
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const location = useLocation();
-  const [userTheme, setUserTheme] = useState<Theme | null>(() => getStoredTheme());
-  const theme = userTheme ?? getRouteTheme(location.pathname);
-  const isUserPreference = userTheme !== null;
+  const theme: Theme = "dark";
 
   useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
+    applyTheme();
+  }, []);
 
-  const setTheme = useCallback((nextTheme: Theme) => {
-    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-    setUserTheme(nextTheme);
+  // No-op functions for API compatibility
+  const setTheme = useCallback((_nextTheme: Theme) => {
+    // Dark only - no-op
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  }, [setTheme, theme]);
+    // Dark only - no-op
+  }, []);
 
   const clearThemePreference = useCallback(() => {
-    window.localStorage.removeItem(THEME_STORAGE_KEY);
-    setUserTheme(null);
+    // Dark only - no-op
   }, []);
 
   const value = useMemo<ThemeContextValue>(
@@ -60,9 +37,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       setTheme,
       toggleTheme,
       clearThemePreference,
-      isUserPreference,
+      isUserPreference: false,
     }),
-    [clearThemePreference, isUserPreference, setTheme, theme, toggleTheme],
+    [clearThemePreference, setTheme, toggleTheme],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

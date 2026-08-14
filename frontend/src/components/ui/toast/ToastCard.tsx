@@ -31,15 +31,15 @@ export function ToastCard({ t, type, message }: ToastCardProps) {
       transition={toastMotion.transition}
       role="status"
       aria-live="polite"
-      className="pointer-events-auto flex w-full max-w-[380px] items-center gap-3 rounded-2xl border border-border bg-card p-4 text-card-foreground shadow-card"
+      className="pointer-events-auto flex w-full max-w-[380px] items-center gap-3 rounded-large border border-border bg-surface p-4 text-text shadow-modal"
     >
       <ToastIcon type={type} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium leading-snug text-card-foreground">
+        <p className="truncate text-sm font-medium leading-snug text-text">
           {message.title}
         </p>
         {message.description ? (
-          <p className="mt-0.5 text-sm leading-snug text-muted-foreground">
+          <p className="mt-0.5 text-sm leading-snug text-text-secondary">
             {message.description}
           </p>
         ) : null}

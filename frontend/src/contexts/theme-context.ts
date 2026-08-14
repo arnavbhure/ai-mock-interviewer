@@ -1,9 +1,10 @@
 import { createContext } from "react";
 
-export type Theme = "light" | "dark";
+export type Theme = "dark";
 
 export type ThemeContextValue = {
   theme: Theme;
+  // These functions exist for API compatibility but do nothing
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
   clearThemePreference: () => void;

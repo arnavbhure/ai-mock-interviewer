@@ -19,9 +19,9 @@ const ICON_MAP: Record<ToastType, typeof CheckCircle2> = {
 
 const TONE_CLASS: Record<ToastType, string> = {
   success: "text-success",
-  error: "text-destructive",
+  error: "text-error",
   warning: "text-warning",
-  info: "text-info",
+  info: "text-primary",
   loading: "text-primary",
 };
 

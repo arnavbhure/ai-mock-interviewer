@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark" data-theme="dark" style="color-scheme: dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,28 +8,9 @@
       content="InterviewAI is a premium AI-powered mock interview platform for focused technical interview preparation."
     />
     <title>InterviewAI</title>
-    <script>
-      (function () {
-        try {
-          var storageKey = "interviewai-theme";
-          var storedTheme = window.localStorage.getItem(storageKey);
-          var routeTheme =
-            window.location.pathname.startsWith("/dashboard") ||
-            window.location.pathname.startsWith("/app")
-              ? "dark"
-              : "light";
-          var theme =
-            storedTheme === "light" || storedTheme === "dark" ? storedTheme : routeTheme;
-
-          document.documentElement.classList.toggle("dark", theme === "dark");
-          document.documentElement.dataset.theme = theme;
-          document.documentElement.style.colorScheme = theme;
-        } catch {
-          document.documentElement.dataset.theme = "light";
-          document.documentElement.style.colorScheme = "light";
-        }
-      })();
-    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   </head>
   <body>
     <div id="root"></div>

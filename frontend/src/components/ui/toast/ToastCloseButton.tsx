@@ -18,7 +18,7 @@ export function ToastCloseButton({
       title="Dismiss"
       onClick={() => toast.dismiss(toastId)}
       className={cn(
-        "-m-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-150 ease-premium hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+        "-m-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-text-secondary transition-colors duration-fast ease-premium hover:bg-surface hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         className,
       )}
     >

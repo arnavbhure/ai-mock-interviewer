@@ -1,25 +1,27 @@
 import { cva } from "class-variance-authority";
 
 export const buttonVariants = cva(
-  "inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-button px-4 text-sm font-medium transition-colors duration-250 ease-premium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-button px-4 text-sm font-medium transition-colors duration-base ease-premium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         primary:
-          "bg-gradient-to-b from-primary to-primary/85 text-primary-foreground shadow-[0_1px_2px_rgba(15,23,42,0.08)] transition-all duration-250 ease-premium hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(79,124,255,0.35)] active:translate-y-0 active:shadow-[0_1px_2px_rgba(15,23,42,0.08)] disabled:hover:translate-y-0 disabled:hover:shadow-none",
+          "bg-primary text-primary-foreground shadow-[0_1px_2px_rgba(0,0,0,0.2)] hover:bg-primary-bright hover:shadow-[0_4px_12px_rgba(77,130,255,0.3)] active:bg-primary/90 active:shadow-none disabled:hover:bg-primary disabled:hover:shadow-[0_1px_2px_rgba(0,0,0,0.2)]",
         secondary:
-          "border border-border bg-secondary text-secondary-foreground hover:border-[var(--border-hover)] hover:bg-accent",
+          "border border-border bg-surface text-text hover:border-border-hover hover:bg-surface-elevated",
         ghost:
-          "bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+          "bg-transparent text-text-secondary hover:bg-surface hover:text-text",
         danger:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        icon: "size-12 rounded-button border border-border bg-card text-foreground hover:bg-accent",
+        outline:
+          "border border-border bg-transparent text-text hover:bg-surface hover:border-border-hover",
+        icon: "size-10 rounded-button border border-border bg-surface text-text hover:bg-surface-elevated",
       },
       size: {
-        default: "h-12 px-4",
-        sm: "h-10 px-3 text-sm",
-        lg: "h-14 px-6 text-base",
-        icon: "size-12 p-0",
+        default: "h-10 px-4",
+        sm: "h-9 px-3 text-sm",
+        lg: "h-11 px-5 text-base",
+        icon: "size-10 p-0",
       },
     },
     defaultVariants: {
