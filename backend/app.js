@@ -9,6 +9,9 @@ const { resumeRouter } = require("./routes/resumeRouter");
 const { authRouter } = require("./routes/auth.router");
 const { interviewRouter } = require("./routes/interview.router");
 const { authMiddleware } = require("./middlewares/auth.middleware");
+const {
+  startCheckpointer,
+} = require("./components/langgraph/config/startCheckpointer");
 
 dotenv.config();
 
@@ -18,6 +21,8 @@ const PORT = process.env.PORT;
 
 app.use(express.json());
 app.use(cookieParser());
+
+startCheckpointer();
 
 app.set("trust proxy", 1);
 
