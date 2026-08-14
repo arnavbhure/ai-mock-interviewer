@@ -37,6 +37,14 @@ CREATE TABLE IF NOT EXISTS public.resume_embeddings (
 
 # interviews :
 
+CREATE TYPE interview_status AS ENUM (
+    'planning',
+    'active',
+    'paused',
+    'completed',
+    'failed'
+);
+
 CREATE TABLE IF NOT EXISTS public.interviews
 (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
