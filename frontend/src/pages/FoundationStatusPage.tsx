@@ -3,6 +3,7 @@ import { HeroSection } from "@/components/hero";
 import { HowItWorksSection } from "@/components/how-it-works";
 import { IntelligenceSection } from "@/components/intelligence";
 import { InterviewExperienceSection } from "@/components/interview-experience";
+import { InterviewModesSection } from "@/components/interview-modes";
 
 export function FoundationStatusPage() {
   return (
@@ -10,6 +11,7 @@ export function FoundationStatusPage() {
       <HeroSection />
       <InterviewExperienceSection />
       <IntelligenceSection />
+      <InterviewModesSection />
       <FeaturesSection />
       <HowItWorksSection />
     </main>

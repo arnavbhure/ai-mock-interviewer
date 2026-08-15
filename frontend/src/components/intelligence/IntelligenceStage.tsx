@@ -27,8 +27,6 @@ export function IntelligenceStage({ activeIndex }: IntelligenceStageProps) {
           </StageStep>
         ))}
       </div>
-
-      <StepIndicator active={activeIndex} total={STEP_CONTENT.length} />
     </div>
   );
 }
@@ -44,27 +42,5 @@ function StageStep({ active, children }: { active: boolean; children: ReactNode 
     >
       {children}
     </motion.div>
-  );
-}
-
-function StepIndicator({ active, total }: { active: number; total: number }) {
-  return (
-    <div className="mt-6 flex items-center gap-2" aria-hidden="true">
-      {Array.from({ length: total }).map((_, index) => (
-        <motion.span
-          key={index}
-          initial={false}
-          animate={{
-            width: active === index ? 40 : 10,
-            opacity: active === index ? 1 : 0.35,
-          }}
-          transition={{ duration: 0.5, ease: EASE }}
-          className="h-1 rounded-full bg-text-secondary"
-        />
-      ))}
-      <span className="ml-2 text-[0.625rem] font-medium uppercase tracking-[0.22em] text-text-muted">
-        {String(active + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
-      </span>
-    </div>
   );
 }
