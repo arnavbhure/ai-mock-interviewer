@@ -1,0 +1,1 @@
+export { IntelligenceSection } from "@/components/intelligence/IntelligenceSection";
