@@ -23,11 +23,10 @@ export function NavbarLogo({ scrolled = false, className }: NavbarLogoProps) {
         alt="InterviewAI logo"
         src={logoMark}
         className={cn(
-          "h-8 w-auto object-contain transition-[height] duration-300 ease-premium md:h-9",
-          scrolled && "md:h-8",
+          "h-8 w-auto object-contain transition-[height] duration-300 ease-premium md:h-18 mt-4",
+          scrolled && "md:h-16",
         )}
       />
     </Link>
   );
 }
-
