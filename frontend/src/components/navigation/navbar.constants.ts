@@ -21,8 +21,8 @@ export type MarketingNavLink = {
  * The ids mirror the section ids already rendered on the `/` page.
  */
 export const MARKETING_NAV_LINKS: MarketingNavLink[] = [
-  { label: "Product", id: "features" },
-  { label: "How It Works", id: "how-it-works" },
+  { label: "Product", id: "interview-modes" },
+  { label: "How It Works", id: "interview-experience" },
   { label: "Pricing", id: "pricing" },
   { label: "FAQ", id: "faq" },
 ];

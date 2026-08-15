@@ -4,8 +4,8 @@ import { FooterBrand } from "@/components/footer/FooterBrand";
 import { FooterLinks } from "@/components/footer/FooterLinks";
 
 const PRODUCT_LINKS = [
-  { label: "Features", href: "/#features" },
-  { label: "How It Works", href: "/#how-it-works" },
+  { label: "Features", href: "/#interview-modes" },
+  { label: "How It Works", href: "/#interview-experience" },
   { label: "Pricing", href: "/#pricing" },
   { label: "FAQ", href: "/#faq" },
   { label: "Roadmap", href: "/#roadmap" },

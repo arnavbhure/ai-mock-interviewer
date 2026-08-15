@@ -1,6 +1,5 @@
-import { FeaturesSection } from "@/components/features-section";
+import { FinalCTA } from "@/components/final-cta";
 import { HeroSection } from "@/components/hero";
-import { HowItWorksSection } from "@/components/how-it-works";
 import { IntelligenceSection } from "@/components/intelligence";
 import { InterviewExperienceSection } from "@/components/interview-experience";
 import { InterviewModesSection } from "@/components/interview-modes";
@@ -12,9 +11,7 @@ export function FoundationStatusPage() {
       <InterviewExperienceSection />
       <IntelligenceSection />
       <InterviewModesSection />
-      <FeaturesSection />
-      <HowItWorksSection />
+      <FinalCTA />
     </main>
   );
 }
-
