@@ -11,3 +11,22 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Sign Up", href: "/register" },
 ];
 
+export type MarketingNavLink = {
+  label: string;
+  id: string;
+};
+
+/**
+ * Center navigation links for the marketing site.
+ * The ids mirror the section ids already rendered on the `/` page.
+ */
+export const MARKETING_NAV_LINKS: MarketingNavLink[] = [
+  { label: "Product", id: "features" },
+  { label: "How It Works", id: "how-it-works" },
+  { label: "Pricing", id: "pricing" },
+  { label: "FAQ", id: "faq" },
+];
+
+/** Extra vertical offset applied when smooth-scrolling so the fixed navbar never covers a section. */
+export const NAVBAR_SCROLL_OFFSET = 88;
+

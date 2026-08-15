@@ -1,39 +1,33 @@
-import { motion, useReducedMotion } from "framer-motion";
 import { Link } from "react-router-dom";
 import logoMark from "@/assets/Logo.png";
-import { NAV_EASING, logoVariants } from "@/components/navigation/navbar.animations";
+import { cn } from "@/lib/utils";
 
 type NavbarLogoProps = {
-  scrolled: boolean;
+  /** Shrinks the mark slightly once the page has been scrolled. */
+  scrolled?: boolean;
+  className?: string;
 };
 
-export function NavbarLogo({ scrolled }: NavbarLogoProps) {
-  const reducedMotion = useReducedMotion();
-
+export function NavbarLogo({ scrolled = false, className }: NavbarLogoProps) {
   return (
-    <div className="flex items-center pl-1">
-      <motion.div
-        whileHover={reducedMotion ? undefined : "hover"}
-        initial="rest"
-        animate="rest"
-        variants={logoVariants}
-        transition={{ duration: 0.28, ease: NAV_EASING }}
-      >
-        <Link
-          to="/"
-          aria-label="InterviewAI home"
-          className="group flex items-center outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <motion.img
-            alt="InterviewAI logo"
-            animate={reducedMotion ? undefined : { scale: scrolled ? 0.94 : 1 }}
-            transition={{ duration: 0.35, ease: NAV_EASING }}
-            className="h-[86px] w-auto object-contain sm:h-[92px]"
-            src={logoMark}
-          />
-        </Link>
-      </motion.div>
-    </div>
+    <Link
+      to="/"
+      aria-label="InterviewAI home"
+      className={cn(
+        "inline-flex shrink-0 items-center rounded-button transition-opacity duration-200 ease-premium hover:opacity-80",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        className,
+      )}
+    >
+      <img
+        alt="InterviewAI logo"
+        src={logoMark}
+        className={cn(
+          "h-8 w-auto object-contain transition-[height] duration-300 ease-premium md:h-9",
+          scrolled && "md:h-8",
+        )}
+      />
+    </Link>
   );
 }
 

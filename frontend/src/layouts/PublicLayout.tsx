@@ -1,12 +1,12 @@
 import { Outlet } from "react-router-dom";
 import { Footer } from "@/components/footer";
-import { PremiumNavbar } from "@/components/navigation/PremiumNavbar";
+import { MarketingNavbar } from "@/components/navigation/MarketingNavbar";
 
 export function PublicLayout() {
   return (
-    <div className="relative flex min-h-dvh flex-col bg-background text-foreground transition-colors duration-250 ease-premium">
+    <div className="relative flex min-h-dvh flex-col bg-background text-text transition-colors duration-base ease-premium">
       <div id="top">
-        <PremiumNavbar />
+        <MarketingNavbar />
       </div>
 
       <main className="flex-1">

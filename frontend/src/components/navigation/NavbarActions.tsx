@@ -1,56 +1,39 @@
-import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { Button } from "@/components/ui/button";
-import { NAV_EASING, ctaArrowVariants } from "@/components/navigation/navbar.animations";
-import { MobileNavSheet } from "@/components/navigation/MobileNavSheet";
+import { cn } from "@/lib/utils";
 
 export function NavbarActions() {
-  const reducedMotion = useReducedMotion();
-
   return (
-    <div className="flex h-full items-center gap-2 sm:gap-3">
-      <div className="hidden items-center gap-2 md:flex">
-        <ThemeToggle />
+    <div className="flex items-center gap-2 sm:gap-3">
+      {/* Login */}
+      <Link
+        to="/login"
+        className={cn(
+          "rounded-button px-3 py-2 text-sm font-medium text-text-secondary",
+          "transition-colors duration-200 ease-premium hover:text-text",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        )}
+      >
+        Login
+      </Link>
 
-        <Button asChild variant="ghost" className="h-12 px-4 text-sm font-medium">
-          <Link to="/login">Login</Link>
-        </Button>
-
-        <motion.div
-          whileHover={reducedMotion ? undefined : "hover"}
-          initial="rest"
-          whileTap={reducedMotion ? undefined : "tap"}
-          animate="rest"
-          variants={{ rest: { y: 0 }, hover: { y: -2 }, tap: { y: 0 } }}
-          transition={{ duration: 0.28, ease: NAV_EASING }}
-        >
-          <Button
-            asChild
-            variant="primary"
-            className="h-12 gap-2 px-5 text-sm font-medium shadow-card transition-shadow duration-250 ease-premium hover:shadow-hover"
-          >
-            <Link to="/register">
-              <span>Start Free Interview</span>
-              <motion.span
-                aria-hidden="true"
-                variants={ctaArrowVariants}
-                transition={{ duration: 0.28, ease: NAV_EASING }}
-                className="inline-flex"
-              >
-                <ArrowRight size={16} strokeWidth={1.75} />
-              </motion.span>
-            </Link>
-          </Button>
-        </motion.div>
-      </div>
-
-      <div className="flex items-center gap-2 md:hidden">
-        <ThemeToggle />
-        <MobileNavSheet />
-      </div>
+      {/* Primary CTA */}
+      <Link
+        to="/register"
+        className={cn(
+          "group inline-flex h-9 items-center gap-1.5 rounded-button bg-primary px-4 text-sm font-medium text-primary-foreground",
+          "transition-[background-color,box-shadow] duration-200 ease-premium",
+          "hover:bg-primary-bright hover:shadow-[0_2px_10px_rgba(77,130,255,0.28)]",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        )}
+      >
+        <span>Start Interview</span>
+        <ArrowRight
+          aria-hidden="true"
+          className="h-4 w-4 transition-transform duration-200 ease-premium group-hover:translate-x-0.5"
+          strokeWidth={2}
+        />
+      </Link>
     </div>
   );
 }
-
