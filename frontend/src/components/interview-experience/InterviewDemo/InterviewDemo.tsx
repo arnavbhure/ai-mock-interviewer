@@ -1,5 +1,8 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { demoContainer, demoRow } from "@/components/interview-experience/animations/variants";
+import {
+  demoContainer,
+  demoRow,
+} from "@/components/interview-experience/animations/variants";
 import { InterviewHeader } from "@/components/interview-experience/InterviewDemo/InterviewHeader";
 import { Question } from "@/components/interview-experience/InterviewDemo/Question";
 import { CandidateResponse } from "@/components/interview-experience/InterviewDemo/CandidateResponse";

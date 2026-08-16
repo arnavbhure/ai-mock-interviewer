@@ -23,10 +23,9 @@ export type MarketingNavLink = {
 export const MARKETING_NAV_LINKS: MarketingNavLink[] = [
   { label: "Product", id: "interview-modes" },
   { label: "How It Works", id: "interview-experience" },
-  { label: "Pricing", id: "pricing" },
+  { label: "Dashboard", id: "dashboard" },
   { label: "FAQ", id: "faq" },
 ];
 
 /** Extra vertical offset applied when smooth-scrolling so the fixed navbar never covers a section. */
 export const NAVBAR_SCROLL_OFFSET = 88;
-

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import logoMark from "@/assets/Logo.png";
+import logoMark from "@/public/Logo.png";
 import { cn } from "@/lib/utils";
 
 type NavbarLogoProps = {

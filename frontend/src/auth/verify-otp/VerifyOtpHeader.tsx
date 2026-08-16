@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import logoMark from "@/assets/Logo.png";
+import logoMark from "@/public/Logo.png";
 import {
   VERIFY_OTP_DESCRIPTION,
   VERIFY_OTP_HEADLINE,
@@ -22,7 +22,11 @@ export function VerifyOtpHeader({ email }: VerifyOtpHeaderProps) {
         aria-label="InterviewAI home"
         className="inline-flex items-center outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <img alt="InterviewAI logo" className="h-12 w-auto object-contain" src={logoMark} />
+        <img
+          alt="InterviewAI logo"
+          className="h-12 w-auto object-contain"
+          src={logoMark}
+        />
       </Link>
 
       <h1 className="mt-8 text-3xl font-semibold tracking-[-0.03em] text-foreground sm:text-4xl">
@@ -35,4 +39,3 @@ export function VerifyOtpHeader({ email }: VerifyOtpHeaderProps) {
     </motion.div>
   );
 }
-

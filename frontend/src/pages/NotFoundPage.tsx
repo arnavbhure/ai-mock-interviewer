@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NotFoundBackground } from "./NotFoundBackground";
 
 const FADE_IN_VARIANTS = {
   hidden: { opacity: 0, y: 8 },
@@ -18,7 +19,8 @@ export function NotFoundPage() {
   });
 
   return (
-    <div className="relative flex flex-col items-center justify-center p-5 py-30 text-center">
+    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-background p-5 text-center text-foreground">
+      <NotFoundBackground />
       <motion.div
         initial="hidden"
         animate="visible"
@@ -42,7 +44,7 @@ export function NotFoundPage() {
         <motion.p
           variants={FADE_IN_VARIANTS}
           transition={transition(0.3)}
-          className="max-w-md text-base text-text-secondary m-20"
+          className="max-w-md text-base text-text-secondary m-18"
         >
           The page you're looking for doesn't exist or may have been moved.
         </motion.p>
@@ -74,7 +76,7 @@ export function NotFoundPage() {
           ease: "easeInOut",
           delay: reduced ? 0 : 0.5,
         }}
-        className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center text-[20vw] font-black leading-none text-primary/15 sm:text-[180px]"
+        className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center text-[20vw] font-black leading-none text-primary/18 sm:text-[180px]"
         aria-hidden="true"
       >
         404

@@ -37,7 +37,7 @@ export function NavLinks({ onNavigate, mobile = false }: NavLinksProps) {
       {MARKETING_NAV_LINKS.map((link) => (
         <a
           key={link.id}
-          href={`#${link.id}`}
+          href={link.id === "dashboard" ? "/dashboard" : `#${link.id}`}
           onClick={(event) => handleClick(event, link.id)}
           className={cn(
             "relative text-sm font-medium tracking-[-0.01em] text-text-secondary",
@@ -49,7 +49,12 @@ export function NavLinks({ onNavigate, mobile = false }: NavLinksProps) {
           )}
         >
           <span>{link.label}</span>
-          {mobile ? <ArrowRight className="h-4 w-4 text-text-muted" aria-hidden="true" /> : null}
+          {mobile ? (
+            <ArrowRight
+              className="h-4 w-4 text-text-muted"
+              aria-hidden="true"
+            />
+          ) : null}
         </a>
       ))}
     </nav>
