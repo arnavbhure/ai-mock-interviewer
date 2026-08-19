@@ -30,6 +30,6 @@ workflow.addConditionalEdges("advance_interview", routeAfterAdvance, {
 });
 workflow.addEdge("final_evaluation", END);
 
-const app = workflow.compile({ checkpointer });
+const main_graph = workflow.compile({ checkpointer });
 
-module.exports = { app };
+module.exports = { main_graph };

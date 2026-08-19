@@ -2,69 +2,117 @@
 @import "tw-animate-css";
 
 @theme inline {
-  /* Core Colors - Dark Only */
-  --color-background: #080B10;
-  --color-background-secondary: #0B1017;
-  --color-surface: #10151D;
-  --color-surface-elevated: #151C27;
-  --color-text: #F5F7FA;
-  --color-text-secondary: #A7B0BF;
-  --color-text-muted: #667386;
-  --color-primary: #4D82FF;
-  --color-primary-bright: #6D9BFF;
-  --color-primary-soft: #B8CCFF;
-  --color-primary-foreground: #080B10;
-  --color-border: #202A38;
-  --color-border-hover: #2A3647;
-  --color-border-focus: #4D82FF;
-  --color-success: #3DDC97;
-  --color-warning: #F5B942;
-  --color-error: #FF6262;
-  --color-destructive: #FF6262;
-  --color-destructive-foreground: #080B10;
-  
-  /* Semantic aliases for compatibility */
+  /* ========================================
+   INTERVIEWAI — LIGHT VIOLET THEME
+   ======================================== */
+
+  --color-background: #f8f6fc;
+  --color-background-secondary: #f1edf8;
+
+  /* ========================================
+   SURFACES
+   ======================================== */
+
+  --color-surface: #ffffff;
+  --color-surface-elevated: #fbfafe;
+
+  /* ========================================
+   TEXT
+   ======================================== */
+
+  --color-text: #19151f;
+  --color-text-secondary: #5f5869;
+  --color-text-muted: #8d8797;
+
+  /* ========================================
+   PRIMARY — ELECTRIC VIOLET
+   ======================================== */
+
+  --color-primary: #845ec2;
+  --color-primary-bright: #956dd0;
+  --color-primary-soft: #c7b3e5;
+  --color-primary-foreground: #ffffff;
+
+  /* ========================================
+   ACCENT — SOFT LAVENDER
+   ======================================== */
+
+  --color-accent: #b39cd0;
+  --color-accent-bright: #c4afe0;
+  --color-accent-soft: #e8dff2;
+  --color-accent-foreground: #19151f;
+
+  /* ========================================
+   BORDERS
+   ======================================== */
+
+  --color-border: #e3ddeb;
+  --color-border-hover: #d2c7df;
+  --color-border-focus: #845ec2;
+
+  /* ========================================
+   STATUS
+   ======================================== */
+
+  --color-success: #55a982;
+  --color-warning: #d79a52;
+  --color-error: #d96873;
+  --color-destructive: #d96873;
+  --color-destructive-foreground: #ffffff;
+
+  /* ========================================
+   SEMANTIC ALIASES
+   ======================================== */
+
   --color-foreground: var(--color-text);
+
   --color-card: var(--color-surface);
   --color-card-foreground: var(--color-text);
+
   --color-popover: var(--color-surface-elevated);
   --color-popover-foreground: var(--color-text);
-  --color-primary-foreground: var(--color-primary-foreground);
-  --color-secondary: var(--color-surface);
+
+  --color-secondary: var(--color-background-secondary);
   --color-secondary-foreground: var(--color-text-secondary);
-  --color-muted: var(--color-surface);
+
+  --color-muted: var(--color-background-secondary);
   --color-muted-foreground: var(--color-text-muted);
-  --color-accent: var(--color-primary);
-  --color-accent-foreground: var(--color-primary-foreground);
+
+  --color-accent-foreground: var(--color-accent-foreground);
+
   --color-ring: var(--color-primary);
   --color-input: var(--color-border);
-  --color-success: var(--color-success);
-  --color-warning: var(--color-warning);
+
   --color-info: var(--color-primary);
-  
+
   /* Radius */
   --radius-button: 8px;
   --radius-input: 8px;
   --radius-card: 12px;
   --radius-large: 16px;
   --radius-pill: 999px;
-  
+
   /* Shadows - Restrained */
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
   --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.2);
-  --shadow-modal: 0 20px 48px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-modal:
+    0 20px 48px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.3);
   --shadow-navbar: 0 1px 2px rgba(0, 0, 0, 0.3);
-  
+
   /* Transitions */
   --ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-fast: 150ms;
   --duration-base: 250ms;
   --duration-slow: 400ms;
-  
+
   /* Typography */
-  --font-sans: "Geist", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  
+  --font-sans:
+    "Geist", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  --font-mono:
+    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace;
+
   /* Spacing scale */
   --space-1: 4px;
   --space-2: 8px;
@@ -118,7 +166,7 @@
     text-underline-offset: 4px;
     transition: color var(--duration-base) var(--ease-premium);
   }
-  
+
   a:hover {
     color: var(--color-primary-bright);
   }
@@ -144,27 +192,27 @@
       animation-iteration-count: 1 !important;
     }
   }
-  
+
   /* Scrollbar styling */
   * {
     scrollbar-width: thin;
     scrollbar-color: var(--color-border) var(--color-background);
   }
-  
+
   *::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
-  
+
   *::-webkit-scrollbar-track {
     background: var(--color-background);
   }
-  
+
   *::-webkit-scrollbar-thumb {
     background: var(--color-border);
     border-radius: 4px;
   }
-  
+
   *::-webkit-scrollbar-thumb:hover {
     background: var(--color-border-hover);
   }
@@ -178,74 +226,73 @@
     line-height: 1.1;
     letter-spacing: -0.03em;
   }
-  
+
   .text-display-2 {
     font-size: clamp(2rem, 4vw, 3rem);
     font-weight: 600;
     line-height: 1.15;
     letter-spacing: -0.02em;
   }
-  
+
   .text-display-3 {
     font-size: clamp(1.5rem, 3vw, 2.25rem);
     font-weight: 600;
     line-height: 1.2;
     letter-spacing: -0.01em;
   }
-  
+
   .text-heading-1 {
     font-size: clamp(1.75rem, 2.5vw, 2.5rem);
     font-weight: 600;
     line-height: 1.25;
   }
-  
+
   .text-heading-2 {
     font-size: clamp(1.375rem, 2vw, 1.875rem);
     font-weight: 600;
     line-height: 1.3;
   }
-  
+
   .text-heading-3 {
     font-size: clamp(1.125rem, 1.5vw, 1.375rem);
     font-weight: 600;
     line-height: 1.4;
   }
-  
+
   .text-body-lg {
     font-size: 1.125rem;
     font-weight: 400;
     line-height: 1.65;
   }
-  
+
   .text-body {
     font-size: 1rem;
     font-weight: 400;
     line-height: 1.6;
   }
-  
+
   .text-body-sm {
     font-size: 0.875rem;
     font-weight: 400;
     line-height: 1.55;
   }
-  
+
   .text-label {
     font-size: 0.875rem;
     font-weight: 500;
     line-height: 1.5;
   }
-  
+
   .text-metadata {
     font-size: 0.75rem;
     font-weight: 400;
     line-height: 1.5;
     font-family: var(--font-mono);
   }
-  
+
   .text-caption {
     font-size: 0.75rem;
     font-weight: 400;
     line-height: 1.5;
   }
-
 }
