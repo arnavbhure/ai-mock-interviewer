@@ -3,6 +3,7 @@ const {
   InterviewPlanSchema,
 } = require("../../langchain/schemas/interviewPlan.schema");
 const { AnswerEvaluationSchema } = require("../schema/answerEvaluationSchema");
+const { FinalEvaluationSchema } = require("../schema/finalEvaluationSchema");
 
 /* =========================
    ENUMS
@@ -161,6 +162,10 @@ const InterviewState = z.object({
   error: InterviewErrorSchema.nullable(),
 
   retryCount: z.number().int().nonnegative(),
+
+  /* for final evaluation */
+
+  finalEvaluation: FinalEvaluationSchema.nullable(),
 
   /* State version */
 
