@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import TextType from "@/components/TextType/TextType";
 import { Button } from "@/components/ui/button";
 
 interface HeroContentProps {
@@ -43,8 +44,8 @@ export function HeroContent({ reduceMotion }: HeroContentProps) {
           INTERVIEW THAT MATTERS.
         </motion.h1>
 
-        {/* Description */}
-        <motion.p
+        {/* Description — typewriter */}
+        <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
@@ -52,14 +53,34 @@ export function HeroContent({ reduceMotion }: HeroContentProps) {
             delay: reduceMotion ? 0 : 0.2,
             ease: [0.16, 1, 0.3, 1],
           }}
-          className="max-w-md text-base leading-7 text-text-secondary sm:text-lg sm:leading-8"
+          className="max-w-md min-h-[5.25rem] w-full text-base leading-7 text-text-secondary sm:min-h-24 sm:text-lg sm:leading-8"
         >
-          Real interviews.
-          <br />
-          Real-time feedback.
-          <br />
-          Real improvement.
-        </motion.p>
+          {reduceMotion ? (
+          <p className="text-base leading-7 text-text-secondary sm:text-lg sm:leading-8">
+            Real interviews.
+            <br />
+            Real-time feedback.
+            <br />
+            Real improvement.
+          </p>
+        ) : (
+          <TextType
+            text={["Real interviews.", "Real-time feedback.", "Real improvement."]}
+            as="p"
+            className="text-text-secondary"
+            typingSpeed={55}
+            deletingSpeed={30}
+            pauseDuration={1800}
+            initialDelay={400}
+            loop
+            showCursor
+            cursorCharacter="_"
+            cursorBlinkDuration={0.6}
+            textColors={["#A7B0BF"]}
+            startOnVisible
+          />
+        )}
+        </motion.div>
 
         {/* CTA */}
         <motion.div
