@@ -1,3 +1,6 @@
+const {
+  appendInterviewEvaluationModel,
+} = require("../../../models/evaluation/interviewEvaluation.model");
 const { EvaluationAnswerChain } = require("../chains/evaluateAnswer.chain");
 
 const evaluateAnswerNode = async (state) => {
@@ -22,6 +25,17 @@ const evaluateAnswerNode = async (state) => {
     question: state.currentQuestion.question,
     answer: state.currentAnswer,
   });
+
+  const evaluation = {
+    question: currentQuestion,
+    answer: currentAnswer,
+    roundNumber: state.currentRoundNumber,
+    roundType: currentRound.roundType,
+    questionNumber: state.currentQuestionNumber,
+    ...evaluationResult,
+  };
+
+  await appendInterviewEvaluationModel(state.interviewId, evaluation);
 
   return {
     lastEvaluation: evaluationResult,
