@@ -6,14 +6,14 @@ CREATE TABLE IF NOT EXISTS public.users ( id uuid NOT NULL DEFAULT gen_random_uu
 
 # candidate_resume :
 
-CREATE TABLE IF NOT EXISTS public.candidate_resumes ( id uuid NOT NULL DEFAULT gen_random_uuid(), user_id uuid NOT NULL, full_name text COLLATE pg_catalog."default", phone text COLLATE pg_catalog."default", summary text COLLATE pg_catalog."default", skills text[] COLLATE pg_catalog."default" DEFAULT '{}'::text[], education text[] COLLATE pg_catalog."default" DEFAULT '{}'::text[], experience text[] COLLATE pg_catalog."default" DEFAULT '{}'::text[], projects text[] COLLATE pg_catalog."default" DEFAULT '{}'::text[], achievements text COLLATE pg_catalog."default", created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now(), CONSTRAINT candidate_resumes_pkey PRIMARY KEY (id), CONSTRAINT candidate_resumes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users (id) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE CASCADE ); 
+CREATE TABLE IF NOT EXISTS public.candidate_resumes ( id uuid NOT NULL DEFAULT gen_random_uuid(), user_id uuid NOT NULL, full_name text COLLATE pg_catalog."default", phone text COLLATE pg_catalog."default", summary text COLLATE pg_catalog."default", skills text[] COLLATE pg_catalog."default" DEFAULT '{}'::text[], education text[] COLLATE pg_catalog."default" DEFAULT '{}'::text[], experience text[] COLLATE pg_catalog."default" DEFAULT '{}'::text[], projects text[] COLLATE pg_catalog."default" DEFAULT '{}'::text[], achievements text COLLATE pg_catalog."default", created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now(), CONSTRAINT candidate_resumes_pkey PRIMARY KEY (id), CONSTRAINT candidate_resumes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users (id) MATCH SIMPLE ON UPDATE NO ACTION ON DELETE CASCADE );
 
-# resume_embeddings : 
+# resume_embeddings :
 
 CREATE EXTENSION IF NOT EXISTS vector;
 
 CREATE TABLE IF NOT EXISTS public.resume_embeddings (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     resume_id UUID NOT NULL
         REFERENCES public.candidate_resumes(id)
@@ -32,22 +32,22 @@ CREATE TABLE IF NOT EXISTS public.resume_embeddings (
     metadata JSONB DEFAULT '{}'::jsonb,
 
     created_at TIMESTAMPTZ DEFAULT NOW()
-);
 
+);
 
 # interviews :
 
 CREATE TYPE interview_status AS ENUM (
-    'planning',
-    'active',
-    'paused',
-    'completed',
-    'failed'
+'planning',
+'active',
+'paused',
+'completed',
+'failed'
 );
 
 CREATE TABLE IF NOT EXISTS public.interviews
 (
-    id uuid NOT NULL DEFAULT gen_random_uuid(),
+id uuid NOT NULL DEFAULT gen_random_uuid(),
 
     user_id uuid NOT NULL,
 
@@ -85,9 +85,41 @@ CREATE TABLE IF NOT EXISTS public.interviews
         FOREIGN KEY (user_id)
         REFERENCES public.users (id)
         ON DELETE CASCADE
+
 );
 
-# Indexes: 
+# interview_evaluations :
+
+CREATE TABLE interview_evaluations (
+id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    interview_id UUID NOT NULL UNIQUE,
+
+    evaluations JSONB NOT NULL DEFAULT '[]'::jsonb,
+
+    overall_score NUMERIC(4,2),
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    CONSTRAINT interview_evaluations_interview_id_fkey
+        FOREIGN KEY (interview_id)
+        REFERENCES interviews(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT interview_evaluations_array_check
+        CHECK (jsonb_typeof(evaluations) = 'array'),
+
+    CONSTRAINT interview_evaluations_score_check
+        CHECK (
+            overall_score IS NULL
+            OR (overall_score >= 0 AND overall_score <= 10)
+        )
+
+);
+
+# Indexes:
 
 CREATE INDEX idx_candidate_resumes_user_id
 ON candidate_resumes(user_id);

@@ -1,5 +1,6 @@
 const { ChatOpenAI } = require("@langchain/openai");
 const { OpenAIEmbeddings } = require("@langchain/openai");
+require("dotenv").config({ path: ".env" });
 
 const resumeParserLLM = new ChatOpenAI({
   model: process.env.OPENROUTER_MODEL,
@@ -17,6 +18,7 @@ const embeddingModel = new OpenAIEmbeddings({
   configuration: {
     baseURL: process.env.OPENROUTER_BASE_URL,
   },
+  encodingFormat: "float",
 });
 
 module.exports = { resumeParserLLM, embeddingModel };
