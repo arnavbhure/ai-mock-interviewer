@@ -9,19 +9,13 @@ export function AuthCard({ children }: AuthCardProps) {
   const reducedMotion = useReducedMotion();
 
   return (
-    <div className="relative">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -inset-10 -z-10 rounded-full bg-primary/8 blur-3xl"
-      />
-      <motion.div
-        initial={reducedMotion ? false : { opacity: 0, y: 20 }}
-        animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="rounded-card border border-border/80 bg-card/90 p-6 shadow-modal backdrop-blur-sm transition-shadow duration-300 ease-premium hover:shadow-[0_18px_50px_rgba(15,23,42,0.14)] sm:p-8 lg:p-10"
-      >
-        {children}
-      </motion.div>
-    </div>
+    <motion.div
+      initial={reducedMotion ? false : { opacity: 0, y: 16 }}
+      animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full max-w-[440px] rounded-large border border-border bg-surface p-6 sm:p-8 shadow-[0_2px_12px_rgba(0,0,0,0.04),0_8px_32px_rgba(0,0,0,0.06)]"
+    >
+      {children}
+    </motion.div>
   );
 }

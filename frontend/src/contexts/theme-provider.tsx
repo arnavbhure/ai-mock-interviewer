@@ -19,7 +19,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   }, []);
 
   // No-op functions for API compatibility
-  const setTheme = useCallback((_nextTheme: Theme) => {
+  const setTheme = useCallback(() => {
     // Dark only - no-op
   }, []);
 

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, type Transition } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotFoundBackground } from "./NotFoundBackground";
@@ -12,7 +12,7 @@ const FADE_IN_VARIANTS = {
 export function NotFoundPage() {
   const reduced = useReducedMotion();
 
-  const transition = (delay: number) => ({
+  const transition = (delay: number): Transition => ({
     duration: 0.4,
     ease: [0.25, 1, 0.5, 1],
     delay: reduced ? 0 : delay,

@@ -23,7 +23,7 @@ const ProtectedRoute = () => {
         } else {
           setUser(response.user);
         }
-      } catch (error) {
+      } catch {
         clearUser();
       } finally {
         setLoading(false);

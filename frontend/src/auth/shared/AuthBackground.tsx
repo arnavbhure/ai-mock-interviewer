@@ -1,48 +1,16 @@
-const GRID_DOTS = [
-  { top: "18%", left: "12%" },
-  { top: "72%", left: "8%" },
-  { top: "26%", left: "86%" },
-  { top: "80%", left: "78%" },
-  { top: "8%", left: "58%" },
-];
-
 export function AuthBackground() {
   return (
     <div
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 overflow-hidden"
     >
-      {/* Square grid */}
+      {/* Subtle ambient lavender glow in center */}
       <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, rgba(148,163,184,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(148,163,184,0.05) 1px, transparent 1px)",
-          backgroundSize: "48px 48px",
-          maskImage:
-            "radial-gradient(ellipse 80% 70% at 50% 35%, black 40%, transparent 100%)",
-          WebkitMaskImage:
-            "radial-gradient(ellipse 80% 70% at 50% 35%, black 40%, transparent 100%)",
-        }}
+        className="absolute left-1/2 top-1/2 h-[40rem] w-[40rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-3xl"
       />
-
-      {/* Top hairline */}
-      <div className="absolute inset-x-0 top-0 h-px bg-border" />
-
-      {/* Large radial primary glow behind the card */}
-      <div className="absolute left-1/2 top-1/2 h-[34rem] w-[34rem] -translate-x-[70%] -translate-y-1/2 rounded-full bg-primary/10 blur-3xl" />
-
-      {/* Smaller blurred accent in another corner */}
-      <div className="absolute bottom-[-8rem] right-[-6rem] h-[22rem] w-[22rem] rounded-full bg-primary/8 blur-3xl" />
-
-      {/* Tiny glowing dots aligned to the grid */}
-      {GRID_DOTS.map((dot, index) => (
-        <span
-          key={index}
-          className="absolute size-1.5 rounded-full bg-primary/40"
-          style={{ top: dot.top, left: dot.left }}
-        />
-      ))}
+      {/* Very faint corner accents */}
+      <div className="absolute top-0 left-0 h-[18rem] w-[18rem] rounded-full bg-primary/3 blur-3xl" />
+      <div className="absolute bottom-0 right-0 h-[18rem] w-[18rem] rounded-full bg-primary/3 blur-3xl" />
     </div>
   );
 }

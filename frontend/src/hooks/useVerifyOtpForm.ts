@@ -63,7 +63,7 @@ export function useVerifyOtpForm(email: string) {
     toastSuccess("Verification code resent.");
 
     setIsResending(false);
-  }, [email]);
+  }, []);
 
   return {
     register: form.register,

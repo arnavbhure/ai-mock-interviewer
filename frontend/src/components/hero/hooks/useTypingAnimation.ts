@@ -10,12 +10,26 @@ type UseTypingAnimationOptions = {
 export function useTypingAnimation({ text, active, paused = false, speedMs = 22 }: UseTypingAnimationOptions) {
   const [count, setCount] = useState(0);
 
+  // Reset typing progress whenever the inputs change.
+  // React's recommended "adjust state during render" pattern: compare against
+  // the previous inputs stored in state (not a ref), and call setState during
+  // render to reset. This avoids both `react-hooks/set-state-in-effect` and
+  // `react-hooks/refs`.
+  const [prevInputs, setPrevInputs] = useState({ text, active, paused, speedMs });
+  if (
+    text !== prevInputs.text ||
+    active !== prevInputs.active ||
+    paused !== prevInputs.paused ||
+    speedMs !== prevInputs.speedMs
+  ) {
+    setPrevInputs({ text, active, paused, speedMs });
+    setCount(0);
+  }
+
   useEffect(() => {
     if (!active || paused) {
       return;
     }
-
-    setCount(0);
 
     const intervalId = window.setInterval(() => {
       setCount((current) => {
