@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { useAuthStore } from "@/store/auth.store";
 import { HAS_INTERVIEWS } from "@/data/dashboard.mock";
+import { TextLoop } from "@/components/TextLoop/TextLoop";
 import {
   DashboardHeader,
   PerformanceTrendCard,
@@ -28,6 +29,24 @@ export function DashboardPage() {
         transition={{ duration: 0.4, ease }}
       >
         <DashboardHeader name={displayName} />
+      </motion.div>
+
+      <motion.div
+        initial={enter}
+        animate={shown}
+        transition={{ duration: 0.4, ease, delay: reduced ? 0 : 0.07 }}
+      >
+        <TextLoop
+          text="INTERVIEW PRACTICE ✦ TECHNICAL SKILLS ✦ CONFIDENCE ✦ COMMUNICATION"
+          shape="wave"
+          speed={32}
+          fontSize={13}
+          fontWeight={600}
+          letterSpacing={1.5}
+          uppercase
+          pauseOnHover
+          className="mt-6"
+        />
       </motion.div>
 
       <motion.div

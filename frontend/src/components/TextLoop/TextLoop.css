@@ -1,0 +1,50 @@
+.text-loop {
+  overflow: hidden;
+  position: relative;
+  user-select: none;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.text-loop__track {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  will-change: transform;
+  animation: text-loop-slide var(--loop-speed) linear infinite;
+}
+
+.text-loop--pause:hover .text-loop__track {
+  animation-play-state: paused;
+}
+
+.text-loop__unit {
+  display: inline-block;
+  flex: none;
+  padding-right: 1.25em;
+  font-size: var(--loop-font-size);
+  font-weight: var(--loop-weight);
+  letter-spacing: var(--loop-tracking);
+  color: var(--loop-color);
+  text-transform: none;
+}
+
+.text-loop--ribbon .text-loop__track {
+  background: var(--color-background-secondary);
+  padding: 0.1em 0;
+}
+
+@keyframes text-loop-slide {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-loop__track {
+    animation: none;
+  }
+}

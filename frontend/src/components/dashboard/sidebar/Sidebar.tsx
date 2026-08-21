@@ -1,5 +1,5 @@
 import * as Tooltip from "@radix-ui/react-tooltip";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import {
   Briefcase,
   ChevronsLeft,
@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth.store";
 import { SidebarNavItem } from "./SidebarNavItem";
 import { SidebarTooltip } from "./SidebarTooltip";
+import logoMark from "@/public/Logo.png";
 
 type SidebarProps = {
   collapsed: boolean;
@@ -42,13 +43,17 @@ function BrandMark() {
       className="inline-flex size-8 shrink-0 items-center justify-center rounded-[9px] bg-primary text-primary-foreground"
       aria-hidden="true"
     >
-      <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" aria-hidden="true">
-        <rect x="5" y="11" width="2.4" height="7" rx="1.2" fill="currentColor" />
-        <rect x="8.4" y="8.5" width="2.4" height="9.5" rx="1.2" fill="currentColor" />
-        <rect x="11.8" y="6" width="2.4" height="12" rx="1.2" fill="currentColor" />
-        <rect x="15.2" y="8.5" width="2.4" height="9.5" rx="1.2" fill="currentColor" />
-        <rect x="18.6" y="11" width="2.4" height="7" rx="1.2" fill="currentColor" />
-      </svg>
+      <Link
+        to="/"
+        aria-label="InterviewAI home"
+        className="inline-flex items-center mb-8"
+      >
+        <img
+          alt="InterviewAI logo"
+          src={logoMark}
+          className="h-10 w-auto object-contain"
+        />
+      </Link>
     </span>
   );
 }
@@ -73,14 +78,24 @@ function NavLabel({
       )}
       aria-hidden={show ? undefined : true}
     >
-      <span className={cn("truncate", show && "transition-[transform] duration-200 ease-out")}>
+      <span
+        className={cn(
+          "truncate",
+          show && "transition-[transform] duration-200 ease-out",
+        )}
+      >
         {children}
       </span>
     </span>
   );
 }
 
-export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobile }: SidebarProps) {
+export function Sidebar({
+  collapsed,
+  onToggleCollapsed,
+  mobileOpen,
+  onCloseMobile,
+}: SidebarProps) {
   const user = useAuthStore((state) => state.user);
   const name = user?.name?.trim() || "Candidate";
   const cleanName = name;
@@ -101,7 +116,9 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
         onClick={onCloseMobile}
         className={cn(
           "fixed inset-0 z-40 bg-[#111827]/40 backdrop-blur-[2px] transition-opacity duration-300 ease-premium lg:hidden",
-          mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
+          mobileOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none",
         )}
       />
       <Tooltip.Provider delayDuration={250} skipDelayDuration={150}>
@@ -205,8 +222,12 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
                   aria-hidden={!showExpanded}
                 >
                   <span className="flex flex-col items-start w-full">
-                    <span className="truncate text-sm font-medium text-text">{cleanName}</span>
-                    <span className="truncate text-xs text-text-muted">Candidate</span>
+                    <span className="truncate text-sm font-medium text-text">
+                      {cleanName}
+                    </span>
+                    <span className="truncate text-xs text-text-muted">
+                      Candidate
+                    </span>
                   </span>
                 </span>
               </NavLink>
@@ -229,7 +250,10 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
                 <ChevronsRight className="size-4 shrink-0" aria-hidden="true" />
               ) : (
                 <>
-                  <ChevronsLeft className="size-4 shrink-0" aria-hidden="true" />
+                  <ChevronsLeft
+                    className="size-4 shrink-0"
+                    aria-hidden="true"
+                  />
                   <span className="text-xs font-medium">Collapse</span>
                 </>
               )}
