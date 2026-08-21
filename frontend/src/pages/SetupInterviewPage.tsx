@@ -18,7 +18,7 @@ function SetupStep({
 }) {
   return (
     <section className="space-y-4">
-      <p className="text-caption font-medium uppercase tracking-[0.16em] text-text-muted">
+      <p className="text-xs font-medium text-text-muted">
         {number} — {title}
       </p>
       {children}
@@ -42,17 +42,18 @@ export function SetupInterviewPage() {
   } = useDashboardForm();
 
   return (
-    <div className="mx-auto w-full max-w-[760px] px-4 py-10 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-[760px] px-4 py-8 sm:px-6 sm:py-10 lg:px-10 lg:py-12">
       <motion.header
         initial={reduced ? false : { opacity: 0, y: 12 }}
         animate={reduced ? false : { opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         className="mb-10"
       >
-        <h1 className="text-heading-2 text-text">Start a new interview</h1>
-        <p className="mt-2 max-w-2xl text-body-sm text-text-muted">
-          Configure a personalized mock interview around your target role, resume, and
-          preferred difficulty — then start when you are ready.
+        <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-text">
+          Start a new interview
+        </h1>
+        <p className="mt-2 max-w-xl text-sm leading-6 text-text-secondary">
+          Set the role, resume, and difficulty, then begin when you are ready.
         </p>
       </motion.header>
 
@@ -65,13 +66,12 @@ export function SetupInterviewPage() {
           delay: reduced ? 0 : 0.08,
           ease: [0.16, 1, 0.3, 1],
         }}
-        className="space-y-10 rounded-xl border border-border bg-surface p-5 shadow-card sm:space-y-12 sm:p-8"
+        className="space-y-10 sm:space-y-12"
       >
         <div>
-          <h2 className="text-heading-3 text-text">Configure your interview</h2>
-          <p className="mt-2 max-w-lg text-body-sm text-text-muted">
-            Tell us what you're preparing for, upload your resume, and choose your
-            difficulty.
+          <h2 className="text-sm font-medium text-text">Configuration</h2>
+          <p className="mt-1 max-w-lg text-sm text-text-secondary">
+            These details personalize the questions you will get.
           </p>
         </div>
 

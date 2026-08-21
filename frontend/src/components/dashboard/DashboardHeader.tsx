@@ -1,6 +1,7 @@
 import { useReducedMotion } from "framer-motion";
 import TextType from "@/components/TextType/TextType";
 import { ShinyText } from "@/components/ShinyText/ShinyText";
+import { TextLoop } from "@/components/TextLoop/TextLoop";
 
 type DashboardHeaderProps = {
   name: string;
@@ -14,32 +15,45 @@ export function DashboardHeader({ name }: DashboardHeaderProps) {
   const greetingText = `${greeting}, ${name}`;
 
   return (
-    <div className="flex flex-col gap-1">
+    <header className="flex flex-col">
       <ShinyText
         text="AI-powered interview practice"
-        speed={4}
-        className="text-[11px] font-medium uppercase tracking-[0.18em]"
+        speed={5}
+        disabled={Boolean(reduced)}
+        className="text-[11px] font-medium tracking-[0.16em] uppercase"
       />
       {reduced ? (
-        <h1 className="text-heading-2 text-text">{greetingText}</h1>
+        <h1 className="mt-3 text-[1.75rem] font-bold leading-tight tracking-tight text-text sm:text-[2rem]">
+          {greetingText}
+        </h1>
       ) : (
         <TextType
           as="h1"
           text={greetingText}
-          typingSpeed={50}
+          typingSpeed={48}
           pauseDuration={2200}
           deletingSpeed={28}
           showCursor
           cursorCharacter="|"
           loop={false}
           startOnVisible
-          className="text-heading-2 text-text"
+          className="mt-3 text-[1.75rem] font-bold leading-tight tracking-tight text-text sm:text-[2rem]"
         />
       )}
-      <p className="text-body-lg text-text-secondary">Ready for your next interview?</p>
-      <p className="text-body-sm text-text-muted">
-        Continue practicing or start a new interview tailored to your target role.
+      <p className="mt-2 max-w-xl text-sm leading-6 text-text-secondary">
+        Review how you are performing, then start your next session.
       </p>
-    </div>
+      <TextLoop
+        text="Interview practice  ·  Technical skills  ·  Communication  ·  Confidence"
+        shape="linear"
+        speed={40}
+        fontSize={12}
+        fontWeight={500}
+        letterSpacing={0.4}
+        uppercase={false}
+        pauseOnHover
+        className="mt-8 opacity-50"
+      />
+    </header>
   );
 }

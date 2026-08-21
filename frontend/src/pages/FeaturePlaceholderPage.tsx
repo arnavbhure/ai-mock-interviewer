@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -11,17 +11,16 @@ type FeaturePlaceholderPageProps = {
 
 export function FeaturePlaceholderPage({ title, description, icon: Icon }: FeaturePlaceholderPageProps) {
   return (
-    <section className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 py-10">
-      <div className="mx-auto max-w-md rounded-xl border border-border bg-surface p-10 text-center shadow-card">
-        <span className="mx-auto flex size-12 items-center justify-center rounded-large bg-primary/10">
-          <Icon className="size-6 text-primary" aria-hidden="true" />
+    <section className="mx-auto w-full max-w-[1120px] px-4 py-12 sm:px-6 lg:px-10">
+      <div className="max-w-md">
+        <span className="flex size-10 items-center justify-center text-text-muted">
+          <Icon className="size-5" aria-hidden="true" />
         </span>
-        <h2 className="mt-5 text-lg font-semibold tracking-tight text-text">{title}</h2>
+        <h2 className="mt-4 text-xl font-bold tracking-tight text-text">{title}</h2>
         <p className="mt-2 text-sm leading-6 text-text-secondary">{description}</p>
         <div className="mt-6">
           <Button asChild>
             <Link to="/dashboard/new">
-              <Play className="size-4 fill-current" aria-hidden="true" />
               Start a new interview
               <ArrowRight className="size-4" aria-hidden="true" />
             </Link>

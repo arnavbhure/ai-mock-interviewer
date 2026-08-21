@@ -36,7 +36,7 @@ export function TopBar({ title, subtitle, onOpenMobile }: TopBarProps) {
   );
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-4 border-b border-border bg-surface/80 px-4 sm:px-6 backdrop-blur supports-[backdrop-filter]:bg-surface/70">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-4 border-b border-border bg-background/80 px-4 sm:px-6 lg:px-10 backdrop-blur supports-[backdrop-filter]:bg-background/75">
       <button
         type="button"
         onClick={onOpenMobile}
@@ -73,7 +73,7 @@ export function TopBar({ title, subtitle, onOpenMobile }: TopBarProps) {
               className="flex h-9 shrink-0 items-center gap-2 rounded-lg pl-1 pr-1.5 text-text-secondary hover:bg-surface-elevated hover:text-text transition-colors duration-base ease-premium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label="Open profile menu"
             >
-              <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+              <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-background-secondary text-xs font-semibold text-text">
                 {initials || <User className="size-3.5" aria-hidden="true" />}
               </span>
               <span className="hidden md:flex max-w-[12rem] flex flex-col items-start text-left">

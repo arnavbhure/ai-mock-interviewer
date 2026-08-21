@@ -24,7 +24,6 @@ export function ShinyText({
     <span
       className={cn("shiny-text", disabled && "shiny-text--disabled", className)}
       style={{ animationDuration: `${speed}s` }}
-      aria-hidden={disabled ? undefined : true}
     >
       {text}
     </span>

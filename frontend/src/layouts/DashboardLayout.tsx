@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/TopBar";
@@ -6,7 +6,7 @@ import { TopBar } from "@/components/dashboard/TopBar";
 const SIDEBAR_KEY = "interviewai-sidebar-collapsed";
 
 const PAGE_META: Record<string, { title: string; subtitle?: string }> = {
-  "/dashboard": { title: "Dashboard", subtitle: "Performance overview" },
+  "/dashboard": { title: "Dashboard" },
   "/dashboard/new": { title: "New interview", subtitle: "Set up your practice session" },
   "/interviews": { title: "Interviews", subtitle: "All practice sessions" },
   "/reports": { title: "Reports", subtitle: "Detailed performance breakdowns" },
@@ -38,6 +38,13 @@ export function DashboardLayout() {
     }
   }
 
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
   const meta = PAGE_META[location.pathname] ?? { title: "Dashboard" };
 
   return (
@@ -48,7 +55,7 @@ export function DashboardLayout() {
         mobileOpen={mobileOpen}
         onCloseMobile={() => setMobileOpen(false)}
       />
-      <div className="min-w-0 flex-1 flex flex-col">
+      <div className="flex min-w-0 flex-1 flex-col transition-[margin] duration-300 ease-premium motion-reduce:transition-none">
         <TopBar
           title={meta.title}
           subtitle={meta.subtitle}
@@ -61,4 +68,3 @@ export function DashboardLayout() {
     </div>
   );
 }
-
