@@ -1,5 +1,12 @@
 import axios from "axios";
 import { toastError } from "@/components/ui/toast";
+
+declare module "axios" {
+  interface AxiosRequestConfig {
+    skipErrorToast?: boolean;
+  }
+}
+
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const api = axios.create({

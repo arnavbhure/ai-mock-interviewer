@@ -3,61 +3,61 @@
 
 @theme inline {
   /* ========================================
-   INTERVIEWAI — LIGHT VIOLET THEME
+   INTERVIEWAI — NEUTRAL LIGHT THEME
    ======================================== */
 
-  --color-background: #f8f6fc;
-  --color-background-secondary: #f1edf8;
+  --color-background: #f7f8fa;
+  --color-background-secondary: #f0f1f4;
 
   /* ========================================
    SURFACES
    ======================================== */
 
   --color-surface: #ffffff;
-  --color-surface-elevated: #fbfafe;
+  --color-surface-elevated: #fafbfc;
 
   /* ========================================
    TEXT
    ======================================== */
 
-  --color-text: #19151f;
-  --color-text-secondary: #5f5869;
-  --color-text-muted: #8d8797;
+  --color-text: #111827;
+  --color-text-secondary: #667085;
+  --color-text-muted: #98a2b3;
 
   /* ========================================
-   PRIMARY — ELECTRIC VIOLET
+   PRIMARY — DEEP INDIGO
    ======================================== */
 
-  --color-primary: #845ec2;
-  --color-primary-bright: #956dd0;
-  --color-primary-soft: #c7b3e5;
+  --color-primary: #4f46e5;
+  --color-primary-bright: #6366f1;
+  --color-primary-soft: #e0e7ff;
   --color-primary-foreground: #ffffff;
 
   /* ========================================
-   ACCENT — SOFT LAVENDER
+   ACCENT — SOFT NEUTRAL
    ======================================== */
 
-  --color-accent: #b39cd0;
-  --color-accent-bright: #c4afe0;
-  --color-accent-soft: #e8dff2;
-  --color-accent-foreground: #19151f;
+  --color-accent: #eef0f3;
+  --color-accent-bright: #f1f2f6;
+  --color-accent-soft: #f6f7f9;
+  --color-accent-foreground: #111827;
 
   /* ========================================
    BORDERS
    ======================================== */
 
-  --color-border: #e3ddeb;
-  --color-border-hover: #d2c7df;
-  --color-border-focus: #845ec2;
+  --color-border: #e5e7eb;
+  --color-border-hover: #d1d5db;
+  --color-border-focus: #4f46e5;
 
   /* ========================================
    STATUS
    ======================================== */
 
-  --color-success: #55a982;
-  --color-warning: #d79a52;
-  --color-error: #d96873;
-  --color-destructive: #d96873;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+  --color-destructive: #dc2626;
   --color-destructive-foreground: #ffffff;
 
   /* ========================================
@@ -88,16 +88,16 @@
   /* Radius */
   --radius-button: 8px;
   --radius-input: 8px;
-  --radius-card: 12px;
-  --radius-large: 16px;
+  --radius-card: 10px;
+  --radius-large: 14px;
   --radius-pill: 999px;
 
   /* Shadows - Restrained */
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
-  --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.2);
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --shadow-hover: 0 2px 4px rgba(16, 24, 40, 0.05), 0 8px 24px rgba(16, 24, 40, 0.08);
   --shadow-modal:
-    0 20px 48px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-navbar: 0 1px 2px rgba(0, 0, 0, 0.3);
+    0 24px 48px rgba(16, 24, 40, 0.12), 0 4px 12px rgba(16, 24, 40, 0.08);
+  --shadow-navbar: 0 1px 2px rgba(16, 24, 40, 0.05);
 
   /* Transitions */
   --ease-premium: cubic-bezier(0.16, 1, 0.3, 1);

@@ -1,12 +1,15 @@
 import { Route, Routes } from "react-router-dom";
+import { Briefcase, FileText, HelpCircle, Settings, TrendingUp } from "lucide-react";
 import { LoginPage } from "@/auth/login";
 import { RegisterPage } from "@/auth/register";
 import { VerifyOtpPage } from "@/auth/verify-otp";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { DashboardPage } from "@/pages/DashboardPage";
+import { FeaturePlaceholderPage } from "@/pages/FeaturePlaceholderPage";
 import { FoundationStatusPage } from "@/pages/FoundationStatusPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
+import { SetupInterviewPage } from "@/pages/SetupInterviewPage";
 import ProtectedRoute from "./ProtectedRoute";
 
 export function AppRouter() {
@@ -23,6 +26,57 @@ export function AppRouter() {
       <Route element={<ProtectedRoute />}>
         <Route element={<DashboardLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/dashboard/new" element={<SetupInterviewPage />} />
+          <Route
+            path="/interviews"
+            element={
+              <FeaturePlaceholderPage
+                title="Interviews"
+                description="Your complete interview history and upcoming sessions will live here."
+                icon={Briefcase}
+              />
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <FeaturePlaceholderPage
+                title="Reports"
+                description="Deep-dive performance breakdowns for every interview you've completed."
+                icon={FileText}
+              />
+            }
+          />
+          <Route
+            path="/progress"
+            element={
+              <FeaturePlaceholderPage
+                title="Progress"
+                description="Follow how each skill grows over time and decide where to focus next."
+                icon={TrendingUp}
+              />
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <FeaturePlaceholderPage
+                title="Settings"
+                description="Manage your account, target roles, and practice preferences."
+                icon={Settings}
+              />
+            }
+          />
+          <Route
+            path="/help"
+            element={
+              <FeaturePlaceholderPage
+                title="Help & support"
+                description="Guides and answers to help you get the most out of InterviewAI."
+                icon={HelpCircle}
+              />
+            }
+          />
         </Route>
       </Route>
     </Routes>

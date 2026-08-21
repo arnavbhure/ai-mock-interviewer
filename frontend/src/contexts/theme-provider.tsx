@@ -6,9 +6,9 @@ type ThemeProviderProps = {
 };
 
 function applyTheme() {
-  document.documentElement.classList.add("dark");
-  document.documentElement.dataset.theme = "dark";
-  document.documentElement.style.colorScheme = "dark";
+  document.documentElement.classList.remove("dark");
+  document.documentElement.dataset.theme = "light";
+  document.documentElement.style.colorScheme = "light";
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {

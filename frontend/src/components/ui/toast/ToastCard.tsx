@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import type { Toast as HotToast } from "react-hot-toast";
 import { ToastCloseButton } from "@/components/ui/toast/ToastCloseButton";
 import { ToastIcon, type ToastType } from "@/components/ui/toast/ToastIcon";
@@ -22,24 +22,26 @@ const toastMotion = {
 };
 
 export function ToastCard({ t, type, message }: ToastCardProps) {
+  const reduced = useReducedMotion();
+
   return (
     <motion.div
       layout
-      initial={toastMotion.initial}
-      animate={toastMotion.animate}
-      exit={toastMotion.exit}
+      initial={reduced ? undefined : toastMotion.initial}
+      animate={reduced ? undefined : toastMotion.animate}
+      exit={reduced ? undefined : toastMotion.exit}
       transition={toastMotion.transition}
       role="status"
       aria-live="polite"
-      className="pointer-events-auto flex w-full max-w-[380px] items-center gap-3 rounded-large border border-border bg-surface p-4 text-text shadow-modal"
+      className="pointer-events-auto flex w-full max-w-[380px] items-start gap-3 rounded-large border border-border bg-surface p-4 text-text shadow-modal"
     >
-      <ToastIcon type={type} />
+      <ToastIcon type={type} className="flex-shrink-0 mt-0.5" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium leading-snug text-text">
+        <p className="text-sm font-medium leading-snug text-text whitespace-normal break-words">
           {message.title}
         </p>
         {message.description ? (
-          <p className="mt-0.5 text-sm leading-snug text-text-secondary">
+          <p className="mt-0.5 text-sm leading-snug text-text-secondary whitespace-normal break-words">
             {message.description}
           </p>
         ) : null}
