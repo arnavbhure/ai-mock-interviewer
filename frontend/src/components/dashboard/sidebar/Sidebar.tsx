@@ -113,7 +113,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onCloseMobil
             "fixed top-0 bottom-0 left-0 z-50 w-[240px]",
             "transition-[width,transform] duration-300 ease-premium",
             "shadow-[0_1px_3px_rgba(16,24,40,0.08),0_8px_24px_rgba(16,24,40,0.12)] lg:shadow-none",
-            mobileOpen ? "translate-x-0" : "-translate-x-full",
+            mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
             // Desktop: in-flow, sticky, retractable width
             "lg:h-dvh lg:sticky lg:top-0",
             collapsed ? "lg:w-[72px]" : "lg:w-[240px]",
