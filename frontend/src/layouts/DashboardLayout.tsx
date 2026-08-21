@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/TopBar";
+import dashboardBg from "@/assets/background_image_dashboard.png";
 
 const SIDEBAR_KEY = "interviewai-sidebar-collapsed";
 
@@ -61,8 +62,24 @@ export function DashboardLayout() {
           subtitle={meta.subtitle}
           onOpenMobile={() => setMobileOpen(true)}
         />
-        <main className="min-w-0 flex-1">
-          <Outlet />
+        <main
+          className="relative min-w-0 flex-1"
+          style={{
+            backgroundImage: `url(${dashboardBg})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundAttachment: "fixed",
+            backgroundRepeat: "no-repeat",
+          }}
+        >
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ backgroundColor: "rgba(247, 248, 250, 0.12)" }}
+            aria-hidden="true"
+          />
+          <div className="relative">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
