@@ -51,7 +51,7 @@ export function StartInterviewPanel({ hasData, className }: StartInterviewPanelP
           {hasData && (
             <Link
               to="/interviews"
-              className="inline-flex h-11 items-center justify-center px-2 text-sm font-medium text-text-secondary transition-colors duration-base ease-premium hover:text-text"
+              className="inline-flex h-11 items-center justify-center px-2 text-sm font-medium text-text-muted transition-colors duration-base ease-premium hover:text-text"
             >
               Previous interviews
             </Link>

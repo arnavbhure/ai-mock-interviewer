@@ -1,7 +1,6 @@
 import { useReducedMotion } from "framer-motion";
 import TextType from "@/components/TextType/TextType";
 import { ShinyText } from "@/components/ShinyText/ShinyText";
-import { TextLoop } from "@/components/TextLoop/TextLoop";
 
 type DashboardHeaderProps = {
   name: string;
@@ -43,17 +42,6 @@ export function DashboardHeader({ name }: DashboardHeaderProps) {
       <p className="mt-2 max-w-xl text-sm leading-6 text-text-secondary">
         Review how you are performing, then start your next session.
       </p>
-      <TextLoop
-        text="Interview practice  ·  Technical skills  ·  Communication  ·  Confidence"
-        shape="linear"
-        speed={40}
-        fontSize={12}
-        fontWeight={500}
-        letterSpacing={0.4}
-        uppercase={false}
-        pauseOnHover
-        className="mt-8 opacity-50"
-      />
     </header>
   );
 }

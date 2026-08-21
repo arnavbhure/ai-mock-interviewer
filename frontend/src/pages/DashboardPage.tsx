@@ -9,6 +9,7 @@ import {
   StartInterviewPanel,
   StatCards,
 } from "@/components/dashboard";
+import { TextLoop } from "@/components/TextLoop/TextLoop";
 
 export function DashboardPage() {
   const reduced = useReducedMotion();
@@ -30,12 +31,31 @@ export function DashboardPage() {
         <DashboardHeader name={displayName} />
       </motion.div>
 
+      {/* TextLoop — subtle decorative separator that extends behind sidebar */}
+      <div
+        className="pointer-events-none relative z-[-1] my-6"
+        style={{ marginLeft: 'calc(-50vw + 50%)' }}
+        aria-hidden="true"
+      >
+        <TextLoop
+          text="Interview practice  ·  Technical skills  ·  Communication  ·  Confidence"
+          shape="linear"
+          speed={40}
+          fontSize={12}
+          fontWeight={500}
+          letterSpacing={0.4}
+          uppercase={false}
+          pauseOnHover={false}
+          className="opacity-50"
+        />
+      </div>
+
       <motion.div
         initial={enter}
         animate={shown}
         transition={{ duration: 0.35, ease, delay: reduced ? 0 : 0.04 }}
       >
-        <StatCards hasData={HAS_INTERVIEWS} className="mt-12 border-t border-border pt-10" />
+        <StatCards hasData={HAS_INTERVIEWS} className="mt-8 border-t border-border pt-8" />
       </motion.div>
 
       <motion.div

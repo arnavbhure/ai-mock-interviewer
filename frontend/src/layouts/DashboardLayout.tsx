@@ -63,7 +63,7 @@ export function DashboardLayout() {
           onOpenMobile={() => setMobileOpen(true)}
         />
         <main
-          className="relative min-w-0 flex-1"
+          className="relative z-0 min-w-0 flex-1"
           style={{
             backgroundImage: `url(${dashboardBg})`,
             backgroundSize: "cover",
