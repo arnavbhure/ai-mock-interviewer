@@ -1,22 +1,22 @@
-import * as Tooltip from "@radix-ui/react-tooltip";
-import { Link, NavLink } from "react-router-dom";
+"use client";
+
 import {
   Briefcase,
-  ChevronsLeft,
-  ChevronsRight,
+  ChevronLeft,
+  ChevronRight,
   FileText,
   HelpCircle,
   LayoutDashboard,
   Settings,
+  Sparkles,
   TrendingUp,
-  User,
   X,
 } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth.store";
 import { SidebarNavItem } from "./SidebarNavItem";
 import { SidebarTooltip } from "./SidebarTooltip";
-import logoMark from "@/public/Logo.png";
 
 type SidebarProps = {
   collapsed: boolean;
@@ -32,235 +32,69 @@ const PRIMARY_NAV = [
   { to: "/progress", label: "Progress", icon: TrendingUp },
 ] as const;
 
-const UTILITY_NAV = [
+const SECONDARY_NAV = [
   { to: "/settings", label: "Settings", icon: Settings },
   { to: "/help", label: "Help", icon: HelpCircle },
 ] as const;
 
-function BrandMark() {
+function BrandLogo({ collapsed }: { collapsed: boolean }) {
   return (
-    <span
-      className="inline-flex size-8 shrink-0 items-center justify-center rounded-[9px] bg-primary text-primary-foreground"
-      aria-hidden="true"
-    >
-      <Link
-        to="/"
-        aria-label="InterviewAI home"
-        className="inline-flex items-center mb-8"
-      >
-        <img
-          alt="InterviewAI logo"
-          src={logoMark}
-          className="h-10 w-auto object-contain"
-        />
-      </Link>
-    </span>
-  );
-}
-
-/** Labels inside nav links slide and fade out when the rail collapses. */
-function NavLabel({
-  show,
-  className,
-  children,
-}: {
-  show: boolean;
-  className?: string;
-  children: string;
-}) {
-  return (
-    <span
+    <Link
+      to="/dashboard"
       className={cn(
-        "min-w-0 overflow-hidden whitespace-nowrap",
-        "transition-opacity duration-200 ease-out",
-        show ? "flex-1 opacity-100" : "w-0 opacity-0",
-        className,
+        "flex h-12 items-center gap-3 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg",
+        collapsed ? "justify-center px-0 w-full" : "px-1",
       )}
-      aria-hidden={show ? undefined : true}
     >
-      <span
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+        <Sparkles className="size-5" />
+      </div>
+      <div
         className={cn(
-          "truncate",
-          show && "transition-[transform] duration-200 ease-out",
+          "flex flex-col min-w-0 overflow-hidden whitespace-nowrap transition-all duration-300",
+          collapsed ? "w-0 opacity-0" : "w-auto opacity-100",
         )}
       >
-        {children}
-      </span>
-    </span>
+        <span className="text-base font-bold tracking-tight text-text">InterviewAI</span>
+                <span className="text-[10px] font-medium text-text-muted uppercase tracking-wider">
+          Candidate Portal
+        </span>
+      </div>
+    </Link>
   );
 }
 
-export function Sidebar({
-  collapsed,
-  onToggleCollapsed,
-  mobileOpen,
-  onCloseMobile,
-}: SidebarProps) {
+function UserProfileCard({ collapsed }: { collapsed: boolean }) {
   const user = useAuthStore((state) => state.user);
-  const name = user?.name?.trim() || "Candidate";
-  const cleanName = name;
-  const initials = cleanName
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-
-  // The mobile drawer always shows the expanded rail.
-  const showExpanded = mobileOpen || !collapsed;
+  const name = user?.name || "Arnav Bhure";
+  const initials = name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
 
   return (
-    <>
+    <SidebarTooltip label={name} disabled={!collapsed}>
       <div
-        aria-hidden="true"
-        onClick={onCloseMobile}
         className={cn(
-          "fixed inset-0 z-40 bg-[#111827]/40 backdrop-blur-[2px] transition-opacity duration-300 ease-premium lg:hidden",
-          mobileOpen
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none",
+          "flex items-center rounded-lg p-2 transition-all duration-300 bg-surface-elevated/50 border border-border/50",
+          collapsed ? "justify-center px-0" : "gap-3 px-2.5 py-2",
         )}
-      />
-      <Tooltip.Provider delayDuration={250} skipDelayDuration={150}>
-        <aside
-          aria-label="App navigation"
+      >
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+          {initials}
+        </div>
+        <div
           className={cn(
-            "flex flex-col overflow-y-auto border-r border-border bg-surface",
-            // Mobile: off-canvas drawer
-            "fixed top-0 bottom-0 left-0 z-50 w-[240px]",
-            "transition-[width,transform] duration-300 ease-premium",
-            "shadow-[0_1px_3px_rgba(16,24,40,0.08),0_8px_24px_rgba(16,24,40,0.12)] lg:shadow-none",
-            mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-            // Desktop: in-flow, sticky, retractable width
-            "lg:h-dvh lg:sticky lg:top-0",
-            collapsed ? "lg:w-[72px]" : "lg:w-[240px]",
+            "flex flex-col min-w-0 overflow-hidden whitespace-nowrap transition-all duration-300",
+            collapsed ? "w-0 opacity-0" : "w-auto opacity-100 flex-1",
           )}
         >
-          {/* Brand */}
-          <div className="flex h-16 shrink-0 items-center border-b border-border">
-            <NavLink
-              to="/dashboard"
-              onClick={onCloseMobile}
-              aria-label="InterviewAI dashboard"
-              className={cn(
-                "flex h-full min-w-0 flex-1 items-center",
-                showExpanded ? "gap-3 px-5" : "justify-center px-0",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              )}
-            >
-              <BrandMark />
-              <NavLabel
-                show={showExpanded}
-                className="text-[15px] font-semibold tracking-tight text-text"
-              >
-                InterviewAI
-              </NavLabel>
-            </NavLink>
-            <button
-              type="button"
-              onClick={onCloseMobile}
-              className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-text-muted lg:hidden transition-colors duration-base ease-premium hover:bg-surface-elevated hover:text-text"
-              aria-label="Close menu"
-            >
-              <X className="size-4" aria-hidden="true" />
-            </button>
-          </div>
-
-          {/* Primary navigation */}
-          <nav aria-label="Primary" className="flex flex-col gap-1 px-3 pt-5">
-            {PRIMARY_NAV.map((item) => (
-              <SidebarNavItem
-                key={item.to}
-                {...item}
-                collapsed={!showExpanded}
-                onClick={onCloseMobile}
-              />
-            ))}
-          </nav>
-
-          {/* Separator before the secondary / foot cluster */}
-          <div aria-hidden="true" className="mx-3 my-4 h-[1px] bg-border" />
-
-          <div className="mt-auto flex flex-col px-3">
-            {UTILITY_NAV.map((item) => (
-              <SidebarNavItem
-                key={item.to}
-                {...item}
-                collapsed={!showExpanded}
-                onClick={onCloseMobile}
-              />
-            ))}
-          </div>
-
-          {/* User profile */}
-          <div className="border-t border-border px-2 pt-1 pb-2">
-            <SidebarTooltip label={cleanName} disabled={showExpanded}>
-              <NavLink
-                to="/settings"
-                onClick={onCloseMobile}
-                aria-label={`Profile · ${cleanName}`}
-                className={cn(
-                  "flex h-12 min-w-0 items-center rounded-lg",
-                  showExpanded ? "gap-3 px-3" : "justify-center px-0",
-                  "transition-colors duration-base ease-premium hover:bg-surface-elevated",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                )}
-              >
-                <span
-                  className={cn(
-                    "inline-flex size-8 shrink-0 items-center justify-center rounded-full",
-                    "bg-primary/10 text-sm font-semibold text-primary",
-                  )}
-                >
-                  {initials || <User className="size-4" aria-hidden="true" />}
-                </span>
-                <span
-                  className={cn(
-                    "min-w-0 overflow-hidden whitespace-nowrap transition-opacity duration-200 ease-out",
-                    showExpanded ? "flex-1 opacity-100" : "w-0 opacity-0",
-                  )}
-                  aria-hidden={!showExpanded}
-                >
-                  <span className="flex flex-col items-start w-full">
-                    <span className="truncate text-sm font-medium text-text">
-                      {cleanName}
-                    </span>
-                    <span className="truncate text-xs text-text-muted">
-                      Candidate
-                    </span>
-                  </span>
-                </span>
-              </NavLink>
-            </SidebarTooltip>
-
-            {/* Collapse control — belongs to the sidebar */}
-            <button
-              type="button"
-              onClick={onToggleCollapsed}
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              aria-expanded={!collapsed}
-              className={cn(
-                "flex h-9 min-w-0 items-center rounded-lg transition-colors duration-base ease-premium hidden lg:flex",
-                showExpanded ? "gap-3 px-3" : "justify-center px-0",
-                "text-text-muted hover:bg-surface-elevated hover:text-text",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              )}
-            >
-              {collapsed ? (
-                <ChevronsRight className="size-4 shrink-0" aria-hidden="true" />
-              ) : (
-                <>
-                  <ChevronsLeft
-                    className="size-4 shrink-0"
-                    aria-hidden="true"
-                  />
-                  <span className="text-xs font-medium">Collapse</span>
-                </>
-              )}
-            </button>
-          </div>
-        </aside>
-      </Tooltip.Provider>
-    </>
+          <span className="text-xs font-semibold text-text truncate">{name}</span>
+          <span className="text-[11px] text-text-muted truncate">Candidate</span>
+        </div>
+      </div>
+    </SidebarTooltip>
   );
 }
