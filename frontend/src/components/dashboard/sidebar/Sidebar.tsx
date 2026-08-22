@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth.store";
 import { SidebarNavItem } from "./SidebarNavItem";
 import { SidebarTooltip } from "./SidebarTooltip";
+import Logo from "../../../public/Logo.png";
 
 type SidebarProps = {
   collapsed: boolean;
@@ -39,37 +40,11 @@ const SECONDARY_NAV = [
 
 function BrandMark({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 32 32"
-      className={cn("shrink-0 text-text", className)}
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M7 22V12.5"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-      <path
-        d="M12.5 22V8"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-      <path
-        d="M18 22V11"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-      <path
-        d="M23.5 22V15"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-    </svg>
+    <img
+      src={Logo}
+      alt="InterviewAI"
+      className={cn("shrink-0 object-contain", className)}
+    />
   );
 }
 
@@ -98,7 +73,9 @@ export function Sidebar({
         className={cn(
           "fixed inset-0 z-40 bg-[#111827]/40 backdrop-blur-[2px] lg:hidden",
           "transition-opacity duration-300 ease-premium motion-reduce:transition-none",
-          mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
+          mobileOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none",
         )}
       />
 
@@ -131,7 +108,7 @@ export function Sidebar({
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               )}
             >
-              <BrandMark className="size-8" />
+              <BrandMark className="size-15" />
               <span
                 className={cn(
                   "min-w-0 overflow-hidden whitespace-nowrap",
@@ -156,7 +133,10 @@ export function Sidebar({
 
           <nav
             aria-label="Primary"
-            className={cn("flex flex-col gap-0.5 pt-2", showLabels ? "px-3" : "px-0")}
+            className={cn(
+              "flex flex-col gap-0.5 pt-2",
+              showLabels ? "px-3" : "px-0",
+            )}
           >
             {PRIMARY_NAV.map((item) => (
               <SidebarNavItem
@@ -179,7 +159,10 @@ export function Sidebar({
 
             <nav
               aria-label="Account"
-              className={cn("flex flex-col gap-0.5", showLabels ? "px-3" : "px-0")}
+              className={cn(
+                "flex flex-col gap-0.5",
+                showLabels ? "px-3" : "px-0",
+              )}
             >
               {SECONDARY_NAV.map((item) => (
                 <SidebarNavItem
@@ -199,13 +182,17 @@ export function Sidebar({
                   aria-label={`Profile · ${name}`}
                   className={cn(
                     "flex h-10 items-center rounded-lg",
-                    showLabels ? "gap-3 px-3" : "mx-auto size-10 justify-center px-0",
+                    showLabels
+                      ? "gap-3 px-3"
+                      : "mx-auto size-10 justify-center px-0",
                     "transition-colors duration-base ease-premium hover:bg-background-secondary",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   )}
                 >
                   <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-background-secondary text-[11px] font-semibold text-text">
-                    {initials || <User className="size-3.5" aria-hidden="true" />}
+                    {initials || (
+                      <User className="size-3.5" aria-hidden="true" />
+                    )}
                   </span>
                   <span
                     className={cn(
@@ -215,7 +202,9 @@ export function Sidebar({
                     )}
                     aria-hidden={!showLabels}
                   >
-                    <span className="block truncate text-sm font-medium text-text">{name}</span>
+                    <span className="block truncate text-sm font-medium text-text">
+                      {name}
+                    </span>
                   </span>
                 </NavLink>
               </SidebarTooltip>
@@ -230,7 +219,9 @@ export function Sidebar({
                   "hover:bg-background-secondary hover:text-text",
                   "transition-colors duration-base ease-premium",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  showLabels ? "w-full gap-3 px-3" : "mx-auto size-10 justify-center px-0",
+                  showLabels
+                    ? "w-full gap-3 px-3"
+                    : "mx-auto size-10 justify-center px-0",
                 )}
               >
                 <ChevronsLeft
