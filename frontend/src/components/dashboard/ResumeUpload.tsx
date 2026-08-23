@@ -17,7 +17,11 @@ const formatFileSize = (bytes: number): string => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-export function ResumeUpload({ file, onFileChange, onRemove }: ResumeUploadProps) {
+export function ResumeUpload({
+  file,
+  onFileChange,
+  onRemove,
+}: ResumeUploadProps) {
   const reduced = useReducedMotion();
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -83,7 +87,9 @@ export function ResumeUpload({ file, onFileChange, onRemove }: ResumeUploadProps
               <FileText className="h-5 w-5" aria-hidden="true" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-text">{file.name}</p>
+              <p className="truncate text-sm font-medium text-text">
+                {file.name}
+              </p>
               <p className="mt-0.5 text-caption text-text-muted">
                 {formatFileSize(file.size)} · PDF
               </p>
@@ -137,7 +143,7 @@ export function ResumeUpload({ file, onFileChange, onRemove }: ResumeUploadProps
             />
             <p className="text-sm font-medium text-text">Upload your resume</p>
             <p className="mt-1 text-caption text-text-muted">
-              Drag & drop or browse · PDF only · Max 10MB
+              Drag & drop or browse · PDF only · Max 6 MB
             </p>
           </motion.button>
         )}

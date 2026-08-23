@@ -2,13 +2,16 @@ import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/TopBar";
-import dashboardBg from "@/assets/background_image_dashboard.png";
+import dashboardBg from "@/assets/background_image_dashboard.jpg";
 
 const SIDEBAR_KEY = "interviewai-sidebar-collapsed";
 
 const PAGE_META: Record<string, { title: string; subtitle?: string }> = {
   "/dashboard": { title: "Dashboard" },
-  "/dashboard/new": { title: "New interview", subtitle: "Set up your practice session" },
+  "/dashboard/new": {
+    title: "New interview",
+    subtitle: "Set up your practice session",
+  },
   "/interviews": { title: "Interviews", subtitle: "All practice sessions" },
   "/reports": { title: "Reports", subtitle: "Detailed performance breakdowns" },
   "/progress": { title: "Progress", subtitle: "Skill development over time" },
@@ -74,7 +77,7 @@ export function DashboardLayout() {
         >
           <div
             className="pointer-events-none absolute inset-0"
-            style={{ backgroundColor: "rgba(247, 248, 250, 0.12)" }}
+            style={{ backgroundColor: "rgba(247, 248, 250, 0.30)" }}
             aria-hidden="true"
           />
           <div className="relative">
