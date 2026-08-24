@@ -52,7 +52,16 @@ export function DashboardLayout() {
   const meta = PAGE_META[location.pathname] ?? { title: "Dashboard" };
 
   return (
-    <div className="flex min-h-dvh bg-background text-text">
+    <div
+      className="flex min-h-dvh text-text"
+      style={{
+        backgroundImage: `url(${dashboardBg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
       <Sidebar
         collapsed={collapsed}
         onToggleCollapsed={toggleCollapsed}
@@ -65,16 +74,7 @@ export function DashboardLayout() {
           subtitle={meta.subtitle}
           onOpenMobile={() => setMobileOpen(true)}
         />
-        <main
-          className="relative z-0 min-w-0 flex-1"
-          style={{
-            backgroundImage: `url(${dashboardBg})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundAttachment: "fixed",
-            backgroundRepeat: "no-repeat",
-          }}
-        >
+        <main className="relative min-w-0 flex-1">
           <div
             className="pointer-events-none absolute inset-0"
             style={{ backgroundColor: "rgba(247, 248, 250, 0.30)" }}

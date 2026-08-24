@@ -84,13 +84,14 @@ export function Sidebar({
           aria-label="App navigation"
           data-collapsed={collapsed ? "true" : "false"}
           className={cn(
-            "flex shrink-0 flex-col overflow-hidden border-r border-border bg-surface",
+            "flex shrink-0 flex-col overflow-hidden border-r border-border",
             "fixed inset-y-0 left-0 z-50 w-[260px]",
             "transition-[width,transform] duration-300 ease-premium motion-reduce:transition-none",
             mobileOpen ? "translate-x-0" : "-translate-x-full",
             "lg:static lg:z-[10] lg:h-dvh lg:translate-x-0 lg:sticky lg:top-0",
             collapsed ? "lg:w-[72px]" : "lg:w-[260px]",
           )}
+          style={{ backgroundColor: "rgba(255, 255, 255, 0.82)" }}
         >
           <div
             className={cn(

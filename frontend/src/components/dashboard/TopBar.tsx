@@ -36,7 +36,10 @@ export function TopBar({ title, subtitle, onOpenMobile }: TopBarProps) {
   );
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-4 border-b border-border bg-background/80 px-4 sm:px-6 lg:px-10 backdrop-blur supports-[backdrop-filter]:bg-background/75">
+    <header
+      className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-4 border-b border-border px-4 sm:px-6 lg:px-10"
+      style={{ backgroundColor: "rgba(255, 255, 255, 0.82)" }}
+    >
       <button
         type="button"
         onClick={onOpenMobile}
