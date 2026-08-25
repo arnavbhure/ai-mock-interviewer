@@ -51,11 +51,10 @@ export const createInterview = async (
   formData.append("difficulty", payload.difficulty);
   formData.append("resume", payload.resume);
 
-  const response = await api.post("/interviews/create", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-    skipErrorToast: true,
-  });
-  return response.data;
+  console.log({ payload }); return {
+    success: true,
+    message: "HELLO",
+    interview_id: "ffffffff",
+    redirect_url: "http://localhost:5173/interview"
+  }
 };

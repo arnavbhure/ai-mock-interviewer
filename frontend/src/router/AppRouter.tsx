@@ -10,6 +10,7 @@ import { FeaturePlaceholderPage } from "@/pages/FeaturePlaceholderPage";
 import { FoundationStatusPage } from "@/pages/FoundationStatusPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { SetupInterviewPage } from "@/pages/SetupInterviewPage";
+import { InterviewPage } from "@/pages/InterviewPage";
 import ProtectedRoute from "./ProtectedRoute";
 
 export function AppRouter() {
@@ -24,6 +25,7 @@ export function AppRouter() {
       </Route>
 
       <Route element={<ProtectedRoute />}>
+        <Route path="/interview" element={<InterviewPage />} />
         <Route element={<DashboardLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/dashboard/new" element={<SetupInterviewPage />} />

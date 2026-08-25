@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import type { DashboardFormValues } from "@/types/dashboard.types";
 import { MAX_FILE_SIZE, ACCEPTED_FILE_TYPES } from "@/types/dashboard.types";
@@ -34,6 +35,7 @@ function getApiErrorMessage(error: unknown): string {
 
 export function useDashboardForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   const form = useForm<DashboardFormValues>({
     defaultValues: {
@@ -111,6 +113,9 @@ export function useDashboardForm() {
       }
 
       toastSuccess(response.message || "Interview ready.");
+
+      // Transition into the interview preparation → live flow
+      navigate("/interview");
     } catch (error) {
       toastError(getApiErrorMessage(error), { id: toastId });
     } finally {
