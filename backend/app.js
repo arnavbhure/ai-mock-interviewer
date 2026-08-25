@@ -27,6 +27,8 @@ startCheckpointer();
 
 app.set("trust proxy", 1);
 
+io.use(socketAuthMiddleware);
+
 // For resume upload
 app.use("/api/resume", authMiddleware, resumeRouter);
 
