@@ -10,17 +10,25 @@ import type {
  * Replace these placeholder arrays with server data once the
  * reporting API is available.
  */
-export const HAS_INTERVIEWS = true;
+export const HAS_INTERVIEWS = false;
 
 export const DASHBOARD_STATS: DashboardStat[] = [
   { label: "Overall Score", value: "82%", context: "+6 pts vs last month" },
-  { label: "Interviews Completed", value: "12", context: "3 in the last 30 days" },
+  {
+    label: "Interviews Completed",
+    value: "12",
+    context: "3 in the last 30 days",
+  },
   { label: "Improvement", value: "+14%", context: "compared to 30 days ago" },
 ];
 
 export const EMPTY_DASHBOARD_STATS: DashboardStat[] = [
   { label: "Overall Score", value: "--", context: "No data yet" },
-  { label: "Interviews Completed", value: "0", context: "Complete your first interview" },
+  {
+    label: "Interviews Completed",
+    value: "0",
+    context: "Complete your first interview",
+  },
   { label: "Improvement", value: "--", context: "No data yet" },
 ];
 

@@ -2,7 +2,7 @@ const dotenv = require("dotenv");
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const { server, app } = require("./config/socket");
+const { server, app, io } = require("./config/socket");
 const { corsOptions } = require("./config/corsOption");
 const { errorHandler } = require("./middlewares/error.middleware");
 const { resumeRouter } = require("./routes/resumeRouter");
@@ -12,6 +12,7 @@ const { authMiddleware } = require("./middlewares/auth.middleware");
 const {
   startCheckpointer,
 } = require("./components/langgraph/config/startCheckpointer");
+const { socketAuthMiddleware } = require("./middlewares/socketAuth.middleware");
 
 dotenv.config();
 

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useDashboardForm } from "@/hooks/useDashboardForm";
 import { RoleInput } from "@/components/dashboard/RoleInput";
@@ -6,6 +6,7 @@ import { ResumeUpload } from "@/components/dashboard/ResumeUpload";
 import { DifficultySelector } from "@/components/dashboard/DifficultySelector";
 import { ReadinessIndicator } from "@/components/dashboard/ReadinessIndicator";
 import { StartInterviewCTA } from "@/components/dashboard/StartInterviewCTA";
+import socket from "@/socket/socket";
 
 function SetupStep({
   number,
@@ -27,6 +28,14 @@ function SetupStep({
 }
 
 export function SetupInterviewPage() {
+  useEffect(() => {
+    socket.connect();
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
   const reduced = useReducedMotion();
   const {
     form,
@@ -79,7 +88,10 @@ export function SetupInterviewPage() {
           <RoleInput
             value={watchedRole}
             onChange={(value) =>
-              form.setValue("role", value, { shouldValidate: true, shouldDirty: true })
+              form.setValue("role", value, {
+                shouldValidate: true,
+                shouldDirty: true,
+              })
             }
             error={form.formState.errors.role?.message}
           />
@@ -107,7 +119,10 @@ export function SetupInterviewPage() {
 
         <div className="space-y-5 border-t border-border pt-8">
           <ReadinessIndicator completed={getCompletionCount()} total={3} />
-          <StartInterviewCTA isValid={isFormValid} isSubmitting={isSubmitting} />
+          <StartInterviewCTA
+            isValid={isFormValid}
+            isSubmitting={isSubmitting}
+          />
         </div>
       </motion.form>
     </div>

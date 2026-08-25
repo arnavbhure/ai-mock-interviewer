@@ -1,10 +1,14 @@
 const {
   getLatestInterviewByUserId,
 } = require("../models/interview/getLatestInterviewOfCandidiate");
+const cookie = require("cookie");
+const jwt = require("jsonwebtoken");
 
 const socketAuthMiddleware = async (socket, next) => {
   try {
-    const token = socket.handshake.auth?.token;
+    console.log("Socket authentication middleware invoked.");
+    const cookies = cookie.parse(socket.handshake.headers.cookie || "");
+    const token = cookies.token;
     if (!token) {
       return next(new Error("Authentication token is required."));
     }

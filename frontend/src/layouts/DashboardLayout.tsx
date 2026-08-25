@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/TopBar";
-import dashboardBg from "@/assets/background_image_dashboard.jpg";
+import dashboardBg from "@/assets/background_image_dashboard.png";
 
 const SIDEBAR_KEY = "interviewai-sidebar-collapsed";
 

@@ -1,6 +1,8 @@
+import socket from "@/socket/socket";
 import api from "../axios";
 
 export const login = async (payload: { email: string; password: string }) => {
+  socket.connect();
   const response = await api.post("/auth/login", payload);
   return response.data;
 };
@@ -42,7 +44,7 @@ export interface CreateInterviewResponse {
 }
 
 export const createInterview = async (
-  payload: CreateInterviewPayload
+  payload: CreateInterviewPayload,
 ): Promise<CreateInterviewResponse> => {
   const formData = new FormData();
   formData.append("role", payload.role);
