@@ -27,7 +27,12 @@ const getLatestInterviewByInterviewId = async (interviewId) => {
       id,
       user_id,
       resume_id,
+      role,
+      difficulty,
       status,
+      current_round,
+      current_question,
+      interview_plan,
       created_at
     FROM interviews
     WHERE interview_id = $1

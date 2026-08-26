@@ -13,6 +13,7 @@ const {
   startCheckpointer,
 } = require("./components/langgraph/config/startCheckpointer");
 const { socketAuthMiddleware } = require("./middlewares/socketAuth.middleware");
+const { registerSocketHandlers } = require("./socket");
 
 dotenv.config();
 
@@ -27,7 +28,7 @@ startCheckpointer();
 
 app.set("trust proxy", 1);
 
-io.use(socketAuthMiddleware);
+registerSocketHandlers(io);
 
 // For resume upload
 app.use("/api/resume", authMiddleware, resumeRouter);
