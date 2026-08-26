@@ -34,7 +34,7 @@ export function DashboardPage() {
       {/* TextLoop — subtle decorative separator that extends behind sidebar */}
       <div
         className="pointer-events-none relative z-[-1] my-6"
-        style={{ marginLeft: 'calc(-50vw + 50%)' }}
+        style={{ marginLeft: "calc(-50vw + 50%)" }}
         aria-hidden="true"
       >
         <TextLoop
@@ -55,7 +55,10 @@ export function DashboardPage() {
         animate={shown}
         transition={{ duration: 0.35, ease, delay: reduced ? 0 : 0.04 }}
       >
-        <StatCards hasData={HAS_INTERVIEWS} className="mt-8 border-t border-border pt-8" />
+        <StatCards
+          hasData={HAS_INTERVIEWS}
+          className="mt-8 border-t border-border pt-8"
+        />
       </motion.div>
 
       <motion.div
@@ -72,8 +75,14 @@ export function DashboardPage() {
         transition={{ duration: 0.4, ease, delay: reduced ? 0 : 0.12 }}
       >
         <div className="mt-14 grid gap-12 lg:grid-cols-12 lg:gap-16">
-          <RecentInterviewsCard hasData={HAS_INTERVIEWS} className="lg:col-span-7" />
-          <SkillProgressCard hasData={HAS_INTERVIEWS} className="lg:col-span-5" />
+          <RecentInterviewsCard
+            hasData={HAS_INTERVIEWS}
+            className="lg:col-span-7"
+          />
+          <SkillProgressCard
+            hasData={HAS_INTERVIEWS}
+            className="lg:col-span-5"
+          />
         </div>
         {HAS_INTERVIEWS && (
           <PerformanceTrendCard className="mt-14 border-t border-border pt-10" />
