@@ -30,9 +30,6 @@ const initializeCheckpointer = async () => {
 
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-
-      // AWS RDS requires SSL in your current setup.
-      // For LOCAL DEVELOPMENT only.
       ssl: {
         rejectUnauthorized: false,
       },
@@ -45,7 +42,6 @@ const initializeCheckpointer = async () => {
     await checkpointer.setup();
 
     console.log("LangGraph PostgresSaver initialized successfully");
-
     return checkpointer;
   }
 

@@ -1,7 +1,7 @@
 const { Command } = require("@langchain/langgraph");
 const { main_graph } = require("../../components/langgraph/graph/main_graph");
 
-const submitAnswerService = async (interviewId, answer) => {
+const submitAnswerService = async ({ interviewId, answer }) => {
   if (!interviewId) {
     throw new Error("Interview ID is required.");
   }

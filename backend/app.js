@@ -2,6 +2,9 @@ const dotenv = require("dotenv");
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const {
+  startCheckpointer,
+} = require("./components/langgraph/config/startCheckpointer");
 const { server, app, io } = require("./config/socket");
 const { corsOptions } = require("./config/corsOption");
 const { errorHandler } = require("./middlewares/error.middleware");
@@ -9,10 +12,6 @@ const { resumeRouter } = require("./routes/resumeRouter");
 const { authRouter } = require("./routes/auth.router");
 const { interviewRouter } = require("./routes/interview.router");
 const { authMiddleware } = require("./middlewares/auth.middleware");
-const {
-  startCheckpointer,
-} = require("./components/langgraph/config/startCheckpointer");
-const { socketAuthMiddleware } = require("./middlewares/socketAuth.middleware");
 
 dotenv.config();
 
@@ -22,8 +21,6 @@ const PORT = process.env.PORT;
 
 app.use(express.json());
 app.use(cookieParser());
-
-startCheckpointer();
 
 app.set("trust proxy", 1);
 
@@ -42,6 +39,20 @@ app.get("/ping", (req, res) => {
 
 app.use(errorHandler); // always last
 
-server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+const startServer = async () => {
+  try {
+    await startCheckpointer();
+    const { registerSocketHandlers } = require("./socket");
+    registerSocketHandlers(io);
+
+    server.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Server startup failed:", error);
+
+    process.exit(1);
+  }
+};
+
+startServer();

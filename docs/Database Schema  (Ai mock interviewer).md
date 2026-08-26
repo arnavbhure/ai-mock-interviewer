@@ -47,7 +47,8 @@ CREATE TYPE interview_status AS ENUM (
 
 CREATE TABLE IF NOT EXISTS public.interviews
 (
-id uuid NOT NULL DEFAULT gen_random_uuid(),
+
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
 
     user_id uuid NOT NULL,
 
