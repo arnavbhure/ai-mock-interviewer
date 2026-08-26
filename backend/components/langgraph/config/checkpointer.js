@@ -60,7 +60,4 @@ const getCheckpointer = () => {
   return checkpointer;
 };
 
-module.exports = {
-  initializeCheckpointer,
-  getCheckpointer,
-};
+module.exports = { initializeCheckpointer, getCheckpointer };
