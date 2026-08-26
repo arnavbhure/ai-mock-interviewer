@@ -1,62 +1,76 @@
-import { create } from "zustand";
+﻿import { create } from "zustand";
 import type {
-  InterviewPhase,
-  InterviewSessionState,
-  OrbState,
-  PreparationStep,
-  InterviewQuestion,
+  InterviewState,
+  InterviewStore,
+  SetQuestionPayload,
+  FinalEvaluation,
 } from "@/types/interview.types";
 
-const INITIAL_STATE = {
-  phase: "PREPARATION" as InterviewPhase,
-  preparationStatus: "PREPARING" as const,
-  currentStep: "ANALYZING_RESUME" as PreparationStep,
-  completedSteps: [] as PreparationStep[],
-  preparationError: null as string | null,
-  orbState: "AI_SPEAKING" as OrbState,
-  currentQuestion: null as InterviewQuestion | null,
-  interviewId: null as string | null,
-  interviewType: "Technical Interview",
+const INITIAL_STATE: InterviewState = {
+  interviewId: null,
+  status: "idle",
+  currentRoundNumber: null,
+  currentQuestionNumber: null,
+  currentDifficulty: null,
+  currentQuestion: null,
+  answer: "",
+  finalEvaluation: null,
+  error: null,
 };
 
-export const useInterviewStore = create<InterviewSessionState>((set) => ({
+export const useInterviewStore = create<InterviewStore>((set) => ({
   ...INITIAL_STATE,
 
-  startPreparation: () =>
+  startInterview: (interviewId?: string) =>
     set({
-      phase: "PREPARATION",
-      preparationStatus: "PREPARING",
-      currentStep: "ANALYZING_RESUME",
-      completedSteps: [],
-      preparationError: null,
+      status: "starting",
+      interviewId: interviewId ?? null,
+      error: null,
     }),
 
-  advanceStep: (step: PreparationStep) =>
-    set((state) => ({
-      currentStep: step,
-      completedSteps: state.completedSteps.includes(state.currentStep)
-        ? state.completedSteps
-        : [...state.completedSteps, state.currentStep],
-    })),
+  setQuestion: (payload: SetQuestionPayload) =>
+    set((state) => {
+      const questionObj =
+        typeof payload.question === "string"
+          ? { text: payload.question }
+          : payload.question;
 
-  completePreparation: () =>
-    set((state) => ({
-      preparationStatus: "READY",
-      currentStep: "COMPLETE",
-      completedSteps: [...state.completedSteps, "PREPARING_INTERVIEWER"],
-    })),
+      return {
+        status: "active",
+        currentRoundNumber:
+          payload.roundNumber !== undefined
+            ? payload.roundNumber
+            : state.currentRoundNumber,
+        currentQuestionNumber:
+          payload.questionNumber !== undefined
+            ? payload.questionNumber
+            : (questionObj?.questionNumber ?? state.currentQuestionNumber),
+        currentDifficulty:
+          payload.difficulty !== undefined
+            ? payload.difficulty
+            : state.currentDifficulty,
+        currentQuestion: questionObj,
+        answer: "",
+        error: null,
+      };
+    }),
 
-  setPhase: (phase: InterviewPhase) => set({ phase }),
+  setAnswer: (answer: string) => set({ answer }),
 
-  setOrbState: (orbState: OrbState) => set({ orbState }),
+  submitAnswer: () => set({ status: "submitting" }),
 
-  setQuestion: (currentQuestion: InterviewQuestion) =>
-    set({ currentQuestion }),
+  setCompleted: (finalEvaluation: FinalEvaluation) =>
+    set({
+      status: "completed",
+      finalEvaluation,
+      error: null,
+    }),
 
-  setPreparationError: (error: string) =>
-    set({ preparationStatus: "ERROR", preparationError: error }),
-
-  endInterview: () => set({ phase: "COMPLETED" }),
+  setError: (error: string) =>
+    set({
+      status: "error",
+      error,
+    }),
 
   reset: () => set({ ...INITIAL_STATE }),
 }));

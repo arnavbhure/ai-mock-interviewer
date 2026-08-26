@@ -1,79 +1,61 @@
-/* ==========================================================
-   INTERVIEW FLOW — TYPE DEFINITIONS
+﻿/* ==========================================================
+   INTERVIEW SESSION — TYPE DEFINITIONS (V1 Real-Time)
    ========================================================== */
 
-// ── Preparation ──────────────────────────────────────────────
+export type InterviewStatus =
+  | "idle"
+  | "starting"
+  | "active"
+  | "submitting"
+  | "completed"
+  | "error";
 
-export const PREPARATION_STEPS = [
-  "ANALYZING_RESUME",
-  "UNDERSTANDING_EXPERIENCE",
-  "BUILDING_PLAN",
-  "PREPARING_QUESTIONS",
-  "PREPARING_INTERVIEWER",
-  "COMPLETE",
-] as const;
-
-export type PreparationStep = (typeof PREPARATION_STEPS)[number];
-
-export type PreparationStatus = "PREPARING" | "READY" | "ERROR";
-
-/** Human-readable labels for each preparation step. */
-export const PREPARATION_STEP_LABELS: Record<PreparationStep, string> = {
-  ANALYZING_RESUME: "Analyzing your resume",
-  UNDERSTANDING_EXPERIENCE: "Understanding your experience",
-  BUILDING_PLAN: "Building your interview plan",
-  PREPARING_QUESTIONS: "Preparing personalized questions",
-  PREPARING_INTERVIEWER: "Preparing your interviewer",
-  COMPLETE: "Interview ready",
-};
-
-// ── Interview Phases ─────────────────────────────────────────
-
-export type InterviewPhase =
-  | "PREPARATION"
-  | "READY_TRANSITION"
-  | "LIVE"
-  | "COMPLETED";
-
-// ── Orb / AI Visual State ────────────────────────────────────
-
-export type OrbState = "AI_SPEAKING" | "LISTENING" | "THINKING" | "PROCESSING";
-
-// ── Questions ────────────────────────────────────────────────
+export type InterviewDifficulty = "easy" | "medium" | "hard";
 
 export interface InterviewQuestion {
-  id: string;
+  id?: string;
   text: string;
-  questionNumber: number;
-  totalQuestions: number;
+  questionNumber?: number;
+  totalQuestions?: number;
+  topic?: string;
 }
 
-// ── Session State (Zustand shape) ────────────────────────────
+export interface FinalEvaluation {
+  overallScore?: number;
+  feedback?: string;
+  strengths?: string[];
+  improvements?: string[];
+  summary?: string;
+  [key: string]: unknown;
+}
 
-export interface InterviewSessionState {
-  /** Current high-level phase of the interview flow. */
-  phase: InterviewPhase;
+export interface SetQuestionPayload {
+  roundNumber?: number | null;
+  questionNumber?: number | null;
+  difficulty?: InterviewDifficulty | null;
+  question: InterviewQuestion | string;
+}
 
-  /** Preparation sub-state. */
-  preparationStatus: PreparationStatus;
-  currentStep: PreparationStep;
-  completedSteps: PreparationStep[];
-  preparationError: string | null;
-
-  /** Live interview sub-state. */
-  orbState: OrbState;
-  currentQuestion: InterviewQuestion | null;
+export interface InterviewState {
   interviewId: string | null;
-  interviewType: string;
+  status: InterviewStatus;
+  currentRoundNumber: number | null;
+  currentQuestionNumber: number | null;
+  currentDifficulty: InterviewDifficulty | null;
+  currentQuestion: InterviewQuestion | null;
+  answer: string;
+  finalEvaluation: FinalEvaluation | null;
+  error: string | null;
+}
 
-  /** Actions */
-  startPreparation: () => void;
-  advanceStep: (step: PreparationStep) => void;
-  completePreparation: () => void;
-  setPhase: (phase: InterviewPhase) => void;
-  setOrbState: (state: OrbState) => void;
-  setQuestion: (question: InterviewQuestion) => void;
-  setPreparationError: (error: string) => void;
-  endInterview: () => void;
+export interface InterviewActions {
+  startInterview: (interviewId?: string) => void;
+  setQuestion: (data: SetQuestionPayload) => void;
+  setAnswer: (answer: string) => void;
+  submitAnswer: () => void;
+  setCompleted: (finalEvaluation: FinalEvaluation) => void;
+  setError: (error: string) => void;
   reset: () => void;
 }
+
+export type InterviewStore = InterviewState & InterviewActions;
