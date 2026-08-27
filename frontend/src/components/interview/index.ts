@@ -4,5 +4,7 @@ export { AIOrb } from "./AIOrb";
 export { Orb } from "@/components/ui/Orb";
 export { InterviewHeader } from "./InterviewHeader";
 export { QuestionDisplay } from "./QuestionDisplay";
+export { CandidateResponseArea } from "./CandidateResponseArea";
 export { InterviewControls } from "./InterviewControls";
+export { EndInterviewDialog } from "./EndInterviewDialog";
 export { CompletionScreen } from "./CompletionScreen";

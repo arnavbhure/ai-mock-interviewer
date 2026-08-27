@@ -1,29 +1,60 @@
-import type { InterviewQuestion } from "@/types/interview.types";
+﻿import type { InterviewQuestion } from "@/types/interview.types";
+
+export interface MockQuestionData extends InterviewQuestion {
+  id: string;
+  text: string;
+  topic: string;
+  sampleAnswer: string;
+  questionNumber: number;
+  totalQuestions: number;
+}
 
 /**
  * Realistic mock questions for the frontend demo.
- * Replace with real AI-generated questions from the backend.
+ * Structured so backend socket events can easily provide dynamic payloads later.
  */
-export const MOCK_QUESTIONS: Omit<InterviewQuestion, "questionNumber" | "totalQuestions">[] = [
+export const MOCK_QUESTIONS: Omit<MockQuestionData, "questionNumber" | "totalQuestions">[] = [
   {
     id: "q_001",
-    text: "Tell me about a challenging technical problem you solved recently. Walk me through your approach and the outcome.",
+    topic: "Introduction & Overview",
+    text: "Tell me about yourself and your experience as a Full Stack Developer.",
+    sampleAnswer:
+      "I've been working as a full stack developer for the past 4 years, building high-scale React and Node.js applications with a focus on real-time data and microservice architectures.",
   },
   {
     id: "q_002",
-    text: "How would you design a system that needs to handle millions of concurrent users with low latency requirements?",
+    topic: "Technical Problem Solving",
+    text: "Can you describe a challenging technical problem you solved recently? Walk me through your approach and the outcome.",
+    sampleAnswer:
+      "Recently, our WebSocket server was experiencing memory leaks during peak traffic. I profiled the V8 heap dumps, identified uncollected event listener closures, and implemented bounded connection pools.",
   },
   {
     id: "q_003",
-    text: "Describe a time when you had to make a significant trade-off in a project. What factors did you consider?",
+    topic: "System Design & Scalability",
+    text: "How would you design a scalable API and caching strategy for a high-traffic application handling millions of concurrent users?",
+    sampleAnswer:
+      "I would use a multi-tiered caching architecture with edge CDN caching for static payloads, Redis distributed cache for session and active entity data, and read-replica database pools with rate-limiting.",
   },
   {
     id: "q_004",
-    text: "What's your approach to debugging a complex production issue that only appears intermittently?",
+    topic: "Debugging & Reliability",
+    text: "Tell me about a time you had to debug a difficult production issue that only appeared intermittently.",
+    sampleAnswer:
+      "We encountered an intermittent race condition in our payment checkout queue. I enabled distributed OpenTelemetry tracing, traced asynchronous lock contention, and migrated to idempotent database transactions.",
   },
   {
     id: "q_005",
-    text: "How do you ensure code quality and maintainability in a fast-moving team? Give me a concrete example.",
+    topic: "Engineering Practices & Quality",
+    text: "How do you ensure code quality, automated testing, and maintainability in a fast-moving engineering team?",
+    sampleAnswer:
+      "I advocate for contract-driven API schemas, automated unit and integration CI pipelines, strict TypeScript linting, and thorough peer code reviews focused on architecture and edge cases.",
+  },
+  {
+    id: "q_006",
+    topic: "Trade-offs & Decision Making",
+    text: "Describe a scenario where you had to make a major technical trade-off under tight deadlines. What factors did you weigh?",
+    sampleAnswer:
+      "We needed to ship search capabilities quickly. Rather than setting up a dedicated Elasticsearch cluster immediately, we leveraged PostgreSQL full-text search with GIN indexes as phase one.",
   },
 ];
 
@@ -37,7 +68,7 @@ export const MOCK_INTERVIEW_CONFIG = {
 /**
  * Build a full InterviewQuestion from a mock entry and its index.
  */
-export function buildMockQuestion(index: number): InterviewQuestion | null {
+export function buildMockQuestion(index: number): MockQuestionData | null {
   const entry = MOCK_QUESTIONS[index];
   if (!entry) return null;
 

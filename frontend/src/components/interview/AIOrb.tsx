@@ -61,6 +61,7 @@ export function AIOrb({
           glowScale: [1, 1.08, 1],
           duration: 2.2,
           label: "Speaking",
+          badgeColor: "text-indigo-400",
         };
       case "listening":
         return {
@@ -71,6 +72,7 @@ export function AIOrb({
           glowScale: [1, 1.04, 1],
           duration: 2.8,
           label: "Listening",
+          badgeColor: "text-emerald-400",
         };
       case "thinking":
         return {
@@ -80,7 +82,8 @@ export function AIOrb({
           ringColor: "rgba(192, 132, 252, 0.35)",
           glowScale: [1, 1.12, 1],
           duration: 1.6,
-          label: "Thinking",
+          label: "Thinking...",
+          badgeColor: "text-purple-300",
         };
       case "processing":
         return {
@@ -90,7 +93,8 @@ export function AIOrb({
           ringColor: "rgba(56, 189, 248, 0.3)",
           glowScale: [1, 1.06, 1],
           duration: 2.0,
-          label: "Processing",
+          label: "Processing your answer...",
+          badgeColor: "text-cyan-400",
         };
       case "idle":
       default:
@@ -102,6 +106,7 @@ export function AIOrb({
           glowScale: [1, 1.02, 1],
           duration: 3.2,
           label: "Ready",
+          badgeColor: "text-slate-400",
         };
     }
   }, [normalized]);
@@ -148,7 +153,7 @@ export function AIOrb({
       {/* Rotating orbit ring for thinking stage */}
       {normalized === "thinking" && (
         <motion.div
-          className="pointer-events-none absolute h-[110%] w-[110%] rounded-full border border-dashed"
+          className="pointer-events-none absolute h-[115%] w-[115%] rounded-full border border-dashed"
           style={{ borderColor: stageConfig.ringColor }}
           animate={reduced ? false : { rotate: 360 }}
           transition={{ duration: 7, repeat: Infinity, ease: "linear" }}
@@ -160,7 +165,7 @@ export function AIOrb({
       <div
         style={containerStyle}
         className={cn(
-          "relative h-[220px] w-[220px] sm:h-[280px] sm:w-[280px] md:h-[320px] md:w-[320px]",
+          "relative h-[200px] w-[200px] sm:h-[260px] sm:w-[260px] md:h-[300px] md:w-[300px]",
         )}
       >
         <Orb
@@ -181,8 +186,8 @@ export function AIOrb({
               transition={{ duration: 0.25 }}
               className="pointer-events-none absolute inset-0 flex items-center justify-center"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface/40 shadow-sm backdrop-blur-md border border-white/10 sm:h-12 sm:w-12">
-                <Mic className="h-5 w-5 text-emerald-400 sm:h-6 sm:w-6" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-950/60 shadow-sm backdrop-blur-md border border-emerald-500/30 sm:h-12 sm:w-12">
+                <Mic className="h-5 w-5 text-emerald-400 sm:h-6 sm:w-6 animate-pulse" />
               </div>
             </motion.div>
           )}
@@ -196,7 +201,7 @@ export function AIOrb({
               transition={{ duration: 0.25 }}
               className="pointer-events-none absolute inset-0 flex items-center justify-center"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface/30 shadow-sm backdrop-blur-md border border-white/10 sm:h-12 sm:w-12">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-950/60 shadow-sm backdrop-blur-md border border-purple-500/30 sm:h-12 sm:w-12">
                 <BrainCircuit className="h-5 w-5 text-purple-300 sm:h-6 sm:w-6" />
               </div>
             </motion.div>
@@ -211,11 +216,11 @@ export function AIOrb({
               transition={{ duration: 0.25 }}
               className="pointer-events-none absolute inset-0 flex items-center justify-center"
             >
-              <div className="flex items-center gap-1.5 rounded-full bg-surface/40 px-3 py-1.5 shadow-sm backdrop-blur-md border border-white/10">
+              <div className="flex items-center gap-1.5 rounded-full bg-slate-950/60 px-3 py-1.5 shadow-sm backdrop-blur-md border border-cyan-500/30">
                 {[0, 1, 2].map((i) => (
                   <motion.span
                     key={i}
-                    className="h-1.5 w-1.5 rounded-full bg-sky-400"
+                    className="h-1.5 w-1.5 rounded-full bg-cyan-400"
                     animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
                     transition={{
                       duration: 0.9,
@@ -239,7 +244,10 @@ export function AIOrb({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.25 }}
-          className="mt-2 text-xs font-medium tracking-wide text-text-muted sm:text-sm"
+          className={cn(
+            "mt-2 text-xs font-medium tracking-wide sm:text-sm transition-colors duration-300",
+            stageConfig.badgeColor,
+          )}
         >
           {stageConfig.label}
         </motion.span>
