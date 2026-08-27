@@ -1,46 +1,70 @@
-﻿import { useCallback, useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useState } from "react";
 import { useInterviewStore } from "@/store/interview.store";
 import type { OrbState } from "@/types/interview.types";
 import {
-  getInterviewState,
-  submitResponse,
-  endInterview as endInterviewService,
-} from "@/services/interviewService";
-import { MOCK_QUESTIONS, MOCK_INTERVIEW_CONFIG, buildMockQuestion } from "@/data/interview.mock";
+  initializeInterviewSocketListeners,
+  emitStartInterview,
+  emitSubmitAnswer,
+} from "@/services/interviewSocket.service";
+import { MOCK_INTERVIEW_CONFIG } from "@/data/interview.mock";
 
 export function useInterviewSession() {
-  const status = useInterviewStore((s) => s.status);
-  const interviewId = useInterviewStore((s) => s.interviewId);
-  const currentQuestion = useInterviewStore((s) => s.currentQuestion);
-  const setQuestion = useInterviewStore((s) => s.setQuestion);
-  const submitAnswer = useInterviewStore((s) => s.submitAnswer);
-  const setCompleted = useInterviewStore((s) => s.setCompleted);
+  const {
+    interviewId,
+    status,
+    currentRoundNumber,
+    currentQuestionNumber,
+    currentDifficulty,
+    currentQuestion,
+    answer,
+    finalEvaluation,
+    error,
+    setAnswer,
+    setSubmitting,
+    reset,
+  } = useInterviewStore();
 
-  const [orbState, setOrbState] = useState<OrbState>("AI_SPEAKING");
-  const [questionIndex, setQuestionIndex] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [answerSeconds, setAnswerSeconds] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isEndDialogOpen, setIsEndDialogOpen] = useState(false);
-  const [candidateTranscript, setCandidateTranscript] = useState("");
+  const [isSpeakingPhase, setIsSpeakingPhase] = useState(true);
 
-  const stateTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const typingTimerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  // ─── Socket.IO Listener Initialization & Start Trigger ───────
+  useEffect(() => {
+    // 1. Initialize lifecycle-safe Socket.IO listeners
+    const cleanup = initializeInterviewSocketListeners();
 
-  const clearTimers = useCallback(() => {
-    if (stateTimerRef.current !== undefined) {
-      clearTimeout(stateTimerRef.current);
-      stateTimerRef.current = undefined;
-    }
-    if (typingTimerRef.current !== undefined) {
-      clearInterval(typingTimerRef.current);
-      typingTimerRef.current = undefined;
-    }
+    // 2. Emit interview:start when entering live interview
+    emitStartInterview();
+
+    return () => {
+      cleanup();
+    };
   }, []);
+
+  // ─── AI Speech -> Candidate Turn Transition Timer ────────────
+  useEffect(() => {
+    if (!currentQuestion) return;
+
+    // AI speaks initially for ~4.5s upon question arrival, then candidate turns
+    const startTimer = setTimeout(() => {
+      setIsSpeakingPhase(true);
+    }, 0);
+
+    const endTimer = setTimeout(() => {
+      setIsSpeakingPhase(false);
+    }, 4500);
+
+    return () => {
+      clearTimeout(startTimer);
+      clearTimeout(endTimer);
+    };
+  }, [currentQuestion]);
 
   // ─── Elapsed interview timer ─────────────────────────────────
   useEffect(() => {
-    if (status !== "active" && status !== "starting") return;
+    if (status !== "active" && status !== "submitting" && status !== "starting") return;
 
     const timer = setInterval(() => {
       setElapsedSeconds((prev) => prev + 1);
@@ -49,9 +73,9 @@ export function useInterviewSession() {
     return () => clearInterval(timer);
   }, [status]);
 
-  // ─── Answer duration timer (active during LISTENING) ────────
+  // ─── Answer duration timer (active during candidate turn) ────
   useEffect(() => {
-    if (orbState !== "LISTENING") return;
+    if (status !== "active" || isSpeakingPhase) return;
 
     const timer = setInterval(() => {
       setAnswerSeconds((prev) => prev + 1);
@@ -60,165 +84,46 @@ export function useInterviewSession() {
     return () => {
       clearInterval(timer);
     };
-  }, [orbState]);
+  }, [status, isSpeakingPhase]);
 
-  // ─── Simulated live candidate speech typing in LISTENING ─────
-  useEffect(() => {
-    if (orbState !== "LISTENING") return;
-
-    const currentMock = buildMockQuestion(questionIndex);
-    const targetText = currentMock?.sampleAnswer ?? "Providing my technical response...";
-    let charIndex = 0;
-
-    const timer = setInterval(() => {
-      charIndex += 2;
-      if (charIndex <= targetText.length) {
-        setCandidateTranscript(targetText.slice(0, charIndex));
-      } else {
-        clearInterval(timer);
-      }
-    }, 90);
-
-    return () => {
-      clearInterval(timer);
-    };
-  }, [orbState, questionIndex]);
-
-  // ─── Load initial question on start ──────────────────────────
-  useEffect(() => {
-    if (status !== "active" && status !== "starting") return;
-    if (currentQuestion) return;
-
-    async function loadFirst() {
-      const { question } = await getInterviewState(0);
-      if (question) {
-        setQuestion({
-          questionNumber: question.questionNumber,
-          question,
-        });
-      }
+  // ─── Derived Orb State ───────────────────────────────────────
+  const orbState: OrbState = (() => {
+    if (status === "starting") return "THINKING";
+    if (status === "submitting") return "PROCESSING";
+    if (status === "active") {
+      return isSpeakingPhase ? "AI_SPEAKING" : "LISTENING";
     }
+    return "idle";
+  })();
 
-    loadFirst();
-  }, [status, currentQuestion, setQuestion]);
+  // ─── User Actions ─────────────────────────────────────────────
 
-  // ─── Core State Machine Transitions ──────────────────────────
+  const submitCurrentAnswer = useCallback(() => {
+    const trimmed = answer.trim();
+    if (!trimmed || status === "submitting") return;
 
-  const advanceToProcessing = useCallback(() => {
-    clearTimers();
-    setOrbState("PROCESSING");
-    submitAnswer();
-
-    if (interviewId && currentQuestion) {
-      submitResponse(
-        interviewId,
-        currentQuestion.id ?? `q_${questionIndex}`,
-        candidateTranscript || "[candidate response]",
-      );
-    }
-  }, [clearTimers, submitAnswer, interviewId, currentQuestion, questionIndex, candidateTranscript]);
+    emitSubmitAnswer(trimmed);
+  }, [answer, status]);
 
   const toggleListening = useCallback(() => {
-    if (orbState === "LISTENING") {
-      advanceToProcessing();
-    } else if (orbState === "AI_SPEAKING") {
-      clearTimers();
-      setAnswerSeconds(0);
-      setCandidateTranscript("");
-      setOrbState("LISTENING");
+    if (isSpeakingPhase) {
+      // Candidate wants to skip AI speech and start answering immediately
+      setIsSpeakingPhase(false);
+    } else if (answer.trim()) {
+      // Candidate finished answering and submits
+      submitCurrentAnswer();
     }
-  }, [orbState, advanceToProcessing, clearTimers]);
-
-  const skipQuestion = useCallback(async () => {
-    clearTimers();
-    const nextIndex = questionIndex + 1;
-    if (nextIndex >= MOCK_QUESTIONS.length) {
-      setCompleted({
-        overallScore: 88,
-        summary: "Interview session concluded.",
-      });
-      return;
-    }
-
-    setQuestionIndex(nextIndex);
-    const { question } = await getInterviewState(nextIndex);
-    if (question) {
-      setQuestion({
-        questionNumber: question.questionNumber,
-        question,
-      });
-      setAnswerSeconds(0);
-      setCandidateTranscript("");
-      setOrbState("AI_SPEAKING");
-    }
-  }, [clearTimers, questionIndex, setCompleted, setQuestion]);
-
-  const confirmEndInterview = useCallback(async () => {
-    clearTimers();
-    setIsEndDialogOpen(false);
-    if (interviewId) {
-      await endInterviewService(interviewId);
-    }
-    setCompleted({
-      overallScore: 85,
-      summary: "Interview ended early by candidate.",
-    });
-  }, [clearTimers, interviewId, setCompleted]);
+  }, [isSpeakingPhase, answer, submitCurrentAnswer]);
 
   const toggleMute = useCallback(() => {
     setIsMuted((prev) => !prev);
   }, []);
 
-  // ─── Auto advance timer loop ──────────────────────────────────
-  useEffect(() => {
-    if (status !== "active") return;
+  const confirmEndInterview = useCallback(() => {
+    setIsEndDialogOpen(false);
+    reset();
+  }, [reset]);
 
-    clearTimers();
-
-    if (orbState === "AI_SPEAKING") {
-      stateTimerRef.current = setTimeout(() => {
-        setAnswerSeconds(0);
-        setCandidateTranscript("");
-        setOrbState("LISTENING");
-      }, 4500);
-    } else if (orbState === "LISTENING") {
-      stateTimerRef.current = setTimeout(() => {
-        advanceToProcessing();
-      }, 12000);
-    } else if (orbState === "PROCESSING") {
-      stateTimerRef.current = setTimeout(() => {
-        setOrbState("THINKING");
-      }, 1400);
-    } else if (orbState === "THINKING") {
-      stateTimerRef.current = setTimeout(async () => {
-        const nextIndex = questionIndex + 1;
-        if (nextIndex >= MOCK_QUESTIONS.length) {
-          setCompleted({
-            overallScore: 92,
-            feedback: "Outstanding technical articulation, depth in architecture, and clear debugging methodologies.",
-            summary: "Completed all technical interview questions with high confidence.",
-          });
-          return;
-        }
-
-        setQuestionIndex(nextIndex);
-        const { question } = await getInterviewState(nextIndex);
-        if (question) {
-          setQuestion({
-            questionNumber: question.questionNumber,
-            question,
-          });
-          setAnswerSeconds(0);
-          setCandidateTranscript("");
-          setOrbState("AI_SPEAKING");
-        }
-      }, 1800);
-    }
-
-    return clearTimers;
-  }, [orbState, status, questionIndex, clearTimers, advanceToProcessing, setCompleted, setQuestion]);
-
-  // Format mm:ss
   const formattedTime = `${String(Math.floor(elapsedSeconds / 60)).padStart(2, "0")}:${String(
     elapsedSeconds % 60,
   ).padStart(2, "0")}`;
@@ -228,24 +133,30 @@ export function useInterviewSession() {
   ).padStart(2, "0")}`;
 
   return {
+    interviewId,
+    status,
     orbState,
+    currentRoundNumber,
+    currentQuestionNumber,
+    currentDifficulty: currentDifficulty ?? MOCK_INTERVIEW_CONFIG.difficulty,
     currentQuestion,
-    interviewType: MOCK_INTERVIEW_CONFIG.type,
+    answer,
+    setAnswer,
+    setSubmitting,
+    finalEvaluation,
+    error,
     role: MOCK_INTERVIEW_CONFIG.role,
-    difficulty: MOCK_INTERVIEW_CONFIG.difficulty,
-    questionIndex,
-    totalQuestions: MOCK_QUESTIONS.length,
+    interviewType: MOCK_INTERVIEW_CONFIG.type,
     elapsedSeconds,
     formattedTime,
     answerSeconds,
     formattedAnswerTime,
     isMuted,
     toggleMute,
-    candidateTranscript,
     isEndDialogOpen,
     setIsEndDialogOpen,
     toggleListening,
-    skipQuestion,
+    submitCurrentAnswer,
     confirmEndInterview,
   };
 }

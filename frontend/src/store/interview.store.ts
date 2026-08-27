@@ -1,14 +1,13 @@
 ﻿import { create } from "zustand";
 import type {
   InterviewState,
-  InterviewStore,
-  SetQuestionPayload,
+  QuestionPayload,
   FinalEvaluation,
 } from "@/types/interview.types";
 
-const INITIAL_STATE: InterviewState = {
+const INITIAL_STATE = {
   interviewId: null,
-  status: "idle",
+  status: "idle" as const,
   currentRoundNumber: null,
   currentQuestionNumber: null,
   currentDifficulty: null,
@@ -18,58 +17,45 @@ const INITIAL_STATE: InterviewState = {
   error: null,
 };
 
-export const useInterviewStore = create<InterviewStore>((set) => ({
+export const useInterviewStore = create<InterviewState>((set) => ({
   ...INITIAL_STATE,
 
-  startInterview: (interviewId?: string) =>
+  startInterview: () =>
     set({
       status: "starting",
-      interviewId: interviewId ?? null,
       error: null,
     }),
 
-  setQuestion: (payload: SetQuestionPayload) =>
-    set((state) => {
-      const questionObj =
-        typeof payload.question === "string"
-          ? { text: payload.question }
-          : payload.question;
-
-      return {
-        status: "active",
-        currentRoundNumber:
-          payload.roundNumber !== undefined
-            ? payload.roundNumber
-            : state.currentRoundNumber,
-        currentQuestionNumber:
-          payload.questionNumber !== undefined
-            ? payload.questionNumber
-            : (questionObj?.questionNumber ?? state.currentQuestionNumber),
-        currentDifficulty:
-          payload.difficulty !== undefined
-            ? payload.difficulty
-            : state.currentDifficulty,
-        currentQuestion: questionObj,
-        answer: "",
-        error: null,
-      };
+  setQuestion: (data: QuestionPayload) =>
+    set({
+      status: "active",
+      currentRoundNumber: data.roundNumber ?? null,
+      currentQuestionNumber: data.questionNumber ?? null,
+      currentDifficulty: data.difficulty ?? null,
+      currentQuestion:
+        typeof data.question === "string"
+          ? { text: data.question }
+          : data.question,
+      answer: "",
+      error: null,
     }),
 
   setAnswer: (answer: string) => set({ answer }),
 
-  submitAnswer: () => set({ status: "submitting" }),
+  setSubmitting: () => set({ status: "submitting" }),
 
-  setCompleted: (finalEvaluation: FinalEvaluation) =>
+  setCompleted: (interviewId: string, evaluation: FinalEvaluation) =>
     set({
       status: "completed",
-      finalEvaluation,
+      interviewId,
+      finalEvaluation: evaluation,
       error: null,
     }),
 
-  setError: (error: string) =>
+  setError: (code: string, message: string) =>
     set({
       status: "error",
-      error,
+      error: { code, message },
     }),
 
   reset: () => set({ ...INITIAL_STATE }),

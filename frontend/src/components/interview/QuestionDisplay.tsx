@@ -5,8 +5,9 @@ import { cn } from "@/lib/utils";
 type Props = {
   question: string;
   topic?: string;
-  questionNumber?: number;
-  totalQuestions?: number;
+  questionNumber?: number | null;
+  roundNumber?: number | null;
+  difficulty?: string | null;
   orbState: OrbState;
   className?: string;
 };
@@ -14,14 +15,14 @@ type Props = {
 /**
  * Spoken Question Display Component
  *
- * Prominently renders the AI interviewer's speech text below the orb.
- * Ensures the candidate does not depend solely on audio cues.
+ * Prominently renders the AI interviewer's question text below the orb.
  */
 export function QuestionDisplay({
   question,
   topic,
   questionNumber,
-  totalQuestions,
+  roundNumber,
+  difficulty,
   orbState,
   className,
 }: Props) {
@@ -36,24 +37,38 @@ export function QuestionDisplay({
         className,
       )}
     >
-      {/* ── Topic / Category Pill ── */}
-      {topic && (
-        <motion.div
-          key={`topic-${topic}`}
-          initial={reduced ? undefined : { opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium tracking-wide text-slate-400 backdrop-blur-md"
-        >
-          {questionNumber && totalQuestions && (
-            <span className="font-semibold text-indigo-400">
-              Question {String(questionNumber).padStart(2, "0")}
-            </span>
-          )}
-          {questionNumber && totalQuestions && <span className="text-slate-600">•</span>}
-          <span>{topic}</span>
-        </motion.div>
-      )}
+      {/* ── Context & Metadata Pill ── */}
+      <motion.div
+        key={`meta-${questionNumber}-${roundNumber}`}
+        initial={reduced ? undefined : { opacity: 0, y: -4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium tracking-wide text-slate-400 backdrop-blur-md"
+      >
+        {questionNumber !== null && questionNumber !== undefined && (
+          <span className="font-semibold text-indigo-400">
+            Question {String(questionNumber).padStart(2, "0")}
+          </span>
+        )}
+        {roundNumber !== null && roundNumber !== undefined && (
+          <>
+            <span className="text-slate-600">•</span>
+            <span>Round {roundNumber}</span>
+          </>
+        )}
+        {topic && (
+          <>
+            <span className="text-slate-600">•</span>
+            <span>{topic}</span>
+          </>
+        )}
+        {difficulty && (
+          <>
+            <span className="text-slate-600">•</span>
+            <span className="capitalize text-indigo-300">{difficulty}</span>
+          </>
+        )}
+      </motion.div>
 
       {/* ── Main Spoken Question Text ── */}
       <AnimatePresence mode="wait">

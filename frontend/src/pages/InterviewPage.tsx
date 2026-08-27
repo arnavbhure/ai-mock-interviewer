@@ -53,7 +53,7 @@ function ReadyTransition({ onComplete }: { onComplete: () => void }) {
             Entering live interview
           </h2>
           <p className="text-xs text-slate-400">
-            Preparing AI interviewer and audio channel...
+            Connecting real-time socket and AI interviewer...
           </p>
         </div>
       </motion.div>
@@ -63,23 +63,27 @@ function ReadyTransition({ onComplete }: { onComplete: () => void }) {
 
 // ─── Live Interview Room ─────────────────────────────────────
 
-export function LiveInterviewRoom() {
+function LiveInterviewRoom() {
   const {
+    status,
     orbState,
+    currentRoundNumber,
+    currentQuestionNumber,
+    currentDifficulty,
     currentQuestion,
-    interviewType,
+    answer,
+    setAnswer,
+    error,
     role,
-    difficulty,
-    totalQuestions,
+    interviewType,
     formattedTime,
     formattedAnswerTime,
     isMuted,
     toggleMute,
-    candidateTranscript,
     isEndDialogOpen,
     setIsEndDialogOpen,
     toggleListening,
-    skipQuestion,
+    submitCurrentAnswer,
     confirmEndInterview,
   } = useInterviewSession();
 
@@ -95,50 +99,57 @@ export function LiveInterviewRoom() {
         aria-hidden="true"
       />
 
-      {/* ── A. Top Bar ── */}
+      {/* ── Top Bar ── */}
       <InterviewHeader
         interviewType={interviewType}
         role={role}
-        difficulty={difficulty}
-        questionNumber={currentQuestion?.questionNumber ?? 1}
-        totalQuestions={totalQuestions}
+        difficulty={currentDifficulty}
+        roundNumber={currentRoundNumber}
+        questionNumber={currentQuestionNumber}
+        status={status}
         formattedTime={formattedTime}
       />
 
-      {/* ── B & C. Central AI Interviewer & Visible Question Area ── */}
+      {/* ── Central AI Interviewer & Response Form ── */}
       <main className="relative z-10 flex flex-1 flex-col items-center justify-between px-4 py-6 sm:py-8">
         <div className="flex flex-1 w-full max-w-4xl flex-col items-center justify-center gap-6 sm:gap-8">
-          {/* AI Orb (Visual Centerpiece with WebGL & Stage Lighting) */}
+          {/* AI Orb */}
           <div className="relative flex items-center justify-center">
             <AIOrb state={orbState} />
           </div>
 
-          {/* Visible Spoken Question Below Orb */}
+          {/* Current Question */}
           {currentQuestion && (
             <QuestionDisplay
               question={currentQuestion.text}
               topic={currentQuestion.topic}
-              questionNumber={currentQuestion.questionNumber}
-              totalQuestions={totalQuestions}
+              roundNumber={currentRoundNumber}
+              questionNumber={currentQuestionNumber}
+              difficulty={currentDifficulty}
               orbState={orbState}
             />
           )}
 
-          {/* Candidate Response & Live Transcript Area */}
+          {/* Candidate Response Area */}
           <CandidateResponseArea
             orbState={orbState}
-            transcript={candidateTranscript}
+            status={status}
+            answer={answer}
+            setAnswer={setAnswer}
+            onSubmitAnswer={submitCurrentAnswer}
             formattedAnswerTime={formattedAnswerTime}
+            error={error}
           />
         </div>
 
-        {/* ── D. Bottom Controls Dock ── */}
+        {/* ── Bottom Controls ── */}
         <InterviewControls
           orbState={orbState}
+          status={status}
+          hasAnswer={Boolean(answer.trim())}
           isMuted={isMuted}
           onToggleMute={toggleMute}
           onToggleListening={toggleListening}
-          onSkipQuestion={skipQuestion}
           onEndInterview={() => setIsEndDialogOpen(true)}
         />
       </main>

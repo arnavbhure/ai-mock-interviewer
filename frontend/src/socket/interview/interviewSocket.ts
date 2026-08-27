@@ -1,5 +1,6 @@
-import socket from "../socket";
-
-export const startInterview = () => {
-  socket.emit("interview:start");
-};
+﻿export {
+  initializeInterviewSocketListeners,
+  cleanupInterviewSocketListeners,
+  emitStartInterview,
+  emitSubmitAnswer,
+} from "@/services/interviewSocket.service";

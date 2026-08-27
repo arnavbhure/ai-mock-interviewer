@@ -13,8 +13,8 @@ type UseInterviewPreparationOptions = {
 /**
  * Drives the preparation step sequence on mount.
  *
- * 1. Calls `startInterview()` to get an interviewId.
- * 2. Walks through each preparation step via the service.
+ * 1. Calls `startInterview()` mock service.
+ * 2. Walks through each preparation step.
  * 3. When all steps reach COMPLETE, marks preparation complete and calls onReady.
  *
  * Cleans up if the component unmounts mid-sequence.
@@ -39,10 +39,10 @@ export function useInterviewPreparation(options: UseInterviewPreparationOptions 
     async function run() {
       try {
         // 1. Kick off the interview session
-        const { interviewId } = await startInterview();
+        await startInterview();
         if (cancelled.current) return;
 
-        startInterviewAction(interviewId);
+        startInterviewAction();
 
         // 2. Walk through preparation steps
         await runPreparationSequence((step) => {

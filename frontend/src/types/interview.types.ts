@@ -2,7 +2,7 @@
    INTERVIEW SESSION — TYPE DEFINITIONS (V1 Real-Time)
    ========================================================== */
 
-// ─── Real-Time Interview Session Types ───────────────────────
+// ─── Core Interview Status & Difficulty ───────────────────────
 
 export type InterviewStatus =
   | "idle"
@@ -13,6 +13,8 @@ export type InterviewStatus =
   | "error";
 
 export type InterviewDifficulty = "easy" | "medium" | "hard";
+
+// ─── Question & Evaluation Models ─────────────────────────────
 
 export interface InterviewQuestion {
   id?: string;
@@ -31,36 +33,68 @@ export interface FinalEvaluation {
   [key: string]: unknown;
 }
 
-export interface SetQuestionPayload {
-  roundNumber?: number | null;
-  questionNumber?: number | null;
-  difficulty?: InterviewDifficulty | null;
-  question: InterviewQuestion | string;
+export interface InterviewError {
+  code: string;
+  message: string;
 }
+
+// ─── Socket.IO Payloads (Fixed Backend Contract) ─────────────
+
+/** Backend -> Frontend: "interview:question" payload */
+export interface QuestionPayload {
+  roundNumber: number;
+  questionNumber: number;
+  difficulty: InterviewDifficulty;
+  question: InterviewQuestion;
+}
+
+/** Backend -> Frontend: "interview:completed" payload */
+export interface CompletedPayload {
+  interviewId: string;
+  evaluation: FinalEvaluation;
+}
+
+/** Backend -> Frontend: "interview:error" payload */
+export interface ErrorPayload {
+  code: string;
+  message: string;
+}
+
+/** Frontend -> Backend: "interview:answer" payload */
+export interface AnswerPayload {
+  answer: string;
+}
+
+// ─── Zustand Store State & Actions ───────────────────────────
 
 export interface InterviewState {
   interviewId: string | null;
+
   status: InterviewStatus;
+
   currentRoundNumber: number | null;
   currentQuestionNumber: number | null;
   currentDifficulty: InterviewDifficulty | null;
-  currentQuestion: InterviewQuestion | null;
-  answer: string;
-  finalEvaluation: FinalEvaluation | null;
-  error: string | null;
-}
 
-export interface InterviewActions {
-  startInterview: (interviewId?: string) => void;
-  setQuestion: (data: SetQuestionPayload) => void;
+  currentQuestion: InterviewQuestion | null;
+
+  answer: string;
+
+  finalEvaluation: FinalEvaluation | null;
+
+  error: InterviewError | null;
+
+  // Actions
+  startInterview: () => void;
+  setQuestion: (data: QuestionPayload) => void;
   setAnswer: (answer: string) => void;
-  submitAnswer: () => void;
-  setCompleted: (finalEvaluation: FinalEvaluation) => void;
-  setError: (error: string) => void;
+  setSubmitting: () => void;
+  setCompleted: (interviewId: string, evaluation: FinalEvaluation) => void;
+  setError: (code: string, message: string) => void;
   reset: () => void;
 }
 
-export type InterviewStore = InterviewState & InterviewActions;
+export type InterviewStore = InterviewState;
 
 // ─── UI & Visual Animation Types ─────────────────────────────
 

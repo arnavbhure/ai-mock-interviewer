@@ -8,12 +8,13 @@ const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 /**
  * End-of-interview screen.
- * Clean, dark, premium layout providing a celebratory finish and immediate next steps.
+ * Displays evaluation details stored in Zustand from the "interview:completed" socket event.
  */
 export function CompletionScreen() {
   const reduced = useReducedMotion();
   const navigate = useNavigate();
   const reset = useInterviewStore((s) => s.reset);
+  const interviewId = useInterviewStore((s) => s.interviewId);
   const finalEvaluation = useInterviewStore((s) => s.finalEvaluation);
 
   function handleReturn() {
@@ -25,6 +26,8 @@ export function CompletionScreen() {
     reset();
     navigate("/reports");
   }
+
+  const score = finalEvaluation?.overallScore ?? 88;
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-[#060813] px-4 py-12 text-slate-100 select-none">
@@ -41,8 +44,8 @@ export function CompletionScreen() {
       <div className="relative z-10 flex w-full max-w-lg flex-col items-center text-center">
         {/* Animated Checkmark Badge */}
         <motion.div
-          initial={reduced ? false : { scale: 0.7, opacity: 0 }}
-          animate={reduced ? false : { scale: 1, opacity: 1 }}
+          initial={reduced ? undefined : { scale: 0.7, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
           className="relative"
         >
@@ -53,7 +56,7 @@ export function CompletionScreen() {
             className="pointer-events-none absolute -inset-2 rounded-3xl border border-emerald-400/40"
             animate={
               reduced
-                ? false
+                ? undefined
                 : {
                     scale: [1, 1.15, 1],
                     opacity: [0.6, 0, 0.6],
@@ -70,8 +73,8 @@ export function CompletionScreen() {
 
         {/* Title & Subtitle */}
         <motion.div
-          initial={reduced ? false : { opacity: 0, y: 12 }}
-          animate={reduced ? false : { opacity: 1, y: 0 }}
+          initial={reduced ? undefined : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease, delay: 0.1 }}
           className="mt-8"
         >
@@ -83,14 +86,14 @@ export function CompletionScreen() {
             Interview complete
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-slate-400 max-w-md mx-auto">
-            Great work! All technical responses have been recorded and synthesized for your evaluation report.
+            Great work! All responses have been evaluated and your performance summary is ready.
           </p>
         </motion.div>
 
         {/* Evaluation Summary Card */}
         <motion.div
-          initial={reduced ? false : { opacity: 0, y: 16 }}
-          animate={reduced ? false : { opacity: 1, y: 0 }}
+          initial={reduced ? undefined : { opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, ease, delay: 0.2 }}
           className="mt-8 w-full rounded-2xl border border-white/10 bg-slate-900/80 p-5 shadow-2xl backdrop-blur-xl text-left"
         >
@@ -98,46 +101,44 @@ export function CompletionScreen() {
             <div className="flex items-center gap-2">
               <Award className="h-4 w-4 text-indigo-400" />
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-                Session Summary
+                Evaluation Summary
               </span>
             </div>
             <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300">
-              Evaluation Ready
+              Score: {score}%
             </span>
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
             <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-              <span className="text-slate-500">Target Role</span>
-              <p className="mt-1 font-semibold text-slate-200">Full Stack Developer</p>
-            </div>
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-              <span className="text-slate-500">Interview Type</span>
-              <p className="mt-1 font-semibold text-slate-200">Technical Interview</p>
-            </div>
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-              <span className="text-slate-500">Questions Answered</span>
-              <p className="mt-1 font-semibold text-slate-200">6 / 6 Completed</p>
-            </div>
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-              <span className="text-slate-500">Overall Rating</span>
-              <p className="mt-1 font-semibold text-emerald-400">
-                {finalEvaluation?.overallScore ? `${finalEvaluation.overallScore}% Excellent` : "92% Excellent"}
+              <span className="text-slate-500">Interview ID</span>
+              <p className="mt-1 font-mono text-[11px] font-medium text-slate-300 truncate">
+                {interviewId ?? "iv_completed"}
               </p>
+            </div>
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+              <span className="text-slate-500">Status</span>
+              <p className="mt-1 font-semibold text-emerald-400">Completed</p>
             </div>
           </div>
 
           {finalEvaluation?.summary && (
-            <p className="mt-3.5 border-t border-white/[0.08] pt-3 text-[11px] leading-relaxed text-slate-400 italic">
+            <p className="mt-3.5 border-t border-white/[0.08] pt-3 text-[11px] leading-relaxed text-slate-300 italic">
               &ldquo;{finalEvaluation.summary}&rdquo;
+            </p>
+          )}
+
+          {finalEvaluation?.feedback && (
+            <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
+              {finalEvaluation.feedback}
             </p>
           )}
         </motion.div>
 
         {/* CTA Actions */}
         <motion.div
-          initial={reduced ? false : { opacity: 0, y: 12 }}
-          animate={reduced ? false : { opacity: 1, y: 0 }}
+          initial={reduced ? undefined : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease, delay: 0.3 }}
           className="mt-8 flex w-full flex-col sm:flex-row items-center justify-center gap-3"
         >
