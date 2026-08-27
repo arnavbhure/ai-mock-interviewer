@@ -1,24 +1,35 @@
-import { useEffect, useRef } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { useInterviewStore } from "@/store/interview.store";
+import type { PreparationStep, PreparationStatus } from "@/types/interview.types";
 import {
   startInterview,
   runPreparationSequence,
 } from "@/services/interviewService";
 
+type UseInterviewPreparationOptions = {
+  onReady?: () => void;
+};
+
 /**
  * Drives the preparation step sequence on mount.
  *
  * 1. Calls `startInterview()` to get an interviewId.
- * 2. Walks through each preparation step via the mock service.
- * 3. When all steps reach COMPLETE, transitions the store to READY.
+ * 2. Walks through each preparation step via the service.
+ * 3. When all steps reach COMPLETE, marks preparation complete and calls onReady.
  *
  * Cleans up if the component unmounts mid-sequence.
  */
-export function useInterviewPreparation() {
+export function useInterviewPreparation(options: UseInterviewPreparationOptions = {}) {
+  const { onReady } = options;
   const started = useRef(false);
   const cancelled = useRef(false);
 
-  const store = useInterviewStore();
+  const [preparationStatus, setPreparationStatus] = useState<PreparationStatus>("PREPARING");
+  const [currentStep, setCurrentStep] = useState<PreparationStep>("ANALYZING_RESUME");
+  const [completedSteps, setCompletedSteps] = useState<PreparationStep[]>([]);
+  const [preparationError, setPreparationError] = useState<string | null>(null);
+
+  const startInterviewAction = useInterviewStore((s) => s.startInterview);
 
   useEffect(() => {
     if (started.current) return;
@@ -31,21 +42,26 @@ export function useInterviewPreparation() {
         const { interviewId } = await startInterview();
         if (cancelled.current) return;
 
-        useInterviewStore.setState({ interviewId });
+        startInterviewAction(interviewId);
 
         // 2. Walk through preparation steps
         await runPreparationSequence((step) => {
           if (cancelled.current) return;
-          store.advanceStep(step);
+          setCurrentStep(step);
+          setCompletedSteps((prev) => (prev.includes(step) ? prev : [...prev, step]));
         });
 
         if (cancelled.current) return;
 
         // 3. Mark preparation complete
-        store.completePreparation();
+        setPreparationStatus("READY");
+        setCurrentStep("COMPLETE");
+        setCompletedSteps((prev) => [...prev, "PREPARING_INTERVIEWER"]);
+        onReady?.();
       } catch {
         if (!cancelled.current) {
-          store.setPreparationError(
+          setPreparationStatus("ERROR");
+          setPreparationError(
             "Something went wrong while preparing your interview. Please try again.",
           );
         }
@@ -57,14 +73,12 @@ export function useInterviewPreparation() {
     return () => {
       cancelled.current = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [startInterviewAction, onReady]);
 
   return {
-    phase: store.phase,
-    preparationStatus: store.preparationStatus,
-    currentStep: store.currentStep,
-    completedSteps: store.completedSteps,
-    preparationError: store.preparationError,
+    preparationStatus,
+    currentStep,
+    completedSteps,
+    preparationError,
   };
 }

@@ -1,5 +1,4 @@
-import { cn } from "@/lib/utils";
-import { SKILL_SCORES } from "@/data/dashboard.mock";
+﻿import { SKILL_SCORES } from "@/data/dashboard.mock";
 import type { DashboardSkill } from "@/types/dashboard.types";
 import { SectionHeading } from "./SectionHeading";
 

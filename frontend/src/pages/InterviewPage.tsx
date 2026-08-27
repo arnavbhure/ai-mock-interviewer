@@ -1,7 +1,8 @@
-import { useEffect, useCallback } from "react";
+﻿import { useEffect, useCallback, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
 import { useInterviewStore } from "@/store/interview.store";
+import type { InterviewPhase } from "@/types/interview.types";
 import { useInterviewPreparation } from "@/hooks/useInterviewPreparation";
 import { useInterviewSession } from "@/hooks/useInterviewSession";
 import {
@@ -15,7 +16,7 @@ import {
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
-// ── Ready Transition (brief flash between prep & live) ─────
+// ─── Ready Transition (brief flash between prep & live) ─────
 
 function ReadyTransition({ onComplete }: { onComplete: () => void }) {
   const reduced = useReducedMotion();
@@ -47,7 +48,7 @@ function ReadyTransition({ onComplete }: { onComplete: () => void }) {
   );
 }
 
-// ── Live Interview Screen ──────────────────────────────────
+// ─── Live Interview Screen ───────────────────────────────────
 
 function LiveInterview() {
   const {
@@ -88,36 +89,37 @@ function LiveInterview() {
   );
 }
 
-// ── Main Page Orchestrator ─────────────────────────────────
+// ─── Main Page Orchestrator ─────────────────────────────────
 
 export function InterviewPage() {
-  const phase = useInterviewStore((s) => s.phase);
-  const preparationStatus = useInterviewStore((s) => s.preparationStatus);
-  const setPhase = useInterviewStore((s) => s.setPhase);
+  const status = useInterviewStore((s) => s.status);
+  const resetStore = useInterviewStore((s) => s.reset);
 
-  // Reset store when this page mounts for the first time
+  const [phase, setPhase] = useState<InterviewPhase>("PREPARATION");
+
+  // Reset store when this page mounts
   useEffect(() => {
-    useInterviewStore.getState().reset();
-    useInterviewStore.getState().startPreparation();
+    resetStore();
+  }, [resetStore]);
+
+  const handlePreparationReady = useCallback(() => {
+    setPhase("READY_TRANSITION");
   }, []);
 
   const { currentStep, completedSteps, preparationError } =
-    useInterviewPreparation();
-
-  // When preparation completes, transition to READY_TRANSITION
-  useEffect(() => {
-    if (preparationStatus === "READY" && phase === "PREPARATION") {
-      setPhase("READY_TRANSITION");
-    }
-  }, [preparationStatus, phase, setPhase]);
+    useInterviewPreparation({ onReady: handlePreparationReady });
 
   const handleReadyComplete = useCallback(() => {
     setPhase("LIVE");
-  }, [setPhase]);
+  }, []);
+
+  // Compute active display phase
+  const activePhase: InterviewPhase =
+    status === "completed" ? "COMPLETED" : phase;
 
   return (
     <AnimatePresence mode="wait">
-      {phase === "PREPARATION" && (
+      {activePhase === "PREPARATION" && (
         <motion.div
           key="preparation"
           exit={{ opacity: 0 }}
@@ -131,7 +133,7 @@ export function InterviewPage() {
         </motion.div>
       )}
 
-      {phase === "READY_TRANSITION" && (
+      {activePhase === "READY_TRANSITION" && (
         <motion.div
           key="ready"
           initial={{ opacity: 0 }}
@@ -143,7 +145,7 @@ export function InterviewPage() {
         </motion.div>
       )}
 
-      {phase === "LIVE" && (
+      {activePhase === "LIVE" && (
         <motion.div
           key="live"
           initial={{ opacity: 0 }}
@@ -155,7 +157,7 @@ export function InterviewPage() {
         </motion.div>
       )}
 
-      {phase === "COMPLETED" && (
+      {activePhase === "COMPLETED" && (
         <motion.div
           key="completed"
           initial={{ opacity: 0 }}

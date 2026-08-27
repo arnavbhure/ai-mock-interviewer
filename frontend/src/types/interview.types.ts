@@ -2,6 +2,8 @@
    INTERVIEW SESSION — TYPE DEFINITIONS (V1 Real-Time)
    ========================================================== */
 
+// ─── Real-Time Interview Session Types ───────────────────────
+
 export type InterviewStatus =
   | "idle"
   | "starting"
@@ -59,3 +61,35 @@ export interface InterviewActions {
 }
 
 export type InterviewStore = InterviewState & InterviewActions;
+
+// ─── UI & Visual Animation Types ─────────────────────────────
+
+export type OrbState = "AI_SPEAKING" | "LISTENING" | "THINKING" | "PROCESSING";
+
+export const PREPARATION_STEPS = [
+  "ANALYZING_RESUME",
+  "UNDERSTANDING_EXPERIENCE",
+  "BUILDING_PLAN",
+  "PREPARING_QUESTIONS",
+  "PREPARING_INTERVIEWER",
+  "COMPLETE",
+] as const;
+
+export type PreparationStep = (typeof PREPARATION_STEPS)[number];
+
+export type PreparationStatus = "PREPARING" | "READY" | "ERROR";
+
+export const PREPARATION_STEP_LABELS: Record<PreparationStep, string> = {
+  ANALYZING_RESUME: "Analyzing your resume",
+  UNDERSTANDING_EXPERIENCE: "Understanding your experience",
+  BUILDING_PLAN: "Building your interview plan",
+  PREPARING_QUESTIONS: "Preparing personalized questions",
+  PREPARING_INTERVIEWER: "Preparing your interviewer",
+  COMPLETE: "Interview ready",
+};
+
+export type InterviewPhase =
+  | "PREPARATION"
+  | "READY_TRANSITION"
+  | "LIVE"
+  | "COMPLETED";

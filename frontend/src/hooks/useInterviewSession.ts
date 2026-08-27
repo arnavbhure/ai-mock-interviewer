@@ -1,25 +1,31 @@
-import { useCallback, useEffect, useRef } from "react";
+﻿import { useCallback, useEffect, useRef, useState } from "react";
 import { useInterviewStore } from "@/store/interview.store";
+import type { OrbState } from "@/types/interview.types";
 import {
   getInterviewState,
   submitResponse,
   endInterview as endInterviewService,
 } from "@/services/interviewService";
-import { MOCK_QUESTIONS } from "@/data/interview.mock";
+import { MOCK_QUESTIONS, MOCK_INTERVIEW_CONFIG } from "@/data/interview.mock";
 
 /**
  * Manages the live interview state machine cycle:
  *
- *   AI_SPEAKING  →(auto ~3.5s)→  LISTENING
- *   LISTENING    →(user tap / auto ~8s)→  PROCESSING
- *   PROCESSING   →(auto ~1s)→  THINKING
- *   THINKING     →(auto ~1.5s)→  AI_SPEAKING (next question)
- *
- * User interaction (toggleListening) advances from LISTENING→PROCESSING.
- * Auto-timers provide fallback so the demo can run hands-free.
+ *   AI_SPEAKING  → (auto ~3.5s) →  LISTENING
+ *   LISTENING    → (user tap / auto ~8s) →  PROCESSING
+ *   PROCESSING   → (auto ~1s) →  THINKING
+ *   THINKING     → (auto ~1.5s) →  AI_SPEAKING (next question)
  */
 export function useInterviewSession() {
-  const store = useInterviewStore();
+  const status = useInterviewStore((s) => s.status);
+  const interviewId = useInterviewStore((s) => s.interviewId);
+  const currentQuestion = useInterviewStore((s) => s.currentQuestion);
+  const setQuestion = useInterviewStore((s) => s.setQuestion);
+  const submitAnswer = useInterviewStore((s) => s.submitAnswer);
+  const setCompleted = useInterviewStore((s) => s.setCompleted);
+
+  const [orbState, setOrbState] = useState<OrbState>("AI_SPEAKING");
+
   const questionIndexRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -30,51 +36,54 @@ export function useInterviewSession() {
     }
   }, []);
 
-  // ── Load first question when phase becomes LIVE ──────────
+  // ─── Load first question when session starts ───────────────────
 
   useEffect(() => {
-    if (store.phase !== "LIVE") return;
+    if (status !== "active" && status !== "starting") return;
 
     async function loadFirst() {
       questionIndexRef.current = 0;
       const { question } = await getInterviewState(0);
       if (question) {
-        useInterviewStore.setState({
-          currentQuestion: question,
-          orbState: "AI_SPEAKING",
+        setQuestion({
+          questionNumber: question.questionNumber,
+          question,
         });
+        setOrbState("AI_SPEAKING");
       }
     }
 
-    loadFirst();
-  }, [store.phase]);
+    if (!currentQuestion) {
+      loadFirst();
+    }
+  }, [status, currentQuestion, setQuestion]);
 
-  // ── State machine auto-transitions ───────────────────────
+  // ─── State machine auto-transitions ────────────────────────────
 
   useEffect(() => {
-    if (store.phase !== "LIVE") return;
+    if (status !== "active") return;
 
     clearTimer();
 
-    switch (store.orbState) {
+    switch (orbState) {
       case "AI_SPEAKING":
         // After 3.5s of "speaking", transition to listening
         timerRef.current = setTimeout(() => {
-          useInterviewStore.setState({ orbState: "LISTENING" });
+          setOrbState("LISTENING");
         }, 3500);
         break;
 
       case "LISTENING":
         // Auto-fallback: if user doesn't tap mic, auto-advance after 8s
         timerRef.current = setTimeout(() => {
-          useInterviewStore.setState({ orbState: "PROCESSING" });
+          setOrbState("PROCESSING");
         }, 8000);
         break;
 
       case "PROCESSING":
         // Short processing delay, then thinking
         timerRef.current = setTimeout(() => {
-          useInterviewStore.setState({ orbState: "THINKING" });
+          setOrbState("THINKING");
         }, 1000);
         break;
 
@@ -83,79 +92,85 @@ export function useInterviewSession() {
         timerRef.current = setTimeout(async () => {
           const nextIndex = questionIndexRef.current + 1;
           if (nextIndex >= MOCK_QUESTIONS.length) {
-            useInterviewStore.getState().endInterview();
+            setCompleted({
+              overallScore: 85,
+              summary: "Interview completed successfully.",
+            });
             return;
           }
           questionIndexRef.current = nextIndex;
           const { question } = await getInterviewState(nextIndex);
           if (question) {
-            useInterviewStore.setState({
-              currentQuestion: question,
-              orbState: "AI_SPEAKING",
+            setQuestion({
+              questionNumber: question.questionNumber,
+              question,
             });
+            setOrbState("AI_SPEAKING");
           }
         }, 1500);
         break;
     }
 
     return clearTimer;
-  }, [store.orbState, store.phase, clearTimer]);
+  }, [orbState, status, clearTimer, setQuestion, setCompleted]);
 
-  // ── User actions ─────────────────────────────────────────
+  // ─── User actions ──────────────────────────────────────────────
 
   const toggleListening = useCallback(() => {
-    const { orbState, interviewId, currentQuestion } =
-      useInterviewStore.getState();
-
     if (orbState === "LISTENING") {
-      // User signals they're done speaking → process
       clearTimer();
-      useInterviewStore.setState({ orbState: "PROCESSING" });
+      setOrbState("PROCESSING");
+      submitAnswer();
 
-      // Simulate submitting their response
       if (interviewId && currentQuestion) {
         submitResponse(
           interviewId,
-          currentQuestion.id,
+          currentQuestion.id ?? `q_${questionIndexRef.current}`,
           "[mock transcript]",
         );
       }
     }
-  }, [clearTimer]);
+  }, [orbState, clearTimer, submitAnswer, interviewId, currentQuestion]);
 
   const skipQuestion = useCallback(async () => {
     clearTimer();
     const nextIndex = questionIndexRef.current + 1;
     if (nextIndex >= MOCK_QUESTIONS.length) {
-      useInterviewStore.getState().endInterview();
+      setCompleted({
+        overallScore: 85,
+        summary: "Interview completed successfully.",
+      });
       return;
     }
     questionIndexRef.current = nextIndex;
     const { question } = await getInterviewState(nextIndex);
     if (question) {
-      useInterviewStore.setState({
-        currentQuestion: question,
-        orbState: "AI_SPEAKING",
+      setQuestion({
+        questionNumber: question.questionNumber,
+        question,
       });
+      setOrbState("AI_SPEAKING");
     }
-  }, [clearTimer]);
+  }, [clearTimer, setCompleted, setQuestion]);
 
   const handleEndInterview = useCallback(async () => {
     clearTimer();
-    const { interviewId } = useInterviewStore.getState();
     if (interviewId) {
       await endInterviewService(interviewId);
     }
-    useInterviewStore.getState().endInterview();
-  }, [clearTimer]);
+    setCompleted({
+      overallScore: 80,
+      summary: "Interview ended by candidate.",
+    });
+  }, [clearTimer, interviewId, setCompleted]);
 
   // Cleanup on unmount
   useEffect(() => clearTimer, [clearTimer]);
 
   return {
-    orbState: store.orbState,
-    currentQuestion: store.currentQuestion,
-    interviewType: store.interviewType,
+    orbState,
+    currentQuestion,
+    interviewType: MOCK_INTERVIEW_CONFIG.type,
     toggleListening,
     skipQuestion,
     endInterview: handleEndInterview,

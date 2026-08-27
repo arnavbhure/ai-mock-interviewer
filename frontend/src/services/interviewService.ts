@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Interview Service — Mock Implementation
  *
  * Clean API boundary for interview operations.
@@ -11,7 +11,7 @@ import type { PreparationStep } from "@/types/interview.types";
 import { PREPARATION_STEPS } from "@/types/interview.types";
 import { buildMockQuestion } from "@/data/interview.mock";
 
-// ── Helpers ──────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -27,7 +27,7 @@ const STEP_DELAYS: Record<PreparationStep, number> = {
   COMPLETE: 0,
 };
 
-// ── Public API ───────────────────────────────────────────────
+// ─── Public API ───────────────────────────────────────────────
 
 /**
  * Kick off a new interview session.
@@ -68,10 +68,13 @@ export async function getInterviewState(questionIndex: number) {
  * Submit a candidate response for the current question.
  */
 export async function submitResponse(
-  _interviewId: string,
-  _questionId: string,
-  _transcript: string,
+  _interviewId?: string,
+  _questionId?: string,
+  _transcript?: string,
 ): Promise<{ success: boolean }> {
+  void _interviewId;
+  void _questionId;
+  void _transcript;
   await delay(400);
   return { success: true };
 }
@@ -80,8 +83,9 @@ export async function submitResponse(
  * End the interview session.
  */
 export async function endInterview(
-  _interviewId: string,
+  _interviewId?: string,
 ): Promise<{ success: boolean }> {
+  void _interviewId;
   await delay(300);
   return { success: true };
 }
