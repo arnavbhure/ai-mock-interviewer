@@ -64,7 +64,16 @@ export type InterviewStore = InterviewState & InterviewActions;
 
 // ─── UI & Visual Animation Types ─────────────────────────────
 
-export type OrbState = "AI_SPEAKING" | "LISTENING" | "THINKING" | "PROCESSING";
+export type OrbState =
+  | "AI_SPEAKING"
+  | "LISTENING"
+  | "THINKING"
+  | "PROCESSING"
+  | "speaking"
+  | "listening"
+  | "thinking"
+  | "processing"
+  | "idle";
 
 export const PREPARATION_STEPS = [
   "ANALYZING_RESUME",
