@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+﻿import { Route, Routes } from "react-router-dom";
 import { Briefcase, FileText, HelpCircle, Settings, TrendingUp } from "lucide-react";
 import { LoginPage } from "@/auth/login";
 import { RegisterPage } from "@/auth/register";
@@ -11,6 +11,7 @@ import { FoundationStatusPage } from "@/pages/FoundationStatusPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { SetupInterviewPage } from "@/pages/SetupInterviewPage";
 import { InterviewPage } from "@/pages/InterviewPage";
+import { DSAInterviewPage } from "@/pages/DSAInterviewPage";
 import ProtectedRoute from "./ProtectedRoute";
 
 export function AppRouter() {
@@ -26,6 +27,7 @@ export function AppRouter() {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/interview" element={<InterviewPage />} />
+        <Route path="/interview/dsa" element={<DSAInterviewPage />} />
         <Route element={<DashboardLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/dashboard/new" element={<SetupInterviewPage />} />
