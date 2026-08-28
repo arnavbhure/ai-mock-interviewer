@@ -9,6 +9,8 @@ const {
 
 const resumeUploadController = async (req, res) => {
   try {
+    const user = req.user;
+
     if (!req.file) {
       return res
         .status(400)
@@ -21,6 +23,7 @@ const resumeUploadController = async (req, res) => {
     const result = await ResumePreprocessingChain.invoke({
       resume: cleanResume,
     });
+    const resumeJson = { id: user.id, ...result?.structuredResume };
 
     /*
       result returns an object with the following structure:
@@ -28,10 +31,18 @@ const resumeUploadController = async (req, res) => {
       and result.embeddings is an array of embeddings for the resume
     */
 
-    const [resumeStored, embeddingsStored] = await Promise.all([
-      await saveResumeModel(result.structuredResume),
-      await saveResumeEmbeddingsModel(result.embeddings),
-    ]);
+    const resumeStored = await saveResumeModel(resumeJson);
+
+    const resume_id = resumeStored.id;
+    const user_id = resumeStored.user_id;
+
+    const embeddingData = result.embeddings.map((embedding) => ({
+      user_id,
+      resume_id,
+      ...embedding,
+    }));
+
+    const embeddingsStored = await saveResumeEmbeddingsModel(embeddingData);
 
     /*in above step ,
       we are saving the structured resume data 

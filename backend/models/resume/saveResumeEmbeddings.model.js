@@ -1,3 +1,5 @@
+const { pool } = require("../../config/db");
+
 const saveResumeEmbeddingsModel = async (embeddings) => {
   const client = await pool.connect();
 
@@ -5,22 +7,28 @@ const saveResumeEmbeddingsModel = async (embeddings) => {
     await client.query("BEGIN");
 
     for (const chunk of embeddings) {
+      const vector = `[${chunk.embedding.join(",")}]`;
+
       await client.query(
         `
         INSERT INTO resume_embeddings
         (
+          resume_id,
           chunk_index,
           chunk_text,
           embedding,
-          metadata
+          metadata,
+          user_id
         )
-        VALUES ($1, $2, $3, $4)
+        VALUES ($1, $2, $3, $4::vector, $5, $6)
         `,
         [
+          chunk.resume_id,
           chunk.chunkIndex,
           chunk.text,
-          chunk.embedding,
+          vector,
           JSON.stringify(chunk.metadata),
+          chunk.user_id,
         ],
       );
     }

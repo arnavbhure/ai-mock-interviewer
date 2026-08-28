@@ -18,7 +18,11 @@ const ProtectedRoute = () => {
       try {
         const response = await getUserProfile();
 
-        if (!response?.success || !response?.user) {
+        if (
+          !response?.success ||
+          !response?.user ||
+          !response?.user?.is_verified
+        ) {
           clearUser();
         } else {
           setUser(response.user);
