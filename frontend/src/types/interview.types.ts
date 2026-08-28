@@ -1,11 +1,14 @@
 ﻿/* ==========================================================
-   INTERVIEW SESSION — TYPE DEFINITIONS (V1 Real-Time)
+   INTERVIEW SESSION — TYPE DEFINITIONS (V1 Real-Time & Store)
    ========================================================== */
+
+import type { DSALanguage, DSATestCase, DSASubmissionSummary } from "./dsaInterview.types";
 
 // ─── Core Interview Status & Difficulty ───────────────────────
 
 export type InterviewStatus =
   | "idle"
+  | "preparing"
   | "starting"
   | "active"
   | "submitting"
@@ -13,6 +16,8 @@ export type InterviewStatus =
   | "error";
 
 export type InterviewDifficulty = "easy" | "medium" | "hard";
+
+export type AIInterviewState = "speaking" | "listening" | "thinking" | "idle";
 
 // ─── Question & Evaluation Models ─────────────────────────────
 
@@ -38,15 +43,34 @@ export interface InterviewError {
   message: string;
 }
 
+export interface PreparationState {
+  isPreparing: boolean;
+  currentStep: string;
+  completedSteps: string[];
+  error: string | null;
+}
+
+export interface CodingState {
+  language: DSALanguage;
+  code: string;
+  testCases: DSATestCase[];
+  testResults: DSATestCase[];
+  executionStatus: "idle" | "running" | "completed";
+  submissionStatus: "idle" | "evaluating" | "accepted" | "rejected";
+  submissionSummary: DSASubmissionSummary | null;
+}
+
 // ─── Socket.IO Payloads (Fixed Backend Contract) ─────────────
 
 /** Backend -> Frontend: "interview:question" payload */
 export interface QuestionPayload {
-  roundNumber: number;
-  questionNumber: number;
-  difficulty: InterviewDifficulty;
-  question: InterviewQuestion;
+  roundNumber?: number | null;
+  questionNumber?: number | null;
+  difficulty?: InterviewDifficulty | null;
+  question: InterviewQuestion | string;
 }
+
+export type SetQuestionPayload = QuestionPayload;
 
 /** Backend -> Frontend: "interview:completed" payload */
 export interface CompletedPayload {
@@ -69,28 +93,63 @@ export interface AnswerPayload {
 
 export interface InterviewState {
   interviewId: string | null;
-
   status: InterviewStatus;
 
-  currentRoundNumber: number | null;
-  currentQuestionNumber: number | null;
-  currentDifficulty: InterviewDifficulty | null;
+  roundNumber: number | null;
+  questionNumber: number | null;
+  roundType: string | null;
+  difficulty: InterviewDifficulty | null;
 
   currentQuestion: InterviewQuestion | null;
 
+  aiState: AIInterviewState;
+  currentAIMessage: string;
+
+  candidateAnswer: string;
+
+  preparationState: PreparationState;
+
+  completionData: FinalEvaluation | null;
+
+  errorCode: string | null;
+  errorMessage: string | null;
+
+  codingState: CodingState;
+
+  // Aliases for compatibility with existing components
   answer: string;
-
   finalEvaluation: FinalEvaluation | null;
-
+  currentRoundNumber: number | null;
+  currentQuestionNumber: number | null;
+  currentDifficulty: InterviewDifficulty | null;
   error: InterviewError | null;
 
   // Actions
+  initializeInterview: (config?: Partial<InterviewState>) => void;
+  startPreparing: () => void;
   startInterview: () => void;
-  setQuestion: (data: QuestionPayload) => void;
+  setQuestion: (data: QuestionPayload | InterviewQuestion | string) => void;
+  setAIState: (aiState: AIInterviewState | OrbState) => void;
+  setAIMessage: (message: string) => void;
+  setCandidateAnswer: (answer: string) => void;
+  setCodingState: (codingState: Partial<CodingState>) => void;
+  setCode: (code: string) => void;
+  setLanguage: (language: DSALanguage) => void;
+  setTestResults: (results: DSATestCase[]) => void;
+  setExecutionStatus: (status: "idle" | "running" | "completed") => void;
+  setSubmissionStatus: (
+    status: "idle" | "evaluating" | "accepted" | "rejected",
+    summary?: DSASubmissionSummary | null,
+  ) => void;
+  completeInterview: (data?: FinalEvaluation | null, interviewId?: string) => void;
+  setError: (code: string, message: string) => void;
+  resetInterview: () => void;
+
+  // Compatibility action aliases
   setAnswer: (answer: string) => void;
   setSubmitting: () => void;
-  setCompleted: (interviewId: string, evaluation: FinalEvaluation) => void;
-  setError: (code: string, message: string) => void;
+  submitAnswer: () => void;
+  setCompleted: (interviewIdOrEval: string | FinalEvaluation, evalIfSecond?: FinalEvaluation) => void;
   reset: () => void;
 }
 

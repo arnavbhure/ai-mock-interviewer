@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { loginFormSchema } from "@/constants/auth.constants";
@@ -11,13 +11,13 @@ import {
   toastSuccess,
 } from "@/components/ui/toast";
 import { login } from "@/api/auth/auth.api";
-import { useAuthStore } from "@/store/auth.store";
+import { useUserStore } from "@/store/user.store";
 
 const loginResolver = createZodResolver(loginFormSchema);
 
 export function useLoginForm() {
-  const setUser = useAuthStore((state) => state.setUser);
-  const clearUser = useAuthStore((state) => state.clearUser);
+  const setUser = useUserStore((state) => state.setUser);
+  const clearUser = useUserStore((state) => state.clearUser);
   const navigate = useNavigate();
   const [submitError, setSubmitError] = useState<string | null>(null);
 

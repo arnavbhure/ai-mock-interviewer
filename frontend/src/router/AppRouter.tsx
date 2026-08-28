@@ -1,5 +1,5 @@
 ﻿import { Route, Routes } from "react-router-dom";
-import { Briefcase, FileText, HelpCircle, Settings, TrendingUp } from "lucide-react";
+import { Briefcase, FileText, HelpCircle, TrendingUp } from "lucide-react";
 import { LoginPage } from "@/auth/login";
 import { RegisterPage } from "@/auth/register";
 import { VerifyOtpPage } from "@/auth/verify-otp";
@@ -12,6 +12,7 @@ import { NotFoundPage } from "@/pages/NotFoundPage";
 import { SetupInterviewPage } from "@/pages/SetupInterviewPage";
 import { InterviewPage } from "@/pages/InterviewPage";
 import { DSAInterviewPage } from "@/pages/DSAInterviewPage";
+import { SettingsPage } from "@/pages/SettingsPage";
 import ProtectedRoute from "./ProtectedRoute";
 
 export function AppRouter() {
@@ -61,16 +62,7 @@ export function AppRouter() {
               />
             }
           />
-          <Route
-            path="/settings"
-            element={
-              <FeaturePlaceholderPage
-                title="Settings"
-                description="Manage your account, target roles, and practice preferences."
-                icon={Settings}
-              />
-            }
-          />
+          <Route path="/settings" element={<SettingsPage />} />
           <Route
             path="/help"
             element={

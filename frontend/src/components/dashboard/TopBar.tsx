@@ -1,8 +1,8 @@
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+﻿import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Bell, ChevronDown, LogOut, Menu, Settings, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/store/auth.store";
+import { useUserStore } from "@/store/user.store";
 
 type TopBarProps = {
   title: string;
@@ -11,8 +11,8 @@ type TopBarProps = {
 };
 
 export function TopBar({ title, subtitle, onOpenMobile }: TopBarProps) {
-  const user = useAuthStore((state) => state.user);
-  const clearUser = useAuthStore((state) => state.clearUser);
+  const user = useUserStore((state) => state.user);
+  const clearUser = useUserStore((state) => state.clearUser);
   const navigate = useNavigate();
 
   const name = user?.name?.trim() || user?.email?.split("@")[0] || "Candidate";

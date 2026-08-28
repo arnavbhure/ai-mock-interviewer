@@ -1,15 +1,15 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { getUserProfile } from "@/api/auth/auth.api";
-import { useAuthStore } from "../store/auth.store";
+import { useUserStore } from "@/store/user.store";
 import LoadingPage from "@/pages/LoadingPage";
 
 const ProtectedRoute = () => {
   const location = useLocation();
 
-  const setUser = useAuthStore((state) => state.setUser);
-  const clearUser = useAuthStore((state) => state.clearUser);
-  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const setUser = useUserStore((state) => state.setUser);
+  const clearUser = useUserStore((state) => state.clearUser);
+  const isLoggedIn = useUserStore((state) => state.isLoggedIn);
 
   const [loading, setLoading] = useState(true);
 

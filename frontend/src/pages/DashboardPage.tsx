@@ -1,5 +1,5 @@
-import { motion, useReducedMotion } from "framer-motion";
-import { useAuthStore } from "@/store/auth.store";
+﻿import { motion, useReducedMotion } from "framer-motion";
+import { useUserStore } from "@/store/user.store";
 import { HAS_INTERVIEWS } from "@/data/dashboard.mock";
 import {
   DashboardHeader,
@@ -13,7 +13,9 @@ import { TextLoop } from "@/components/TextLoop/TextLoop";
 
 export function DashboardPage() {
   const reduced = useReducedMotion();
-  const user = useAuthStore((state) => state.user);
+  const user = useUserStore((state) => state.user);
+  
+  // Extract user's first name, full name, or fallback
   const displayName =
     user?.name?.trim()?.split(" ")[0] || user?.email?.split("@")[0] || "there";
 
@@ -38,7 +40,7 @@ export function DashboardPage() {
         aria-hidden="true"
       >
         <TextLoop
-          text="Interview practice  ·  Technical skills  ·  Communication  ·  Confidence"
+          text="Interview practice  •  Technical skills  •  Communication  •  Confidence"
           shape="linear"
           speed={40}
           fontSize={12}

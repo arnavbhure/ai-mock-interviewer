@@ -1,23 +1,21 @@
-"use client";
-
+﻿import { NavLink } from "react-router-dom";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import {
-  Briefcase,
-  ChevronsLeft,
-  FileText,
-  HelpCircle,
   LayoutDashboard,
-  Settings,
+  Briefcase,
+  FileText,
   TrendingUp,
-  User,
+  Settings,
+  HelpCircle,
+  ChevronsLeft,
   X,
+  User,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import Logo from "@/public/Logo.png";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/store/auth.store";
+import { useUserStore } from "@/store/user.store";
 import { SidebarNavItem } from "./SidebarNavItem";
 import { SidebarTooltip } from "./SidebarTooltip";
-import Logo from "../../../public/Logo.png";
 
 type SidebarProps = {
   collapsed: boolean;
@@ -54,7 +52,7 @@ export function Sidebar({
   mobileOpen,
   onCloseMobile,
 }: SidebarProps) {
-  const user = useAuthStore((state) => state.user);
+  const user = useUserStore((state) => state.user);
   const name = user?.name?.trim() || "Candidate";
   const initials = name
     .split(/\s+/)
@@ -180,7 +178,7 @@ export function Sidebar({
                 <NavLink
                   to="/settings"
                   onClick={onCloseMobile}
-                  aria-label={`Profile · ${name}`}
+                  aria-label={`Profile • ${name}`}
                   className={cn(
                     "flex h-10 items-center rounded-lg",
                     showLabels

@@ -23,7 +23,9 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    req.user = user;
+    const { password_hash, ...userWithoutPassword } = user;
+
+    req.user = userWithoutPassword;
     next();
   } catch (err) {
     console.log("Error in authMiddleware : ", err.message || err);
