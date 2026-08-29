@@ -37,6 +37,10 @@ const INITIAL_STATE = {
   roundType: "Technical Interview",
   difficulty: null as InterviewState["difficulty"],
 
+  role: null as string | null,
+  resumeFileName: null as string | null,
+  resumeId: null as string | null,
+
   currentQuestion: null as InterviewQuestion | null,
 
   aiState: "idle" as AIInterviewState,
@@ -82,6 +86,21 @@ export const useInterviewStore = create<InterviewState>((set) => ({
       errorCode: null,
       errorMessage: null,
       error: null,
+    })),
+
+  setInterviewConfig: (config: {
+    role?: string | null;
+    difficulty?: InterviewState["difficulty"];
+    resumeFileName?: string | null;
+    resumeId?: string | null;
+  }) =>
+    set((state) => ({
+      ...state,
+      role: config.role !== undefined ? config.role : state.role,
+      difficulty: config.difficulty !== undefined ? config.difficulty : state.difficulty,
+      currentDifficulty: config.difficulty !== undefined ? config.difficulty : state.difficulty,
+      resumeFileName: config.resumeFileName !== undefined ? config.resumeFileName : state.resumeFileName,
+      resumeId: config.resumeId !== undefined ? config.resumeId : state.resumeId,
     })),
 
   startPreparing: () =>

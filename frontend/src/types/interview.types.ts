@@ -114,6 +114,10 @@ export interface InterviewState {
   errorCode: string | null;
   errorMessage: string | null;
 
+  role: string | null;
+  resumeFileName: string | null;
+  resumeId: string | null;
+
   codingState: CodingState;
 
   evaluation: FinalEvaluation | null;
@@ -128,6 +132,12 @@ export interface InterviewState {
 
   // Actions
   initializeInterview: (config?: Partial<InterviewState>) => void;
+  setInterviewConfig: (config: {
+    role?: string | null;
+    difficulty?: InterviewDifficulty | null;
+    resumeFileName?: string | null;
+    resumeId?: string | null;
+  }) => void;
   startPreparing: () => void;
   startInterview: () => void;
   setQuestion: (data: QuestionPayload | InterviewQuestion | string) => void;
@@ -174,12 +184,11 @@ export type OrbState =
   | "idle";
 
 export const PREPARATION_STEPS = [
-  "ANALYZING_RESUME",
+  "READING_RESUME",
   "UNDERSTANDING_EXPERIENCE",
-  "BUILDING_PLAN",
-  "PREPARING_QUESTIONS",
-  "PREPARING_INTERVIEWER",
-  "COMPLETE",
+  "STRUCTURING_PROFILE",
+  "PREPARING_CONTEXT",
+  "FINALIZING_INTERVIEW",
 ] as const;
 
 export type PreparationStep = (typeof PREPARATION_STEPS)[number];
@@ -187,12 +196,11 @@ export type PreparationStep = (typeof PREPARATION_STEPS)[number];
 export type PreparationStatus = "PREPARING" | "READY" | "ERROR";
 
 export const PREPARATION_STEP_LABELS: Record<PreparationStep, string> = {
-  ANALYZING_RESUME: "Analyzing your resume",
+  READING_RESUME: "Reading your resume",
   UNDERSTANDING_EXPERIENCE: "Understanding your experience",
-  BUILDING_PLAN: "Building your interview plan",
-  PREPARING_QUESTIONS: "Preparing personalized questions",
-  PREPARING_INTERVIEWER: "Preparing your interviewer",
-  COMPLETE: "Interview ready",
+  STRUCTURING_PROFILE: "Structuring your profile",
+  PREPARING_CONTEXT: "Preparing interview context",
+  FINALIZING_INTERVIEW: "Finalizing your interview",
 };
 
 export type InterviewPhase =
@@ -200,3 +208,4 @@ export type InterviewPhase =
   | "READY_TRANSITION"
   | "LIVE"
   | "COMPLETED";
+

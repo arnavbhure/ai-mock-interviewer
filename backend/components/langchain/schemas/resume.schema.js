@@ -17,7 +17,7 @@ const ResumeSchema = z.object({
 
   projects: z.array(z.string()),
 
-  achievments: z.string(),
+  achievements: z.string(),
 });
 
 module.exports = { ResumeSchema };

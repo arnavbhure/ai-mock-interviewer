@@ -1,13 +1,11 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import type { DashboardFormValues } from "@/types/dashboard.types";
 import { MAX_FILE_SIZE, ACCEPTED_FILE_TYPES } from "@/types/dashboard.types";
-import {
-  initializeInterviewSocketListeners,
-  emitStartInterview,
-} from "@/services/interviewSocket.service";
+import { uploadResume } from "@/api/resume/resume.api";
+import { useInterviewStore } from "@/store/interview.store";
 import { toastError } from "@/components/ui/toast";
 
 function getApiErrorMessage(error: unknown): string {
@@ -28,11 +26,14 @@ function getApiErrorMessage(error: unknown): string {
   }
 
   if (error instanceof Error && error.message) return error.message;
-  return "Failed to create interview. Please try again.";
+  return "Failed to process resume. Please try again.";
 }
 
 export function useDashboardForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isProcessingResume, setIsProcessingResume] = useState(false);
+  const [resumeError, setResumeError] = useState<string | null>(null);
+
   const navigate = useNavigate();
 
   const form = useForm<DashboardFormValues>({
@@ -76,8 +77,84 @@ export function useDashboardForm() {
     form.setValue("resume", null, { shouldValidate: true, shouldDirty: true });
   };
 
+  const executeResumeUpload = useCallback(
+    async (file: File, role: string, difficulty: "easy" | "medium" | "hard") => {
+      setIsSubmitting(true);
+      setIsProcessingResume(true);
+      setResumeError(null);
+
+      // Save role, difficulty and resume filename in Zustand store
+      useInterviewStore.getState().setInterviewConfig({
+        role,
+        difficulty,
+        resumeFileName: file.name,
+      });
+
+      try {
+        const response = await uploadResume(file);
+
+        // Normalize response object safely
+        const rawData =
+          response &&
+          typeof response === "object" &&
+          "data" in response &&
+          typeof (response as Record<string, unknown>).data === "object"
+            ? ((response as Record<string, unknown>).data as Record<string, unknown>)
+            : (response as Record<string, unknown>);
+
+        // Check if response indicates success
+        const isSuccess =
+          Boolean(rawData) &&
+          (rawData.success === true ||
+            rawData.status === 200 ||
+            rawData.status === "success" ||
+            rawData.status === "ok" ||
+            (rawData.success !== false &&
+              typeof rawData.message === "string" &&
+              rawData.message.toLowerCase().includes("success")));
+
+        if (isSuccess) {
+          // If backend returns a resumeId, store it
+          if (rawData.resumeId && typeof rawData.resumeId === "string") {
+            useInterviewStore.getState().setInterviewConfig({
+              resumeId: rawData.resumeId,
+            });
+          }
+
+          // Reset interview status so InterviewRoom starts clean
+          useInterviewStore.getState().initializeInterview({ status: "idle" });
+
+          // Stop loading state
+          setIsProcessingResume(false);
+          setIsSubmitting(false);
+          setResumeError(null);
+
+          // Navigate immediately to InterviewRoom (InterviewRoom will handle interview:start)
+          navigate("/interview");
+          return;
+        }
+
+        // Handle explicit failure response
+        const errorMsg =
+          typeof rawData?.message === "string" && rawData.message.trim()
+            ? rawData.message
+            : "Failed to process resume.";
+
+        setResumeError(errorMsg);
+        toastError(errorMsg);
+        setIsSubmitting(false);
+      } catch (error) {
+        const errorMsg = getApiErrorMessage(error);
+        setResumeError(errorMsg);
+        toastError(errorMsg);
+        setIsSubmitting(false);
+      }
+    },
+    [navigate],
+  );
+
   const onSubmit = form.handleSubmit(async (values) => {
-    if (isSubmitting) return;
+    if (isSubmitting || isProcessingResume) return;
 
     const role = values.role.trim();
     if (!role) {
@@ -93,23 +170,25 @@ export function useDashboardForm() {
       return;
     }
 
-    setIsSubmitting(true);
+    await executeResumeUpload(values.resume, role, values.difficulty);
+  });
 
-    try {
-      // 1. Initialize Socket.IO listeners
-      initializeInterviewSocketListeners();
-
-      // 2. Set interview status to "starting" & emit socket.emit("interview:start")
-      emitStartInterview();
-
-      // 3. Navigate to /interview to show preparation loading state
-      navigate("/interview");
-    } catch (error) {
-      toastError(getApiErrorMessage(error));
-    } finally {
+  const handleRetryUpload = useCallback(() => {
+    const values = form.getValues();
+    if (values.resume && values.role && values.difficulty) {
+      executeResumeUpload(values.resume, values.role.trim(), values.difficulty);
+    } else {
+      setIsProcessingResume(false);
+      setResumeError(null);
       setIsSubmitting(false);
     }
-  });
+  }, [executeResumeUpload, form]);
+
+  const handleBackToSetup = useCallback(() => {
+    setIsProcessingResume(false);
+    setResumeError(null);
+    setIsSubmitting(false);
+  }, []);
 
   const getCompletionCount = () => {
     let count = 0;
@@ -122,9 +201,13 @@ export function useDashboardForm() {
   return {
     form,
     isSubmitting,
+    isProcessingResume,
+    resumeError,
     handleFileChange,
     removeFile,
     onSubmit,
+    handleRetryUpload,
+    handleBackToSetup,
     isFormValid,
     getCompletionCount,
     watchedRole,
@@ -132,3 +215,5 @@ export function useDashboardForm() {
     watchedResume,
   };
 }
+
+export default useDashboardForm;

@@ -24,7 +24,6 @@ const resumeUploadController = async (req, res) => {
       resume: cleanResume,
     });
     const resumeJson = { id: user.id, ...result?.structuredResume };
-
     /*
       result returns an object with the following structure:
       result.structuredResume is an object containing the structured resume data
@@ -52,7 +51,6 @@ const resumeUploadController = async (req, res) => {
     if (resumeStored && embeddingsStored.stored) {
       return res.status(200).json({
         success: true,
-        resume_json: result?.structuredResume,
         message: "Resume processed successfully",
       });
     }

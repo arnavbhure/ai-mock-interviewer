@@ -37,24 +37,24 @@ export const DIFFICULTY_OPTIONS: {
   label: string;
   description: string;
 }[] = [
-  {
-    value: "easy",
-    label: "Easy",
-    description: "Foundational questions",
-  },
-  {
-    value: "medium",
-    label: "Medium",
-    description: "Real interview level",
-  },
-  {
-    value: "hard",
-    label: "Hard",
-    description: "Challenging questions",
-  },
-];
+    {
+      value: "easy",
+      label: "Easy",
+      description: "Foundational questions",
+    },
+    {
+      value: "medium",
+      label: "Medium",
+      description: "Real interview level",
+    },
+    {
+      value: "hard",
+      label: "Hard",
+      description: "Challenging questions",
+    },
+  ];
 
-export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+export const MAX_FILE_SIZE = 6 * 1024 * 1024; // 6MB
 export const ACCEPTED_FILE_TYPES = ["application/pdf"];
 
 /* =========================================================

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Interview Service — Mock Implementation
  *
  * Clean API boundary for interview operations.
@@ -19,12 +19,11 @@ function delay(ms: number): Promise<void> {
 
 /** Delays per preparation step — keeps the flow brisk but visible. */
 const STEP_DELAYS: Record<PreparationStep, number> = {
-  ANALYZING_RESUME: 600,
+  READING_RESUME: 600,
   UNDERSTANDING_EXPERIENCE: 700,
-  BUILDING_PLAN: 800,
-  PREPARING_QUESTIONS: 700,
-  PREPARING_INTERVIEWER: 600,
-  COMPLETE: 0,
+  STRUCTURING_PROFILE: 800,
+  PREPARING_CONTEXT: 700,
+  FINALIZING_INTERVIEW: 600,
 };
 
 // ─── Public API ───────────────────────────────────────────────

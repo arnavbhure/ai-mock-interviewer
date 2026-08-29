@@ -20,10 +20,7 @@ function getStepState(
   currentStep: PreparationStep,
   completedSteps: PreparationStep[],
 ): StepState {
-  if (
-    completedSteps.includes(step) ||
-    (step === "COMPLETE" && currentStep === "COMPLETE")
-  ) {
+  if (completedSteps.includes(step)) {
     return "completed";
   }
   if (step === currentStep) return "processing";
@@ -37,17 +34,14 @@ const ease = [0.16, 1, 0.3, 1] as const;
  * animated indicators, and sequential state transitions.
  */
 export function PreparationStepList({ currentStep, completedSteps }: Props) {
-  const displaySteps = PREPARATION_STEPS.slice(0, -1);
+  const displaySteps = PREPARATION_STEPS;
 
   // Calculate progress for the vertical fill line (0 → 1)
   const progress = useMemo(() => {
     const total = displaySteps.length;
     if (total <= 1) return 0;
 
-    // Count completed steps + partial credit for current processing step
-    let filled = completedSteps.filter((s) => s !== "COMPLETE").length;
-
-    // Current step being processed gets 50% fill towards its position
+    let filled = completedSteps.length;
     const currentIdx = displaySteps.indexOf(currentStep);
     if (currentIdx > filled) {
       filled = currentIdx;
