@@ -1,27 +1,25 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useInterviewStore } from "@/store/interview.store";
 import type { OrbState } from "@/types/interview.types";
-import {
-  initializeInterviewSocketListeners,
-  emitStartInterview,
-  emitSubmitAnswer,
-} from "@/services/interviewSocket.service";
+import { emitSubmitAnswer } from "@/services/interviewSocket.service";
 import { MOCK_INTERVIEW_CONFIG } from "@/data/interview.mock";
 
 export function useInterviewSession() {
   const {
     interviewId,
     status,
-    currentRoundNumber,
-    currentQuestionNumber,
-    currentDifficulty,
+    roundNumber,
+    questionNumber,
+    difficulty,
     currentQuestion,
+    candidateAnswer,
     answer,
+    evaluation,
     finalEvaluation,
     error,
-    setAnswer,
+    setCandidateAnswer,
     setSubmitting,
-    reset,
+    resetInterview,
   } = useInterviewStore();
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -30,31 +28,18 @@ export function useInterviewSession() {
   const [isEndDialogOpen, setIsEndDialogOpen] = useState(false);
   const [isSpeakingPhase, setIsSpeakingPhase] = useState(true);
 
-  // ─── Socket.IO Listener Initialization & Start Trigger ───────
-  useEffect(() => {
-    // 1. Initialize lifecycle-safe Socket.IO listeners
-    const cleanup = initializeInterviewSocketListeners();
-
-    // 2. Emit interview:start when entering live interview
-    emitStartInterview();
-
-    return () => {
-      cleanup();
-    };
-  }, []);
-
   // ─── AI Speech -> Candidate Turn Transition Timer ────────────
   useEffect(() => {
     if (!currentQuestion) return;
 
-    // AI speaks initially for ~4.5s upon question arrival, then candidate turns
+    // AI speaks initially for ~3.5s upon question arrival, then candidate turns
     const startTimer = setTimeout(() => {
       setIsSpeakingPhase(true);
     }, 0);
 
     const endTimer = setTimeout(() => {
       setIsSpeakingPhase(false);
-    }, 4500);
+    }, 3500);
 
     return () => {
       clearTimeout(startTimer);
@@ -64,7 +49,7 @@ export function useInterviewSession() {
 
   // ─── Elapsed interview timer ─────────────────────────────────
   useEffect(() => {
-    if (status !== "active" && status !== "submitting" && status !== "starting") return;
+    if (status !== "active" && status !== "submitting") return;
 
     const timer = setInterval(() => {
       setElapsedSeconds((prev) => prev + 1);
@@ -98,22 +83,30 @@ export function useInterviewSession() {
 
   // ─── User Actions ─────────────────────────────────────────────
 
+  const handleSetAnswer = useCallback(
+    (newAnswer: string) => {
+      setCandidateAnswer(newAnswer);
+    },
+    [setCandidateAnswer],
+  );
+
   const submitCurrentAnswer = useCallback(() => {
-    const trimmed = answer.trim();
+    const currentAns = candidateAnswer || answer;
+    const trimmed = currentAns.trim();
     if (!trimmed || status === "submitting") return;
 
     emitSubmitAnswer(trimmed);
-  }, [answer, status]);
+  }, [candidateAnswer, answer, status]);
 
   const toggleListening = useCallback(() => {
     if (isSpeakingPhase) {
       // Candidate wants to skip AI speech and start answering immediately
       setIsSpeakingPhase(false);
-    } else if (answer.trim()) {
+    } else if ((candidateAnswer || answer).trim()) {
       // Candidate finished answering and submits
       submitCurrentAnswer();
     }
-  }, [isSpeakingPhase, answer, submitCurrentAnswer]);
+  }, [isSpeakingPhase, candidateAnswer, answer, submitCurrentAnswer]);
 
   const toggleMute = useCallback(() => {
     setIsMuted((prev) => !prev);
@@ -121,8 +114,8 @@ export function useInterviewSession() {
 
   const confirmEndInterview = useCallback(() => {
     setIsEndDialogOpen(false);
-    reset();
-  }, [reset]);
+    resetInterview();
+  }, [resetInterview]);
 
   const formattedTime = `${String(Math.floor(elapsedSeconds / 60)).padStart(2, "0")}:${String(
     elapsedSeconds % 60,
@@ -136,14 +129,14 @@ export function useInterviewSession() {
     interviewId,
     status,
     orbState,
-    currentRoundNumber,
-    currentQuestionNumber,
-    currentDifficulty: currentDifficulty ?? MOCK_INTERVIEW_CONFIG.difficulty,
+    currentRoundNumber: roundNumber,
+    currentQuestionNumber: questionNumber,
+    currentDifficulty: difficulty ?? MOCK_INTERVIEW_CONFIG.difficulty,
     currentQuestion,
-    answer,
-    setAnswer,
+    answer: candidateAnswer || answer,
+    setAnswer: handleSetAnswer,
     setSubmitting,
-    finalEvaluation,
+    finalEvaluation: evaluation ?? finalEvaluation,
     error,
     role: MOCK_INTERVIEW_CONFIG.role,
     interviewType: MOCK_INTERVIEW_CONFIG.type,
@@ -160,3 +153,4 @@ export function useInterviewSession() {
     confirmEndInterview,
   };
 }
+

@@ -34,7 +34,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/interview", authMiddleware, interviewRouter);
 
 app.get("/ping", (req, res) => {
-  res.send("pong");
+  res.send("ok");
 });
 
 app.use(errorHandler); // always last

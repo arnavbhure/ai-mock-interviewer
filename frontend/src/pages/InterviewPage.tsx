@@ -1,9 +1,7 @@
-﻿import { useEffect, useCallback, useState } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { CheckCircle2, Sparkles } from "lucide-react";
+import { useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useInterviewStore } from "@/store/interview.store";
-import type { InterviewPhase } from "@/types/interview.types";
-import { useInterviewPreparation } from "@/hooks/useInterviewPreparation";
+import { useInterviewSocket } from "@/hooks/useInterviewSocket";
 import { useInterviewSession } from "@/hooks/useInterviewSession";
 import {
   PreparationScreen,
@@ -15,51 +13,6 @@ import {
   EndInterviewDialog,
   CompletionScreen,
 } from "@/components/interview";
-
-const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
-
-// ─── Ready Transition (Dark ambient handoff into Live Room) ──
-
-function ReadyTransition({ onComplete }: { onComplete: () => void }) {
-  const reduced = useReducedMotion();
-
-  useEffect(() => {
-    const timer = setTimeout(onComplete, 1400);
-    return () => clearTimeout(timer);
-  }, [onComplete]);
-
-  return (
-    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-[#060813] text-white select-none">
-      <div
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-600/15 blur-[100px]"
-        aria-hidden="true"
-      />
-      <motion.div
-        initial={reduced ? undefined : { scale: 0.85, opacity: 0 }}
-        animate={reduced ? undefined : { scale: 1, opacity: 1 }}
-        exit={reduced ? undefined : { scale: 1.05, opacity: 0 }}
-        transition={{ duration: 0.5, ease }}
-        className="relative z-10 flex flex-col items-center gap-4 text-center px-4"
-      >
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 shadow-[0_0_24px_rgba(16,185,129,0.2)]">
-          <CheckCircle2 className="h-8 w-8" />
-        </div>
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-0.5 text-[11px] font-semibold text-indigo-300">
-            <Sparkles className="h-3 w-3" />
-            <span>INTERVIEW ROOM READY</span>
-          </div>
-          <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
-            Entering live interview
-          </h2>
-          <p className="text-xs text-slate-400">
-            Connecting real-time socket and AI interviewer...
-          </p>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
 
 // ─── Live Interview Room ─────────────────────────────────────
 
@@ -168,59 +121,35 @@ function LiveInterviewRoom() {
 
 export function InterviewPage() {
   const status = useInterviewStore((s) => s.status);
-  const resetStore = useInterviewStore((s) => s.reset);
+  const currentQuestion = useInterviewStore((s) => s.currentQuestion);
+  const startInterview = useInterviewStore((s) => s.startInterview);
 
-  const [phase, setPhase] = useState<InterviewPhase>("PREPARATION");
+  const { startInterview: emitStart } = useInterviewSocket();
 
-  // Reset store when this page mounts
+  // If page is loaded directly in idle state, start interview
   useEffect(() => {
-    resetStore();
-  }, [resetStore]);
+    if (status === "idle") {
+      startInterview();
+      emitStart();
+    }
+  }, [status, startInterview, emitStart]);
 
-  const handlePreparationReady = useCallback(() => {
-    setPhase("READY_TRANSITION");
-  }, []);
-
-  const { currentStep, completedSteps, preparationError } =
-    useInterviewPreparation({ onReady: handlePreparationReady });
-
-  const handleReadyComplete = useCallback(() => {
-    setPhase("LIVE");
-  }, []);
-
-  // Compute active display phase
-  const activePhase: InterviewPhase =
-    status === "completed" ? "COMPLETED" : phase;
+  // Determine active view mode
+  const isCompleted = status === "completed";
+  const isLive = (status === "active" || status === "submitting") || (status === "error" && currentQuestion !== null);
 
   return (
     <AnimatePresence mode="wait">
-      {activePhase === "PREPARATION" && (
+      {isCompleted ? (
         <motion.div
-          key="preparation"
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <PreparationScreen
-            currentStep={currentStep}
-            completedSteps={completedSteps}
-            preparationError={preparationError}
-          />
-        </motion.div>
-      )}
-
-      {activePhase === "READY_TRANSITION" && (
-        <motion.div
-          key="ready"
+          key="completed"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.35 }}
         >
-          <ReadyTransition onComplete={handleReadyComplete} />
+          <CompletionScreen />
         </motion.div>
-      )}
-
-      {activePhase === "LIVE" && (
+      ) : isLive ? (
         <motion.div
           key="live"
           initial={{ opacity: 0 }}
@@ -230,18 +159,18 @@ export function InterviewPage() {
         >
           <LiveInterviewRoom />
         </motion.div>
-      )}
-
-      {activePhase === "COMPLETED" && (
+      ) : (
         <motion.div
-          key="completed"
+          key="preparation"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.35 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
         >
-          <CompletionScreen />
+          <PreparationScreen />
         </motion.div>
       )}
     </AnimatePresence>
   );
 }
+

@@ -1,42 +1,41 @@
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { BrainCircuit } from "lucide-react";
-import { PreparationStepList } from "./PreparationStepList";
+import { BrainCircuit, AlertTriangle, ArrowLeft, RotateCcw, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { ShinyText } from "@/components/ShinyText/ShinyText";
-import type { PreparationStep } from "@/types/interview.types";
-import { MOCK_INTERVIEW_CONFIG } from "@/data/interview.mock";
+import { Button } from "@/components/ui/button";
+import { useInterviewStore } from "@/store/interview.store";
+import { emitStartInterview } from "@/services/interviewSocket.service";
 import dashboardBg from "@/assets/background_image_dashboard.png";
 
 type Props = {
-  currentStep: PreparationStep;
-  completedSteps: PreparationStep[];
-  preparationError: string | null;
+  preparationError?: string | null;
+  role?: string;
+  difficulty?: string | null;
 };
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
-/** Dynamic contextual messages that change with the active step. */
-const STEP_STATUS_MESSAGES: Partial<Record<PreparationStep, string>> = {
-  ANALYZING_RESUME: "Analyzing your experience and qualifications...",
-  UNDERSTANDING_EXPERIENCE: "Identifying key skills and project patterns...",
-  BUILDING_PLAN: "Structuring a personalized interview plan...",
-  PREPARING_QUESTIONS: "Generating questions tailored to your background...",
-  PREPARING_INTERVIEWER: "Calibrating your AI interviewer...",
-  COMPLETE: "Everything is ready.",
-};
-
-/** Interview context metadata pills. */
-const INTERVIEW_META = [
-  { label: "Role", value: MOCK_INTERVIEW_CONFIG.role },
-  { label: "Difficulty", value: MOCK_INTERVIEW_CONFIG.difficulty },
-  { label: "Type", value: MOCK_INTERVIEW_CONFIG.type },
-] as const;
-
 export function PreparationScreen({
-  currentStep,
-  completedSteps,
   preparationError,
+  role = "Full Stack Developer",
+  difficulty = "Medium",
 }: Props) {
   const reduced = useReducedMotion();
+  const navigate = useNavigate();
+
+  const storeError = useInterviewStore((s) => s.error);
+  const storeDifficulty = useInterviewStore((s) => s.difficulty);
+  const displayError = preparationError || storeError?.message;
+  const displayDifficulty = storeDifficulty || difficulty;
+
+  const handleRetry = () => {
+    emitStartInterview();
+  };
+
+  const handleBackToDashboard = () => {
+    useInterviewStore.getState().resetInterview();
+    navigate("/dashboard/new");
+  };
 
   return (
     <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-background">
@@ -199,78 +198,101 @@ export function PreparationScreen({
             className="text-[10px] font-semibold tracking-[0.2em] uppercase"
           />
           <h1 className="text-center text-[1.4rem] font-semibold tracking-tight text-text sm:text-2xl">
-            Preparing your interview
+            {displayError ? "Interview Setup Error" : "Preparing your interview"}
           </h1>
           <p className="max-w-xs text-center text-sm leading-relaxed text-text-secondary">
-            Tailoring your interview to your experience and target role.
+            {displayError
+              ? "We encountered an issue starting your interview session."
+              : "Connecting to AI interviewer & setting up your personalized session."}
           </p>
         </motion.div>
 
-        {/* ── Step Progress ────────────────────────────────── */}
-        <motion.div
-          initial={reduced ? false : { opacity: 0, y: 16 }}
-          animate={reduced ? false : { opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease, delay: 0.3 }}
-          className="mt-10 w-full rounded-xl border border-border/60 bg-surface/70 px-6 py-5 shadow-card backdrop-blur-sm"
-        >
-          <PreparationStepList
-            currentStep={currentStep}
-            completedSteps={completedSteps}
-          />
-        </motion.div>
-
-        {/* ── Dynamic status message ───────────────────────── */}
-        <motion.div
-          initial={reduced ? false : { opacity: 0 }}
-          animate={reduced ? false : { opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.45 }}
-          className="mt-5 flex h-6 items-center justify-center"
-        >
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={currentStep}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 0.7, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.35, ease }}
-              className="text-center text-xs font-medium text-text-secondary"
-            >
-              {STEP_STATUS_MESSAGES[currentStep] ?? ""}
-            </motion.p>
-          </AnimatePresence>
-        </motion.div>
-
-        {/* ── Interview context metadata ───────────────────── */}
-        <motion.div
-          initial={reduced ? false : { opacity: 0, y: 8 }}
-          animate={reduced ? false : { opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease, delay: 0.55 }}
-          className="mt-6 flex flex-wrap items-center justify-center gap-2"
-        >
-          {INTERVIEW_META.map((meta) => (
-            <span
-              key={meta.label}
-              className="inline-flex items-center gap-1.5 rounded-pill border border-border/50 bg-surface/60 px-3 py-1 text-[11px] backdrop-blur-sm"
-            >
-              <span className="font-medium text-text-muted">{meta.label}</span>
-              <span className="text-text-secondary">{meta.value}</span>
-            </span>
-          ))}
-        </motion.div>
-
-        {/* ── Error state ──────────────────────────────────── */}
-        {preparationError && (
+        {/* ── Loading Status Card ──────────────────────────── */}
+        {!displayError && (
           <motion.div
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-6 rounded-lg border border-error/20 bg-error/5 px-4 py-3"
+            initial={reduced ? false : { opacity: 0, y: 16 }}
+            animate={reduced ? false : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease, delay: 0.25 }}
+            className="mt-8 w-full rounded-2xl border border-border/60 bg-surface/70 p-6 shadow-card backdrop-blur-sm flex flex-col items-center text-center gap-3"
           >
-            <p className="text-center text-sm text-error">
-              {preparationError}
+            <div className="flex items-center gap-2 text-xs font-semibold text-primary">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span>Awaiting first question from interviewer...</span>
+            </div>
+            <p className="text-xs text-text-secondary leading-relaxed max-w-sm">
+              Your customized interview is being synthesized based on your profile and target role.
             </p>
           </motion.div>
         )}
+
+        {/* ── Context Metadata Pills ───────────────────────── */}
+        <motion.div
+          initial={reduced ? false : { opacity: 0, y: 8 }}
+          animate={reduced ? false : { opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease, delay: 0.35 }}
+          className="mt-6 flex flex-wrap items-center justify-center gap-2"
+        >
+          <span className="inline-flex items-center gap-1.5 rounded-pill border border-border/50 bg-surface/60 px-3 py-1 text-[11px] backdrop-blur-sm">
+            <span className="font-medium text-text-muted">Role</span>
+            <span className="text-text-secondary">{role}</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-pill border border-border/50 bg-surface/60 px-3 py-1 text-[11px] backdrop-blur-sm">
+            <span className="font-medium text-text-muted">Difficulty</span>
+            <span className="text-text-secondary capitalize">{displayDifficulty}</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-pill border border-border/50 bg-surface/60 px-3 py-1 text-[11px] backdrop-blur-sm">
+            <span className="font-medium text-text-muted">Type</span>
+            <span className="text-text-secondary">Technical</span>
+          </span>
+        </motion.div>
+
+        {/* ── Error Banner & Actions ───────────────────────── */}
+        <AnimatePresence>
+          {displayError && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              className="mt-8 w-full rounded-xl border border-red-500/20 bg-red-500/10 p-5 text-left"
+            >
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 shrink-0 text-red-500 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-red-700 dark:text-red-300">
+                    {storeError?.code ? `[${storeError.code}] ` : ""}Backend Error
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-red-600 dark:text-red-200 break-words">
+                    {displayError}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 flex items-center justify-end gap-3 border-t border-red-500/20 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBackToDashboard}
+                  className="h-8 gap-1.5 text-xs"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  <span>Back to setup</span>
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleRetry}
+                  className="h-8 gap-1.5 bg-red-600 text-white hover:bg-red-500 text-xs"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  <span>Retry Start</span>
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
 }
+

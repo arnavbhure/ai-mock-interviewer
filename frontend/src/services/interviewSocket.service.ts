@@ -1,5 +1,6 @@
-﻿import socket from "@/socket/socket";
+import socket from "@/socket/socket";
 import { useInterviewStore } from "@/store/interview.store";
+import { toastError } from "@/components/ui/toast";
 import type {
   QuestionPayload,
   CompletedPayload,
@@ -15,11 +16,16 @@ const handleQuestion = (data: QuestionPayload) => {
 };
 
 const handleCompleted = (data: CompletedPayload) => {
-  useInterviewStore.getState().setCompleted(data.interviewId, data.evaluation);
+  useInterviewStore.getState().setCompleted(data);
 };
 
 const handleError = (data: ErrorPayload) => {
   useInterviewStore.getState().setError(data.code, data.message);
+  if (data?.message) {
+    toastError(data.message);
+  } else if (data?.code) {
+    toastError(`Interview Error: ${data.code}`);
+  }
 };
 
 // ─── Socket Listener Lifecycle Management ─────────────────────
@@ -31,6 +37,10 @@ const handleError = (data: ErrorPayload) => {
  * @returns Cleanup function to remove the listeners
  */
 export function initializeInterviewSocketListeners(): () => void {
+  if (!socket.connected) {
+    socket.connect();
+  }
+
   if (!isInitialized) {
     socket.on("interview:question", handleQuestion);
     socket.on("interview:completed", handleCompleted);
@@ -56,8 +66,12 @@ export function cleanupInterviewSocketListeners(): void {
 /**
  * Emits "interview:start" to begin the interview session on the backend.
  * Updates Zustand status to "starting".
+ * Does NOT send an interviewId or any payload (backend identifies via authenticated socket).
  */
 export function emitStartInterview(): void {
+  if (!socket.connected) {
+    socket.connect();
+  }
   useInterviewStore.getState().startInterview();
   socket.emit("interview:start");
 }
@@ -73,9 +87,15 @@ export function emitSubmitAnswer(answer: string): boolean {
   const trimmed = answer.trim();
   if (!trimmed) return false;
 
+  if (!socket.connected) {
+    socket.connect();
+  }
+
+  useInterviewStore.getState().setCandidateAnswer(trimmed);
   useInterviewStore.getState().setSubmitting();
   socket.emit("interview:answer", {
     answer: trimmed,
   });
   return true;
 }
+

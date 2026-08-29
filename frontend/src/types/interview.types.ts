@@ -1,4 +1,4 @@
-﻿/* ==========================================================
+/* ==========================================================
    INTERVIEW SESSION — TYPE DEFINITIONS (V1 Real-Time & Store)
    ========================================================== */
 
@@ -116,6 +116,8 @@ export interface InterviewState {
 
   codingState: CodingState;
 
+  evaluation: FinalEvaluation | null;
+
   // Aliases for compatibility with existing components
   answer: string;
   finalEvaluation: FinalEvaluation | null;
@@ -142,14 +144,17 @@ export interface InterviewState {
     summary?: DSASubmissionSummary | null,
   ) => void;
   completeInterview: (data?: FinalEvaluation | null, interviewId?: string) => void;
-  setError: (code: string, message: string) => void;
+  setError: (errorOrCode: string | InterviewError, message?: string) => void;
   resetInterview: () => void;
 
   // Compatibility action aliases
   setAnswer: (answer: string) => void;
   setSubmitting: () => void;
   submitAnswer: () => void;
-  setCompleted: (interviewIdOrEval: string | FinalEvaluation, evalIfSecond?: FinalEvaluation) => void;
+  setCompleted: (
+    interviewIdOrPayload: string | CompletedPayload | FinalEvaluation,
+    evalIfSecond?: FinalEvaluation,
+  ) => void;
   reset: () => void;
 }
 

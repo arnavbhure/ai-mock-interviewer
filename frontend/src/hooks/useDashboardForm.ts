@@ -4,13 +4,11 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import type { DashboardFormValues } from "@/types/dashboard.types";
 import { MAX_FILE_SIZE, ACCEPTED_FILE_TYPES } from "@/types/dashboard.types";
-import { createInterview } from "@/api/auth/auth.api";
 import {
-  toastDismiss,
-  toastError,
-  toastLoading,
-  toastSuccess,
-} from "@/components/ui/toast";
+  initializeInterviewSocketListeners,
+  emitStartInterview,
+} from "@/services/interviewSocket.service";
+import { toastError } from "@/components/ui/toast";
 
 function getApiErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
@@ -96,28 +94,18 @@ export function useDashboardForm() {
     }
 
     setIsSubmitting(true);
-    const toastId = toastLoading("Preparing Interview...");
 
     try {
-      const response = await createInterview({
-        role,
-        difficulty: values.difficulty,
-        resume: values.resume,
-      });
+      // 1. Initialize Socket.IO listeners
+      initializeInterviewSocketListeners();
 
-      toastDismiss(toastId);
+      // 2. Set interview status to "starting" & emit socket.emit("interview:start")
+      emitStartInterview();
 
-      if (!response.success) {
-        toastError(response.message || "Failed to create interview. Please try again.");
-        return;
-      }
-
-      toastSuccess(response.message || "Interview ready.");
-
-      // Transition into the interview preparation → live flow
+      // 3. Navigate to /interview to show preparation loading state
       navigate("/interview");
     } catch (error) {
-      toastError(getApiErrorMessage(error), { id: toastId });
+      toastError(getApiErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }

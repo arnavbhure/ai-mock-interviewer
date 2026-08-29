@@ -1,4 +1,4 @@
-﻿import { create } from "zustand";
+import { create } from "zustand";
 import type {
   InterviewState,
   InterviewQuestion,
@@ -29,15 +29,15 @@ const INITIAL_CODING_STATE: CodingState = {
 };
 
 const INITIAL_STATE = {
-  interviewId: null,
+  interviewId: null as string | null,
   status: "idle" as const,
 
-  roundNumber: null,
-  questionNumber: null,
+  roundNumber: null as number | null,
+  questionNumber: null as number | null,
   roundType: "Technical Interview",
-  difficulty: null,
+  difficulty: null as InterviewState["difficulty"],
 
-  currentQuestion: null,
+  currentQuestion: null as InterviewQuestion | null,
 
   aiState: "idle" as AIInterviewState,
   currentAIMessage: "",
@@ -46,20 +46,21 @@ const INITIAL_STATE = {
 
   preparationState: INITIAL_PREPARATION_STATE,
 
-  completionData: null,
+  evaluation: null as FinalEvaluation | null,
+  completionData: null as FinalEvaluation | null,
 
-  errorCode: null,
-  errorMessage: null,
+  errorCode: null as string | null,
+  errorMessage: null as string | null,
 
   codingState: INITIAL_CODING_STATE,
 
   // Aliases for compatibility
   answer: "",
-  finalEvaluation: null,
-  currentRoundNumber: null,
-  currentQuestionNumber: null,
-  currentDifficulty: null,
-  error: null,
+  finalEvaluation: null as FinalEvaluation | null,
+  currentRoundNumber: null as number | null,
+  currentQuestionNumber: null as number | null,
+  currentDifficulty: null as InterviewState["difficulty"],
+  error: null as InterviewState["error"],
 };
 
 function normalizeAIState(state: AIInterviewState | OrbState): AIInterviewState {
@@ -220,23 +221,36 @@ export const useInterviewStore = create<InterviewState>((set) => ({
     })),
 
   completeInterview: (data?: FinalEvaluation | null, interviewId?: string) =>
-    set((state) => ({
-      status: "completed",
-      interviewId: interviewId ?? state.interviewId,
-      completionData: data ?? state.completionData,
-      finalEvaluation: data ?? state.completionData,
-      aiState: "idle",
-      errorCode: null,
-      errorMessage: null,
-      error: null,
-    })),
+    set((state) => {
+      const evalData = data ?? state.evaluation ?? state.completionData;
+      return {
+        status: "completed",
+        interviewId: interviewId ?? state.interviewId,
+        evaluation: evalData,
+        completionData: evalData,
+        finalEvaluation: evalData,
+        aiState: "idle",
+        errorCode: null,
+        errorMessage: null,
+        error: null,
+      };
+    }),
 
-  setError: (code: string, message: string) =>
-    set({
-      status: "error",
-      errorCode: code,
-      errorMessage: message,
-      error: { code, message },
+  setError: (errorOrCode: string | { code: string; message: string }, messageIfSecond?: string) =>
+    set(() => {
+      const code = typeof errorOrCode === "object" ? errorOrCode.code : errorOrCode;
+      const message =
+        typeof errorOrCode === "object"
+          ? errorOrCode.message
+          : (messageIfSecond ?? "");
+
+      return {
+        status: "error",
+        errorCode: code,
+        errorMessage: message,
+        error: { code, message },
+        aiState: "idle",
+      };
     }),
 
   resetInterview: () => set({ ...INITIAL_STATE }),
@@ -261,22 +275,35 @@ export const useInterviewStore = create<InterviewState>((set) => ({
     }),
 
   setCompleted: (
-    interviewIdOrEval: string | FinalEvaluation,
+    interviewIdOrPayload: string | { interviewId?: string; evaluation?: FinalEvaluation } | FinalEvaluation,
     evalIfSecond?: FinalEvaluation,
   ) =>
     set((state) => {
-      const id =
-        typeof interviewIdOrEval === "string"
-          ? interviewIdOrEval
-          : state.interviewId;
-      const evalData =
-        typeof interviewIdOrEval === "string"
-          ? (evalIfSecond ?? null)
-          : interviewIdOrEval;
+      let id: string | null = state.interviewId;
+      let evalData: FinalEvaluation | null = null;
+
+      if (typeof interviewIdOrPayload === "string") {
+        id = interviewIdOrPayload;
+        evalData = evalIfSecond ?? null;
+      } else if (
+        typeof interviewIdOrPayload === "object" &&
+        interviewIdOrPayload !== null
+      ) {
+        const payloadObj = interviewIdOrPayload as Record<string, unknown>;
+        if (typeof payloadObj.interviewId === "string") {
+          id = payloadObj.interviewId;
+        }
+        if (payloadObj.evaluation && typeof payloadObj.evaluation === "object") {
+          evalData = payloadObj.evaluation as FinalEvaluation;
+        } else {
+          evalData = interviewIdOrPayload as FinalEvaluation;
+        }
+      }
 
       return {
         status: "completed",
         interviewId: id,
+        evaluation: evalData,
         completionData: evalData,
         finalEvaluation: evalData,
         aiState: "idle",
@@ -288,3 +315,4 @@ export const useInterviewStore = create<InterviewState>((set) => ({
 
   reset: () => set({ ...INITIAL_STATE }),
 }));
+
