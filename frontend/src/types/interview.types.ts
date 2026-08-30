@@ -8,12 +8,14 @@ import type { DSALanguage, DSATestCase, DSASubmissionSummary } from "./dsaInterv
 
 export type InterviewStatus =
   | "idle"
-  | "preparing"
+  | "connecting"
   | "starting"
+  | "waiting"
   | "active"
   | "submitting"
   | "completed"
-  | "error";
+  | "error"
+  | "preparing";
 
 export type InterviewDifficulty = "easy" | "medium" | "hard";
 
@@ -138,6 +140,10 @@ export interface InterviewState {
     resumeFileName?: string | null;
     resumeId?: string | null;
   }) => void;
+  setStatus: (status: InterviewStatus) => void;
+  setConnecting: () => void;
+  setStarting: () => void;
+  setWaiting: () => void;
   startPreparing: () => void;
   startInterview: () => void;
   setQuestion: (data: QuestionPayload | InterviewQuestion | string) => void;

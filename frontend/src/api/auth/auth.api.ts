@@ -42,19 +42,3 @@ export interface CreateInterviewResponse {
   interview_id?: string;
   redirect_url?: string;
 }
-
-export const createInterview = async (
-  payload: CreateInterviewPayload,
-): Promise<CreateInterviewResponse> => {
-  const formData = new FormData();
-  formData.append("role", payload.role);
-  formData.append("difficulty", payload.difficulty);
-  formData.append("resume", payload.resume);
-
-  console.log({ payload }); return {
-    success: true,
-    message: "HELLO",
-    interview_id: "ffffffff",
-    redirect_url: "http://localhost:5173/interview"
-  }
-};

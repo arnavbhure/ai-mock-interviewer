@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useDashboardForm } from "@/hooks/useDashboardForm";
 import { RoleInput } from "@/components/dashboard/RoleInput";
@@ -7,7 +7,6 @@ import { DifficultySelector } from "@/components/dashboard/DifficultySelector";
 import { ReadinessIndicator } from "@/components/dashboard/ReadinessIndicator";
 import { StartInterviewCTA } from "@/components/dashboard/StartInterviewCTA";
 import { PreparationScreen } from "@/components/interview/PreparationScreen";
-import socket from "@/socket/socket";
 
 function SetupStep({
   number,
@@ -29,14 +28,6 @@ function SetupStep({
 }
 
 export function SetupInterviewPage() {
-  useEffect(() => {
-    socket.connect();
-
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
-
   const reduced = useReducedMotion();
   const {
     form,

@@ -1,4 +1,4 @@
-﻿import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Mic, Sparkles, Send, AlertTriangle, Loader2 } from "lucide-react";
 import type { OrbState, InterviewStatus, InterviewError } from "@/types/interview.types";
 import { Button } from "@/components/ui/button";
@@ -73,7 +73,7 @@ export function CandidateResponseArea({
       )}
 
       {/* ── Active / Listening Response Form ── */}
-      {(status === "active" || isProcessing) && (
+      {(status === "active" || isProcessing || isError) && (
         <motion.div
           initial={reduced ? undefined : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}

@@ -74,7 +74,14 @@ export function useInterviewSession() {
 
   // ─── Derived Orb State ───────────────────────────────────────
   const orbState: OrbState = (() => {
-    if (status === "starting") return "THINKING";
+    if (
+      status === "starting" ||
+      status === "waiting" ||
+      status === "connecting" ||
+      status === "preparing"
+    ) {
+      return "THINKING";
+    }
     if (status === "submitting") return "PROCESSING";
     if (status === "active") {
       return isSpeakingPhase ? "AI_SPEAKING" : "LISTENING";

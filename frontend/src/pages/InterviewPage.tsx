@@ -1,10 +1,16 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import socket from "@/socket/socket";
 import { useInterviewStore } from "@/store/interview.store";
-import { useInterviewSocket } from "@/hooks/useInterviewSocket";
+import {
+  initializeInterviewSocketListeners,
+  emitStartInterview,
+} from "@/services/interviewSocket.service";
 import { useInterviewSession } from "@/hooks/useInterviewSession";
 import {
-  PreparationScreen,
+  InterviewLobby,
+  InterviewPreparation,
   AIOrb,
   InterviewHeader,
   QuestionDisplay,
@@ -14,7 +20,7 @@ import {
   CompletionScreen,
 } from "@/components/interview";
 
-// ─── Live Interview Room ─────────────────────────────────────
+// ─── Live Interview Room (active interview UI) ──────────────
 
 function LiveInterviewRoom() {
   const {
@@ -118,25 +124,78 @@ function LiveInterviewRoom() {
 }
 
 // ─── Main Page Orchestrator ─────────────────────────────────
+// Always mounts on /interview. Owns the socket listener lifecycle.
+// Does NOT auto-emit interview:start — waits for the user to click Start.
 
 export function InterviewPage() {
+  const navigate = useNavigate();
   const status = useInterviewStore((s) => s.status);
   const currentQuestion = useInterviewStore((s) => s.currentQuestion);
-  const startInterview = useInterviewStore((s) => s.startInterview);
 
-  const { startInterview: emitStart } = useInterviewSocket();
+  const hasStartedRef = useRef(false);
 
-  // If page is loaded directly in idle state, start interview
+  // ── Register socket listeners on mount (but do NOT emit start) ──
   useEffect(() => {
-    if (status === "idle") {
-      startInterview();
-      emitStart();
-    }
-  }, [status, startInterview, emitStart]);
+    const cleanupListeners = initializeInterviewSocketListeners();
 
-  // Determine active view mode
+    // Connection-level error/disconnect logging (dev only)
+    const handleConnectError = (err: Error) => {
+      if (import.meta.env.DEV) {
+        console.error("[InterviewSocket] connect_error:", err.message);
+      }
+      useInterviewStore
+        .getState()
+        .setError("SOCKET_CONNECTION_FAILED", err.message || "Failed to connect to interview server.");
+    };
+
+    const handleDisconnect = (reason: string) => {
+      if (import.meta.env.DEV) {
+        console.warn("[InterviewSocket] disconnected:", reason);
+      }
+    };
+
+    socket.on("connect_error", handleConnectError);
+    socket.on("disconnect", handleDisconnect);
+
+    return () => {
+      cleanupListeners();
+      socket.off("connect_error", handleConnectError);
+      socket.off("disconnect", handleDisconnect);
+      hasStartedRef.current = false;
+    };
+  }, []);
+
+  // ── User clicks Start Interview ──
+  const handleStartInterview = useCallback(() => {
+    if (hasStartedRef.current) return; // guard against double-click / StrictMode
+    hasStartedRef.current = true;
+
+    if (import.meta.env.DEV) {
+      console.log("[InterviewPage] handleStartInterview invoked");
+    }
+
+    emitStartInterview();
+  }, []);
+
+  // ── Retry after error (before first question) ──
+  const handleRetryStart = useCallback(() => {
+    hasStartedRef.current = false;
+    useInterviewStore.getState().setStatus("idle");
+    // Let user click Start again — don't auto-emit
+  }, []);
+
+  const handleBackToSetup = useCallback(() => {
+    useInterviewStore.getState().resetInterview();
+    navigate("/dashboard/new");
+  }, [navigate]);
+
+  // ── Determine which view to render ──
   const isCompleted = status === "completed";
-  const isLive = (status === "active" || status === "submitting") || (status === "error" && currentQuestion !== null);
+  const isLive = status === "active" || status === "submitting";
+  const isPreparing =
+    status === "connecting" || status === "starting" || status === "waiting";
+  const isErrorBeforeQuestion = status === "error" && currentQuestion === null;
+  const isErrorDuringInterview = status === "error" && currentQuestion !== null;
 
   return (
     <AnimatePresence mode="wait">
@@ -149,7 +208,7 @@ export function InterviewPage() {
         >
           <CompletionScreen />
         </motion.div>
-      ) : isLive ? (
+      ) : isLive || isErrorDuringInterview ? (
         <motion.div
           key="live"
           initial={{ opacity: 0 }}
@@ -159,7 +218,7 @@ export function InterviewPage() {
         >
           <LiveInterviewRoom />
         </motion.div>
-      ) : (
+      ) : isPreparing || isErrorBeforeQuestion ? (
         <motion.div
           key="preparation"
           initial={{ opacity: 0 }}
@@ -167,10 +226,24 @@ export function InterviewPage() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <PreparationScreen />
+          <InterviewPreparation
+            onRetry={handleRetryStart}
+            onBack={handleBackToSetup}
+          />
+        </motion.div>
+      ) : (
+        <motion.div
+          key="lobby"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <InterviewLobby onStart={handleStartInterview} />
         </motion.div>
       )}
     </AnimatePresence>
   );
 }
 
+export default InterviewPage;

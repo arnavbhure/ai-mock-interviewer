@@ -12,14 +12,23 @@ let isInitialized = false;
 // ─── Named Event Handlers (Safe references for cleanup) ───────
 
 const handleQuestion = (data: QuestionPayload) => {
+  if (import.meta.env.DEV) {
+    console.log("[InterviewSocket] interview:question received", data);
+  }
   useInterviewStore.getState().setQuestion(data);
 };
 
 const handleCompleted = (data: CompletedPayload) => {
+  if (import.meta.env.DEV) {
+    console.log("[InterviewSocket] interview:completed received", data);
+  }
   useInterviewStore.getState().setCompleted(data);
 };
 
 const handleError = (data: ErrorPayload) => {
+  if (import.meta.env.DEV) {
+    console.error("[InterviewSocket] interview:error received", data);
+  }
   useInterviewStore.getState().setError(data.code, data.message);
   if (data?.message) {
     toastError(data.message);
@@ -37,11 +46,10 @@ const handleError = (data: ErrorPayload) => {
  * @returns Cleanup function to remove the listeners
  */
 export function initializeInterviewSocketListeners(): () => void {
-  if (!socket.connected) {
-    socket.connect();
-  }
-
   if (!isInitialized) {
+    if (import.meta.env.DEV) {
+      console.log("[InterviewSocket] initializing listeners");
+    }
     socket.on("interview:question", handleQuestion);
     socket.on("interview:completed", handleCompleted);
     socket.on("interview:error", handleError);
@@ -55,30 +63,57 @@ export function initializeInterviewSocketListeners(): () => void {
  * Removes registered Socket.IO interview listeners to prevent duplicate triggers.
  */
 export function cleanupInterviewSocketListeners(): void {
+  if (import.meta.env.DEV) {
+    console.log("[InterviewSocket] cleaning up listeners");
+  }
   socket.off("interview:question", handleQuestion);
   socket.off("interview:completed", handleCompleted);
   socket.off("interview:error", handleError);
   isInitialized = false;
 }
 
-// ─── Socket Command Emitters (Frontend -> Backend) ───────────
-
 /**
  * Emits "interview:start" to begin the interview session on the backend.
- * Updates Zustand status to "starting".
+ * Ensures the socket connection is established and listeners are active before emitting.
  * Does NOT send an interviewId or any payload (backend identifies via authenticated socket).
  */
 export function emitStartInterview(): void {
-  if (!socket.connected) {
+  // 1. Ensure listeners are attached first
+  initializeInterviewSocketListeners();
+
+  const doEmit = () => {
+    if (import.meta.env.DEV) {
+      console.log("[InterviewSocket] emitting interview:start, socket.id:", socket.id);
+    }
+    useInterviewStore.getState().setStarting();
+    socket.emit("interview:start");
+    useInterviewStore.getState().setWaiting();
+  };
+
+  if (socket.connected) {
+    if (import.meta.env.DEV) {
+      console.log("[InterviewSocket] already connected, socket.id:", socket.id);
+    }
+    doEmit();
+  } else {
+    if (import.meta.env.DEV) {
+      console.log("[InterviewSocket] connecting...");
+    }
+    useInterviewStore.getState().setConnecting();
     socket.connect();
+    socket.once("connect", () => {
+      if (import.meta.env.DEV) {
+        console.log("[InterviewSocket] connected:", socket.id);
+      }
+      doEmit();
+    });
   }
-  useInterviewStore.getState().startInterview();
-  socket.emit("interview:start");
 }
 
 /**
  * Emits "interview:answer" with the candidate's response string.
  * Validates non-empty input and updates Zustand status to "submitting".
+ * Prevents duplicate answer submissions while already in "submitting" state.
  *
  * @param answer - The candidate's answer string
  * @returns boolean indicating if the payload was valid and emitted
@@ -87,15 +122,34 @@ export function emitSubmitAnswer(answer: string): boolean {
   const trimmed = answer.trim();
   if (!trimmed) return false;
 
-  if (!socket.connected) {
-    socket.connect();
+  const currentStatus = useInterviewStore.getState().status;
+  if (currentStatus === "submitting") {
+    return false; // Prevent duplicate submissions
   }
 
-  useInterviewStore.getState().setCandidateAnswer(trimmed);
   useInterviewStore.getState().setSubmitting();
-  socket.emit("interview:answer", {
-    answer: trimmed,
-  });
+
+  const doEmit = () => {
+    socket.emit("interview:answer", {
+      answer: trimmed,
+    });
+  };
+
+  if (socket.connected) {
+    doEmit();
+  } else {
+    socket.connect();
+    socket.once("connect", () => {
+      doEmit();
+    });
+  }
+
   return true;
 }
 
+export default {
+  initializeInterviewSocketListeners,
+  cleanupInterviewSocketListeners,
+  emitStartInterview,
+  emitSubmitAnswer,
+};

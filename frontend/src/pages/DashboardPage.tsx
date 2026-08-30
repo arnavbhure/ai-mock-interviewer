@@ -14,7 +14,7 @@ import { TextLoop } from "@/components/TextLoop/TextLoop";
 export function DashboardPage() {
   const reduced = useReducedMotion();
   const user = useUserStore((state) => state.user);
-  
+
   // Extract user's first name, full name, or fallback
   const displayName =
     user?.name?.trim()?.split(" ")[0] || user?.email?.split("@")[0] || "there";

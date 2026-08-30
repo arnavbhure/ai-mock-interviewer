@@ -103,6 +103,39 @@ export const useInterviewStore = create<InterviewState>((set) => ({
       resumeId: config.resumeId !== undefined ? config.resumeId : state.resumeId,
     })),
 
+  setStatus: (status: InterviewState["status"]) =>
+    set({
+      status,
+      ...(status === "error" ? {} : { errorCode: null, errorMessage: null, error: null }),
+    }),
+
+  setConnecting: () =>
+    set({
+      status: "connecting",
+      aiState: "thinking",
+      errorCode: null,
+      errorMessage: null,
+      error: null,
+    }),
+
+  setStarting: () =>
+    set({
+      status: "starting",
+      aiState: "thinking",
+      errorCode: null,
+      errorMessage: null,
+      error: null,
+    }),
+
+  setWaiting: () =>
+    set({
+      status: "waiting",
+      aiState: "thinking",
+      errorCode: null,
+      errorMessage: null,
+      error: null,
+    }),
+
   startPreparing: () =>
     set((state) => ({
       status: "preparing",
@@ -127,25 +160,37 @@ export const useInterviewStore = create<InterviewState>((set) => ({
 
   setQuestion: (data: QuestionPayload | InterviewQuestion | string) =>
     set((state) => {
-      let questionObj: InterviewQuestion;
+      let questionText = "";
+      let topic: string | undefined;
       let roundNum = state.roundNumber;
       let questionNum = state.questionNumber;
       let diff = state.difficulty;
 
       if (typeof data === "string") {
-        questionObj = { text: data };
-      } else if ("question" in data && data.question) {
-        questionObj =
-          typeof data.question === "string"
-            ? { text: data.question }
-            : data.question;
-        roundNum = data.roundNumber ?? roundNum;
-        questionNum = data.questionNumber ?? questionNum;
-        diff = data.difficulty ?? diff;
-      } else {
-        questionObj = data as InterviewQuestion;
-        questionNum = questionObj.questionNumber ?? questionNum;
+        questionText = data;
+      } else if (data && typeof data === "object") {
+        if ("question" in data && data.question) {
+          if (typeof data.question === "string") {
+            questionText = data.question;
+          } else if (typeof data.question === "object" && data.question !== null) {
+            questionText = (data.question as { text?: string }).text || String(data.question);
+            topic = (data.question as { topic?: string }).topic;
+          }
+          roundNum = data.roundNumber ?? roundNum;
+          questionNum = data.questionNumber ?? questionNum;
+          diff = data.difficulty ?? diff;
+        } else if ("text" in data && typeof data.text === "string") {
+          questionText = data.text;
+          topic = (data as { topic?: string }).topic;
+          questionNum = (data as { questionNumber?: number }).questionNumber ?? questionNum;
+        }
       }
+
+      const questionObj: InterviewQuestion = {
+        text: questionText,
+        topic,
+        questionNumber: questionNum ?? undefined,
+      };
 
       return {
         status: "active",
@@ -156,7 +201,7 @@ export const useInterviewStore = create<InterviewState>((set) => ({
         candidateAnswer: "",
         answer: "",
         aiState: "speaking",
-        currentAIMessage: questionObj.text,
+        currentAIMessage: questionText,
         errorCode: null,
         errorMessage: null,
         error: null,
