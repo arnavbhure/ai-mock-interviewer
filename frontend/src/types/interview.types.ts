@@ -195,6 +195,7 @@ export const PREPARATION_STEPS = [
   "STRUCTURING_PROFILE",
   "PREPARING_CONTEXT",
   "FINALIZING_INTERVIEW",
+  "CREATING_INTERVIEW_PLAN",
 ] as const;
 
 export type PreparationStep = (typeof PREPARATION_STEPS)[number];
@@ -207,6 +208,7 @@ export const PREPARATION_STEP_LABELS: Record<PreparationStep, string> = {
   STRUCTURING_PROFILE: "Structuring your profile",
   PREPARING_CONTEXT: "Preparing interview context",
   FINALIZING_INTERVIEW: "Finalizing your interview",
+  CREATING_INTERVIEW_PLAN: "Creating your interview plan",
 };
 
 export type InterviewPhase =

@@ -5,6 +5,7 @@ import axios from "axios";
 import type { DashboardFormValues } from "@/types/dashboard.types";
 import { MAX_FILE_SIZE, ACCEPTED_FILE_TYPES } from "@/types/dashboard.types";
 import { uploadResume } from "@/api/resume/resume.api";
+import { createInterview } from "@/api/interview/interview.api";
 import { useInterviewStore } from "@/store/interview.store";
 import { toastError } from "@/components/ui/toast";
 
@@ -91,6 +92,7 @@ export function useDashboardForm() {
       });
 
       try {
+        // ── Step 1: Upload the resume ──
         const response = await uploadResume(file);
 
         // Normalize response object safely
@@ -113,36 +115,85 @@ export function useDashboardForm() {
               typeof rawData.message === "string" &&
               rawData.message.toLowerCase().includes("success")));
 
-        if (isSuccess) {
-          // If backend returns a resumeId, store it
-          if (rawData.resumeId && typeof rawData.resumeId === "string") {
-            useInterviewStore.getState().setInterviewConfig({
-              resumeId: rawData.resumeId,
-            });
-          }
+        if (!isSuccess) {
+          // Handle explicit failure response from resume upload
+          const errorMsg =
+            typeof rawData?.message === "string" && rawData.message.trim()
+              ? rawData.message
+              : "Failed to process resume.";
 
-          // Reset interview status so InterviewRoom starts clean
-          useInterviewStore.getState().initializeInterview({ status: "idle" });
-
-          // Stop loading state
-          setIsProcessingResume(false);
+          setResumeError(errorMsg);
+          toastError(errorMsg);
           setIsSubmitting(false);
-          setResumeError(null);
-
-          // Navigate immediately to InterviewRoom (InterviewRoom will handle interview:start)
-          navigate("/interview");
           return;
         }
 
-        // Handle explicit failure response
-        const errorMsg =
-          typeof rawData?.message === "string" && rawData.message.trim()
-            ? rawData.message
-            : "Failed to process resume.";
+        // If backend returns a resumeId, store it
+        if (rawData.resumeId && typeof rawData.resumeId === "string") {
+          useInterviewStore.getState().setInterviewConfig({
+            resumeId: rawData.resumeId,
+          });
+        }
 
-        setResumeError(errorMsg);
-        toastError(errorMsg);
+        // ── Step 2: Create the interview plan ──
+        try {
+          const interviewResponse = await createInterview({ role, difficulty });
+
+          const interviewData =
+            interviewResponse &&
+            typeof interviewResponse === "object" &&
+            "data" in interviewResponse &&
+            typeof (interviewResponse as Record<string, unknown>).data === "object"
+              ? ((interviewResponse as Record<string, unknown>).data as Record<string, unknown>)
+              : (interviewResponse as Record<string, unknown>);
+
+          const isInterviewSuccess =
+            Boolean(interviewData) &&
+            (interviewData.success === true ||
+              (interviewData.success !== false &&
+                typeof interviewData.message === "string" &&
+                interviewData.message.toLowerCase().includes("success")));
+
+          if (!isInterviewSuccess) {
+            const errorMsg =
+              typeof interviewData?.message === "string" && interviewData.message.trim()
+                ? interviewData.message
+                : "Failed to create interview plan.";
+
+            setResumeError(errorMsg);
+            toastError(errorMsg);
+            setIsSubmitting(false);
+            return;
+          }
+
+          // Store the interview ID if returned
+          if (
+            interviewData.data &&
+            typeof interviewData.data === "object" &&
+            typeof (interviewData.data as Record<string, unknown>).interview_id === "string"
+          ) {
+            useInterviewStore.getState().initializeInterview({
+              status: "idle",
+              interviewId: (interviewData.data as Record<string, unknown>).interview_id as string,
+            });
+          } else {
+            // Reset interview status so InterviewRoom starts clean
+            useInterviewStore.getState().initializeInterview({ status: "idle" });
+          }
+        } catch (interviewError) {
+          const errorMsg = getApiErrorMessage(interviewError);
+          setResumeError(errorMsg);
+          toastError(errorMsg);
+          setIsSubmitting(false);
+          return;
+        }
+
+        // ── Both steps succeeded — navigate to interview ──
+        setIsProcessingResume(false);
         setIsSubmitting(false);
+        setResumeError(null);
+
+        navigate("/interview");
       } catch (error) {
         const errorMsg = getApiErrorMessage(error);
         setResumeError(errorMsg);

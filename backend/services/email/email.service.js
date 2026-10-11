@@ -9,7 +9,7 @@ const sendEmail = async ({ to, subject, htmlContent }) => {
     "https://api.brevo.com/v3/smtp/email",
     {
       sender: {
-        name: "ClinicSync",
+        name: "Interview AI",
         email: process.env.EMAIL_USER,
       },
       to: recipients,

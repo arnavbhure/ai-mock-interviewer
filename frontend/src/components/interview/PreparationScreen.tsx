@@ -25,11 +25,12 @@ type Props = {
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const STEP_TIMINGS: { step: PreparationStep; delayMs: number }[] = [
-  { step: "READING_RESUME", delayMs: 1600 },
-  { step: "UNDERSTANDING_EXPERIENCE", delayMs: 2000 },
+  { step: "READING_RESUME", delayMs: 2000 },
+  { step: "UNDERSTANDING_EXPERIENCE", delayMs: 2500 },
   { step: "STRUCTURING_PROFILE", delayMs: 2200 },
   { step: "PREPARING_CONTEXT", delayMs: 2500 },
-  { step: "FINALIZING_INTERVIEW", delayMs: 0 },
+  { step: "FINALIZING_INTERVIEW", delayMs: 3000 },
+  { step: "CREATING_INTERVIEW_PLAN", delayMs: 0 },
 ];
 
 export function PreparationScreen({
