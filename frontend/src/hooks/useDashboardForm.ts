@@ -30,6 +30,43 @@ function getApiErrorMessage(error: unknown): string {
   return "Failed to process resume. Please try again.";
 }
 
+function isApiSuccess(payload: unknown): boolean {
+  if (!payload || typeof payload !== "object") return true;
+  const obj = payload as Record<string, unknown>;
+
+  // Explicit failure flags
+  if (obj.success === false) return false;
+  if (obj.status === "error" || obj.status === "failed") return false;
+  if (typeof obj.status === "number" && obj.status >= 400) return false;
+  if (typeof obj.error === "string" && obj.error.trim()) return false;
+
+  return true;
+}
+
+function extractId(payload: unknown, keys: string[]): string | null {
+  if (!payload || typeof payload !== "object") return null;
+  const obj = payload as Record<string, unknown>;
+
+  // Check top-level keys
+  for (const key of keys) {
+    if (obj[key] !== undefined && obj[key] !== null) {
+      return String(obj[key]);
+    }
+  }
+
+  // Check inside nested data property
+  if (obj.data && typeof obj.data === "object") {
+    const nested = obj.data as Record<string, unknown>;
+    for (const key of keys) {
+      if (nested[key] !== undefined && nested[key] !== null) {
+        return String(nested[key]);
+      }
+    }
+  }
+
+  return null;
+}
+
 export function useDashboardForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isProcessingResume, setIsProcessingResume] = useState(false);
@@ -84,7 +121,8 @@ export function useDashboardForm() {
       setIsProcessingResume(true);
       setResumeError(null);
 
-      // Save role, difficulty and resume filename in Zustand store
+      // Reset any previous interview state & errors in Zustand store
+      useInterviewStore.getState().initializeInterview({ status: "idle" });
       useInterviewStore.getState().setInterviewConfig({
         role,
         difficulty,
@@ -93,34 +131,16 @@ export function useDashboardForm() {
 
       try {
         // ── Step 1: Upload the resume ──
-        const response = await uploadResume(file);
+        const uploadResponse = await uploadResume(file);
 
-        // Normalize response object safely
-        const rawData =
-          response &&
-          typeof response === "object" &&
-          "data" in response &&
-          typeof (response as Record<string, unknown>).data === "object"
-            ? ((response as Record<string, unknown>).data as Record<string, unknown>)
-            : (response as Record<string, unknown>);
-
-        // Check if response indicates success
-        const isSuccess =
-          Boolean(rawData) &&
-          (rawData.success === true ||
-            rawData.status === 200 ||
-            rawData.status === "success" ||
-            rawData.status === "ok" ||
-            (rawData.success !== false &&
-              typeof rawData.message === "string" &&
-              rawData.message.toLowerCase().includes("success")));
-
-        if (!isSuccess) {
-          // Handle explicit failure response from resume upload
+        if (!isApiSuccess(uploadResponse)) {
+          const uploadObj = uploadResponse as Record<string, unknown> | undefined;
           const errorMsg =
-            typeof rawData?.message === "string" && rawData.message.trim()
-              ? rawData.message
-              : "Failed to process resume.";
+            typeof uploadObj?.message === "string" && uploadObj.message.trim()
+              ? uploadObj.message
+              : typeof uploadObj?.error === "string" && uploadObj.error.trim()
+                ? uploadObj.error
+                : "Failed to process resume.";
 
           setResumeError(errorMsg);
           toastError(errorMsg);
@@ -128,10 +148,11 @@ export function useDashboardForm() {
           return;
         }
 
-        // If backend returns a resumeId, store it
-        if (rawData.resumeId && typeof rawData.resumeId === "string") {
+        // Store resume ID if present
+        const resumeId = extractId(uploadResponse, ["resumeId", "resume_id", "id"]);
+        if (resumeId) {
           useInterviewStore.getState().setInterviewConfig({
-            resumeId: rawData.resumeId,
+            resumeId,
           });
         }
 
@@ -139,26 +160,14 @@ export function useDashboardForm() {
         try {
           const interviewResponse = await createInterview({ role, difficulty });
 
-          const interviewData =
-            interviewResponse &&
-            typeof interviewResponse === "object" &&
-            "data" in interviewResponse &&
-            typeof (interviewResponse as Record<string, unknown>).data === "object"
-              ? ((interviewResponse as Record<string, unknown>).data as Record<string, unknown>)
-              : (interviewResponse as Record<string, unknown>);
-
-          const isInterviewSuccess =
-            Boolean(interviewData) &&
-            (interviewData.success === true ||
-              (interviewData.success !== false &&
-                typeof interviewData.message === "string" &&
-                interviewData.message.toLowerCase().includes("success")));
-
-          if (!isInterviewSuccess) {
+          if (!isApiSuccess(interviewResponse)) {
+            const interviewObj = interviewResponse as Record<string, unknown> | undefined;
             const errorMsg =
-              typeof interviewData?.message === "string" && interviewData.message.trim()
-                ? interviewData.message
-                : "Failed to create interview plan.";
+              typeof interviewObj?.message === "string" && interviewObj.message.trim()
+                ? interviewObj.message
+                : typeof interviewObj?.error === "string" && interviewObj.error.trim()
+                  ? interviewObj.error
+                  : "Failed to create interview plan.";
 
             setResumeError(errorMsg);
             toastError(errorMsg);
@@ -167,17 +176,13 @@ export function useDashboardForm() {
           }
 
           // Store the interview ID if returned
-          if (
-            interviewData.data &&
-            typeof interviewData.data === "object" &&
-            typeof (interviewData.data as Record<string, unknown>).interview_id === "string"
-          ) {
+          const interviewId = extractId(interviewResponse, ["interview_id", "interviewId", "id"]);
+          if (interviewId) {
             useInterviewStore.getState().initializeInterview({
               status: "idle",
-              interviewId: (interviewData.data as Record<string, unknown>).interview_id as string,
+              interviewId,
             });
           } else {
-            // Reset interview status so InterviewRoom starts clean
             useInterviewStore.getState().initializeInterview({ status: "idle" });
           }
         } catch (interviewError) {
@@ -189,9 +194,9 @@ export function useDashboardForm() {
         }
 
         // ── Both steps succeeded — navigate to interview ──
-        setIsProcessingResume(false);
-        setIsSubmitting(false);
         setResumeError(null);
+        setIsSubmitting(false);
+        setIsProcessingResume(false);
 
         navigate("/interview");
       } catch (error) {
