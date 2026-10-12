@@ -36,6 +36,7 @@ const createInterviewController = async (req, res) => {
 
     const store_result = await storeInterviewPlanModel(
       user?.id,
+      interviewPlan,
       role,
       difficulty,
     );

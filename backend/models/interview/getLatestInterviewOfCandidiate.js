@@ -35,7 +35,7 @@ const getLatestInterviewByInterviewId = async (interviewId) => {
       interview_plan,
       created_at
     FROM interviews
-    WHERE interview_id = $1
+    WHERE id = $1
     ORDER BY created_at DESC
     LIMIT 1
     `;
