@@ -1,8 +1,10 @@
-﻿import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Bell, ChevronDown, LogOut, Menu, Settings, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/user.store";
+import { logout } from "@/api/auth/auth.api";
+import { useInterviewStore } from "@/store/interview.store";
 
 type TopBarProps = {
   title: string;
@@ -25,9 +27,14 @@ export function TopBar({ title, subtitle, onOpenMobile }: TopBarProps) {
     .map((part) => part[0]?.toUpperCase())
     .join("");
 
-  function handleLogout() {
-    clearUser();
-    navigate("/login");
+  async function handleLogout() {
+    try {
+      await logout();
+    } finally {
+      clearUser();
+      useInterviewStore.getState().resetInterview();
+      navigate("/");
+    }
   }
 
   const menuItemClass = cn(

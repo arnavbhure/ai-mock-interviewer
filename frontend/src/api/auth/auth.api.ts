@@ -29,6 +29,19 @@ export const getUserProfile = async () => {
   return response.data;
 };
 
+export const logout = async () => {
+  try {
+    if (socket.connected) {
+      socket.disconnect();
+    }
+    const response = await api.post("/auth/logout");
+    return response.data;
+  } catch (error) {
+    console.error("Logout API error:", error);
+    return { success: false };
+  }
+};
+
 // Interview API
 export interface CreateInterviewPayload {
   role: string;

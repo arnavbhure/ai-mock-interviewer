@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   User,
@@ -17,6 +17,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useUserStore } from "@/store/user.store";
 import { Button } from "@/components/ui/button";
+import { logout } from "@/api/auth/auth.api";
+import { useInterviewStore } from "@/store/interview.store";
 
 function formatDate(isoDate?: string): string {
   if (!isoDate) return "Recently created";
@@ -64,9 +66,14 @@ export function SettingsPage() {
     setTimeout(() => setCopiedId(false), 2000);
   };
 
-  const handleSignOut = () => {
-    clearUser();
-    navigate("/login");
+  const handleSignOut = async () => {
+    try {
+      await logout();
+    } finally {
+      clearUser();
+      useInterviewStore.getState().resetInterview();
+      navigate("/");
+    }
   };
 
   const enter = reduced ? false : { opacity: 0, y: 8 };
