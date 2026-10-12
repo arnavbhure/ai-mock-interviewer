@@ -161,7 +161,7 @@ export interface InterviewState {
   setQuestion: (data: QuestionPayload | InterviewQuestion | string) => void;
   setAIState: (aiState: AIInterviewState | OrbState) => void;
   setAIMessage: (message: string) => void;
-  setCandidateAnswer: (answer: string) => void;
+  setCandidateAnswer: (answer: string | ((prev: string) => string)) => void;
   setCodingState: (codingState: Partial<CodingState>) => void;
   setCode: (code: string) => void;
   setLanguage: (language: DSALanguage) => void;
@@ -176,7 +176,7 @@ export interface InterviewState {
   resetInterview: () => void;
 
   // Compatibility action aliases
-  setAnswer: (answer: string) => void;
+  setAnswer: (answer: string | ((prev: string) => string)) => void;
   setSubmitting: () => void;
   submitAnswer: () => void;
   setCompleted: (

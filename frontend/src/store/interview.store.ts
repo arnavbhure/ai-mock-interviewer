@@ -239,10 +239,23 @@ export const useInterviewStore = create<InterviewState>((set) => ({
       currentAIMessage,
     }),
 
-  setCandidateAnswer: (candidateAnswer: string) =>
-    set({
-      candidateAnswer,
-      answer: candidateAnswer,
+  setCandidateAnswer: (candidateAnswer: string | ((prev: string) => string)) =>
+    set((state) => {
+      const prevVal =
+        typeof state.candidateAnswer === "string"
+          ? state.candidateAnswer
+          : typeof state.answer === "string"
+            ? state.answer
+            : "";
+      const resolved =
+        typeof candidateAnswer === "function"
+          ? candidateAnswer(prevVal)
+          : candidateAnswer;
+      const finalStr = typeof resolved === "string" ? resolved : String(resolved || "");
+      return {
+        candidateAnswer: finalStr,
+        answer: finalStr,
+      };
     }),
 
   setCodingState: (partialCodingState: Partial<CodingState>) =>
@@ -337,10 +350,23 @@ export const useInterviewStore = create<InterviewState>((set) => ({
   resetInterview: () => set({ ...INITIAL_STATE }),
 
   // ─── Compatibility Action Aliases ───────────────────────────
-  setAnswer: (answer: string) =>
-    set({
-      candidateAnswer: answer,
-      answer,
+  setAnswer: (answer: string | ((prev: string) => string)) =>
+    set((state) => {
+      const prevVal =
+        typeof state.answer === "string"
+          ? state.answer
+          : typeof state.candidateAnswer === "string"
+            ? state.candidateAnswer
+            : "";
+      const resolved =
+        typeof answer === "function"
+          ? answer(prevVal)
+          : answer;
+      const finalStr = typeof resolved === "string" ? resolved : String(resolved || "");
+      return {
+        candidateAnswer: finalStr,
+        answer: finalStr,
+      };
     }),
 
   setSubmitting: () =>

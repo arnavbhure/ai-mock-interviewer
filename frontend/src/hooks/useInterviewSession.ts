@@ -91,16 +91,28 @@ export function useInterviewSession() {
 
   // ─── User Actions ─────────────────────────────────────────────
 
+  const safeAnswer =
+    typeof candidateAnswer === "string"
+      ? candidateAnswer
+      : typeof answer === "string"
+        ? answer
+        : "";
+
   const handleSetAnswer = useCallback(
-    (newAnswer: string) => {
+    (newAnswer: string | ((prev: string) => string)) => {
       setCandidateAnswer(newAnswer);
     },
     [setCandidateAnswer],
   );
 
   const submitCurrentAnswer = useCallback(() => {
-    const currentAns = candidateAnswer || answer;
-    const trimmed = currentAns.trim();
+    const rawAns =
+      typeof candidateAnswer === "string"
+        ? candidateAnswer
+        : typeof answer === "string"
+          ? answer
+          : "";
+    const trimmed = rawAns.trim();
     if (!trimmed || status === "submitting") return;
 
     emitSubmitAnswer(trimmed);
@@ -138,7 +150,7 @@ export function useInterviewSession() {
     currentQuestionNumber: questionNumber,
     currentDifficulty: difficulty ?? MOCK_INTERVIEW_CONFIG.difficulty,
     currentQuestion,
-    answer: candidateAnswer || answer,
+    answer: safeAnswer,
     setAnswer: handleSetAnswer,
     setSubmitting,
     finalEvaluation: evaluation ?? finalEvaluation,

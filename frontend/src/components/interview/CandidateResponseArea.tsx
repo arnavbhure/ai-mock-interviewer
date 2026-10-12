@@ -22,7 +22,7 @@ type Props = {
   orbState: OrbState;
   status: InterviewStatus;
   answer: string;
-  setAnswer: (answer: string) => void;
+  setAnswer: (answer: string | ((prev: string) => string)) => void;
   onSubmitAnswer: () => void;
   formattedAnswerTime?: string;
   error?: InterviewError | null;
@@ -49,6 +49,9 @@ export function CandidateResponseArea({
   error,
   className,
 }: Props) {
+  const safeAnswer = typeof answer === "string" ? answer : "";
+  const hasAnswerText = Boolean(safeAnswer.trim());
+
   const reduced = useReducedMotion();
   const normalizedState = orbState.toUpperCase();
   const isSpeaking = normalizedState === "AI_SPEAKING" || normalizedState === "SPEAKING";
@@ -72,7 +75,8 @@ export function CandidateResponseArea({
       if (!cleanChunk) return;
 
       setAnswer((prev) => {
-        const prevTrimmed = prev.trim();
+        const prevStr = typeof prev === "string" ? prev : "";
+        const prevTrimmed = prevStr.trim();
         if (!prevTrimmed) return cleanChunk;
         return `${prevTrimmed} ${cleanChunk}`;
       });
@@ -140,7 +144,7 @@ export function CandidateResponseArea({
       speech.stopListening();
     }
 
-    const trimmed = answer.trim();
+    const trimmed = (typeof answer === "string" ? answer : "").trim();
     if (!trimmed || isProcessing) return;
 
     onSubmitAnswer();
@@ -374,21 +378,21 @@ export function CandidateResponseArea({
                   <span className="text-xs font-semibold text-slate-200">
                     {speech.isListening
                       ? "Microphone Active"
-                      : answer.trim()
+                      : hasAnswerText
                         ? "Microphone Paused"
                         : "Start Speaking"}
                   </span>
                   <span className="text-[11px] text-slate-400">
                     {speech.isListening
                       ? "Speak clearly. Click to pause or finish."
-                      : answer.trim()
+                      : hasAnswerText
                         ? "Click mic to append more speech or edit below."
                         : "Click the mic when you are ready to answer."}
                   </span>
                 </div>
               </div>
 
-              {answer.trim() && (
+              {hasAnswerText && (
                 <button
                   type="button"
                   onClick={handleClearAnswer}
@@ -407,7 +411,7 @@ export function CandidateResponseArea({
           {/* ── Textarea & Live Interim Preview Box ── */}
           <div className="relative w-full rounded-2xl border border-white/10 bg-slate-900/80 p-2 shadow-2xl backdrop-blur-xl transition-all focus-within:border-indigo-500/50 focus-within:ring-1 focus-within:ring-indigo-500/30">
             <textarea
-              value={answer}
+              value={safeAnswer}
               onChange={(e) => setAnswer(e.target.value)}
               onKeyDown={handleKeyDown}
               disabled={isProcessing}
@@ -444,7 +448,7 @@ export function CandidateResponseArea({
                 <Button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={!answer.trim() || isProcessing}
+                  disabled={!hasAnswerText || isProcessing}
                   size="sm"
                   className="h-8 gap-1.5 bg-indigo-600 px-4 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-40"
                 >

@@ -93,7 +93,7 @@ function LiveInterviewRoom() {
           <CandidateResponseArea
             orbState={orbState}
             status={status}
-            answer={answer}
+            answer={typeof answer === "string" ? answer : ""}
             setAnswer={setAnswer}
             onSubmitAnswer={submitCurrentAnswer}
             formattedAnswerTime={formattedAnswerTime}
@@ -105,7 +105,7 @@ function LiveInterviewRoom() {
         <InterviewControls
           orbState={orbState}
           status={status}
-          hasAnswer={Boolean(answer.trim())}
+          hasAnswer={typeof answer === "string" && Boolean(answer.trim())}
           isMuted={isMuted}
           onToggleMute={toggleMute}
           onToggleListening={toggleListening}

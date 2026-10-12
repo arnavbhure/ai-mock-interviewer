@@ -184,7 +184,8 @@ export function useSpeechRecognition({
         } else if (code === "audio-capture") {
           userMessage = "No microphone was detected. Please connect a microphone or use Text Mode.";
         } else if (code === "network") {
-          userMessage = "Network error occurred during speech recognition. Please check your connection.";
+          userMessage =
+            "Speech recognition connection failed. Note: Brave browser blocks Google speech services by default for privacy. Enable Google speech in Brave settings, switch to Chrome/Edge, or use Text Mode.";
         }
 
         setError(userMessage);
