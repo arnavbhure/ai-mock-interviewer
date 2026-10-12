@@ -14,7 +14,7 @@ const socketAuthMiddleware = async (socket, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
-    const interviewData = await getLatestInterviewByUserId(decoded.id);
+    const interviewData = await getLatestInterviewByUserId(decoded.userId);
 
     if (!interviewData) {
       return next(new Error("No interview found for this user."));

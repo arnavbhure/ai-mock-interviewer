@@ -41,10 +41,15 @@ const createInterviewController = async (req, res) => {
       difficulty,
     );
 
+    if (!store_result) {
+      return res.status(500).json({
+        message: "Failed to store interview plan",
+        success: false,
+      });
+    }
     return res.status(200).json({
       message: "Interview plan created successfully",
       success: true,
-      data: store_result,
     });
   } catch (err) {
     console.log("Error in interviewController : ", err);
