@@ -169,20 +169,37 @@ export const useInterviewStore = create<InterviewState>((set) => ({
       if (typeof data === "string") {
         questionText = data;
       } else if (data && typeof data === "object") {
-        if ("question" in data && data.question) {
-          if (typeof data.question === "string") {
-            questionText = data.question;
-          } else if (typeof data.question === "object" && data.question !== null) {
-            questionText = (data.question as { text?: string }).text || String(data.question);
-            topic = (data.question as { topic?: string }).topic;
+        const raw = data as Record<string, unknown>;
+
+        if ("question" in raw && raw.question !== undefined && raw.question !== null) {
+          const qVal = raw.question;
+          if (typeof qVal === "string") {
+            questionText = qVal;
+          } else if (typeof qVal === "object" && qVal !== null) {
+            const qObj = qVal as Record<string, unknown>;
+            questionText =
+              (typeof qObj.question === "string" && qObj.question) ||
+              (typeof qObj.text === "string" && qObj.text) ||
+              (typeof qObj.prompt === "string" && qObj.prompt) ||
+              "";
+            const focusArea = typeof qObj.focusArea === "string" ? qObj.focusArea : null;
+            const questionType = typeof qObj.questionType === "string" ? qObj.questionType : undefined;
+            topic =
+              focusArea ||
+              (typeof qObj.topic === "string" && qObj.topic) ||
+              questionType ||
+              undefined;
           }
-          roundNum = data.roundNumber ?? roundNum;
-          questionNum = data.questionNumber ?? questionNum;
-          diff = data.difficulty ?? diff;
-        } else if ("text" in data && typeof data.text === "string") {
-          questionText = data.text;
-          topic = (data as { topic?: string }).topic;
-          questionNum = (data as { questionNumber?: number }).questionNumber ?? questionNum;
+          roundNum = (typeof raw.roundNumber === "number" ? raw.roundNumber : null) ?? roundNum;
+          questionNum = (typeof raw.questionNumber === "number" ? raw.questionNumber : null) ?? questionNum;
+          diff = (raw.difficulty as InterviewState["difficulty"]) ?? diff;
+        } else if ("text" in raw && typeof raw.text === "string") {
+          questionText = raw.text;
+          topic =
+            (typeof raw.topic === "string" && raw.topic) ||
+            (typeof raw.focusArea === "string" && raw.focusArea) ||
+            undefined;
+          questionNum = typeof raw.questionNumber === "number" ? raw.questionNumber : questionNum;
         }
       }
 

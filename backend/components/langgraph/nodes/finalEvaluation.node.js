@@ -8,16 +8,18 @@ const FinalEvaluationNode = async (state) => {
     state.interviewId,
   );
 
-  if (!evaluationResultsFromDB.length) {
+  const evaluations = evaluationResultsFromDB[0]?.evaluations;
+
+  if (!evaluations || !evaluations.length) {
     throw new Error("Cannot generate final evaluation: no evaluations found.");
   }
 
   const evaluationResult = await finalEvaluationChain.invoke({
     role: state.role,
-    evaluations: JSON.stringify(evaluationResultsFromDB),
+    evaluations: JSON.stringify(evaluations),
   });
 
-  return { evaluationResult, phase: "finalization" };
+  return { finalEvaluation: evaluationResult, phase: "finalization" };
 };
 
 module.exports = { FinalEvaluationNode };

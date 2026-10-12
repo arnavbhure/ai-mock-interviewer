@@ -29,6 +29,18 @@ export interface InterviewQuestion {
   questionNumber?: number;
   totalQuestions?: number;
   topic?: string;
+  focusArea?: string | null;
+  questionType?: string;
+}
+
+export interface RawGeneratedQuestion {
+  question?: string;
+  questionType?: string;
+  focusArea?: string | null;
+  expectedSkills?: string[];
+  text?: string;
+  topic?: string;
+  [key: string]: unknown;
 }
 
 export interface FinalEvaluation {
@@ -69,7 +81,7 @@ export interface QuestionPayload {
   roundNumber?: number | null;
   questionNumber?: number | null;
   difficulty?: InterviewDifficulty | null;
-  question: InterviewQuestion | string;
+  question: InterviewQuestion | RawGeneratedQuestion | string;
 }
 
 export type SetQuestionPayload = QuestionPayload;
