@@ -110,11 +110,8 @@ export function useInterviewSession() {
     if (isSpeakingPhase) {
       // Candidate wants to skip AI speech and start answering immediately
       setIsSpeakingPhase(false);
-    } else if ((candidateAnswer || answer).trim()) {
-      // Candidate finished answering and submits
-      submitCurrentAnswer();
     }
-  }, [isSpeakingPhase, candidateAnswer, answer, submitCurrentAnswer]);
+  }, [isSpeakingPhase]);
 
   const toggleMute = useCallback(() => {
     setIsMuted((prev) => !prev);

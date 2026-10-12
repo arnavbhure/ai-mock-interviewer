@@ -1,4 +1,4 @@
-﻿import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Mic, LogOut, Volume2, VolumeX, Loader2 } from "lucide-react";
 import type { OrbState, InterviewStatus } from "@/types/interview.types";
 import { cn } from "@/lib/utils";
@@ -76,11 +76,9 @@ export function InterviewControls({
             aria-label={
               isSubmitting
                 ? "Submitting answer"
-                : isListening
-                  ? hasAnswer
-                    ? "Finish and submit response"
-                    : "Listening to response"
-                  : "Microphone control"
+                : isSpeaking
+                  ? "Skip AI speech and begin answer"
+                  : "Microphone status"
             }
           >
             {isSubmitting ? (
