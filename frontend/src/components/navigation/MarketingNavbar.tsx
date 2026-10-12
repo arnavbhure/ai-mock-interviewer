@@ -1,4 +1,4 @@
-﻿import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Menu } from "lucide-react";
 import { useEffect, useState } from "react";
 import { MobileMenu } from "@/components/navigation/MobileMenu";
@@ -6,6 +6,8 @@ import { NavbarActions } from "@/components/navigation/NavbarActions";
 import { NavbarLogo } from "@/components/navigation/NavbarLogo";
 import { NavLinks } from "@/components/navigation/NavLinks";
 import { cn } from "@/lib/utils";
+import { useUserStore } from "@/store/user.store";
+import { getUserProfile } from "@/api/auth/auth.api";
 
 const NAVBAR_HEIGHT = "4rem"; // h-16
 const SCROLL_THRESHOLD = 8;
@@ -14,6 +16,26 @@ export function MarketingNavbar() {
   const reduced = useReducedMotion();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const isInitialized = useUserStore((state) => state.isInitialized);
+  const setUser = useUserStore((state) => state.setUser);
+  const clearUser = useUserStore((state) => state.clearUser);
+
+  useEffect(() => {
+    if (!isInitialized) {
+      getUserProfile({ skipErrorToast: true })
+        .then((res) => {
+          if (res?.success && res?.user && res?.user?.is_verified) {
+            setUser(res.user);
+          } else {
+            clearUser();
+          }
+        })
+        .catch(() => {
+          clearUser();
+        });
+    }
+  }, [isInitialized, setUser, clearUser]);
 
   useEffect(() => {
     let animationFrame: number;

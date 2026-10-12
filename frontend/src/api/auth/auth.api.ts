@@ -1,3 +1,4 @@
+import type { AxiosRequestConfig } from "axios";
 import socket from "@/socket/socket";
 import api from "../axios";
 
@@ -24,8 +25,8 @@ export const verifyOtp = async (payload: { email: string; otp: string }) => {
   return response.data;
 };
 
-export const getUserProfile = async () => {
-  const response = await api.get("/auth/get-user");
+export const getUserProfile = async (config?: AxiosRequestConfig) => {
+  const response = await api.get("/auth/get-user", config);
   return response.data;
 };
 

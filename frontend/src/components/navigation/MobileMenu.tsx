@@ -1,11 +1,14 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowRight, LayoutDashboard, LogOut, Settings, User, X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { NavbarLogo } from "@/components/navigation/NavbarLogo";
 import { NavLinks } from "@/components/navigation/NavLinks";
 import { mobileMenuVariants, NAV_EASING } from "@/components/navigation/navbar.animations";
 import { cn } from "@/lib/utils";
+import { useUserStore } from "@/store/user.store";
+import { useInterviewStore } from "@/store/interview.store";
+import { logout } from "@/api/auth/auth.api";
 
 type MobileMenuProps = {
   isOpen: boolean;
@@ -14,6 +17,31 @@ type MobileMenuProps = {
 
 export function MobileMenu({ isOpen, onRequestClose }: MobileMenuProps) {
   const reduced = useReducedMotion();
+  const navigate = useNavigate();
+  const user = useUserStore((state) => state.user);
+  const isLoggedIn = useUserStore((state) => state.isLoggedIn);
+  const clearUser = useUserStore((state) => state.clearUser);
+
+  const name = user?.name?.trim() || user?.email?.split("@")[0] || "Candidate";
+  const cleanName = name.trim();
+  const email = user?.email;
+  const initials = cleanName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+
+  async function handleLogout() {
+    try {
+      await logout();
+    } finally {
+      clearUser();
+      useInterviewStore.getState().resetInterview();
+      onRequestClose();
+      navigate("/");
+    }
+  }
 
   return (
     <Dialog.Root
@@ -75,34 +103,94 @@ export function MobileMenu({ isOpen, onRequestClose }: MobileMenuProps) {
 
             {/* Authentication actions */}
             <div className="shrink-0 space-y-3 border-t border-border/60 px-5 py-4">
-              <Link
-                to="/login"
-                onClick={onRequestClose}
-                className={cn(
-                  "block w-full rounded-button border border-border bg-transparent px-4 py-2.5 text-center text-sm font-medium text-text",
-                  "transition-colors duration-200 ease-premium hover:border-border-hover hover:bg-surface",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                )}
-              >
-                Login
-              </Link>
+              {isLoggedIn ? (
+                <>
+                  {/* Logged in User Profile Info */}
+                  <div className="flex items-center gap-3 rounded-lg border border-border/80 bg-surface/70 p-3">
+                    <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                      {initials || <User className="size-4" aria-hidden="true" />}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-text">{cleanName}</p>
+                      {email && <p className="truncate text-xs text-text-muted">{email}</p>}
+                    </div>
+                  </div>
 
-              <Link
-                to="/register"
-                onClick={onRequestClose}
-                className={cn(
-                  "group flex w-full items-center justify-center gap-1.5 rounded-button bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground",
-                  "transition-[background-color,box-shadow] duration-200 ease-premium",
-                  "hover:bg-primary-bright hover:shadow-[0_2px_10px_rgba(77,130,255,0.28)]",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                )}
-              >
-                <span>Start Interview</span>
-                <ArrowRight
-                  aria-hidden="true"
-                  className="h-4 w-4 transition-transform duration-200 ease-premium group-hover:translate-x-0.5"
-                />
-              </Link>
+                  {/* Dashboard link */}
+                  <Link
+                    to="/dashboard"
+                    onClick={onRequestClose}
+                    className={cn(
+                      "group flex w-full items-center justify-center gap-2 rounded-button bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground",
+                      "transition-[background-color,box-shadow] duration-200 ease-premium",
+                      "hover:bg-primary-bright hover:shadow-[0_2px_10px_rgba(77,130,255,0.28)]",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    )}
+                  >
+                    <LayoutDashboard className="size-4" />
+                    <span>Go to Dashboard</span>
+                  </Link>
+
+                  {/* Settings link */}
+                  <Link
+                    to="/settings"
+                    onClick={onRequestClose}
+                    className={cn(
+                      "flex w-full items-center justify-center gap-2 rounded-button border border-border bg-transparent px-4 py-2.5 text-sm font-medium text-text",
+                      "transition-colors duration-200 ease-premium hover:border-border-hover hover:bg-surface",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    )}
+                  >
+                    <Settings className="size-4" />
+                    <span>Settings</span>
+                  </Link>
+
+                  {/* Sign Out button */}
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className={cn(
+                      "flex w-full items-center justify-center gap-2 rounded-button border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm font-medium text-red-400",
+                      "transition-colors duration-200 ease-premium hover:bg-red-500/20",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    )}
+                  >
+                    <LogOut className="size-4" />
+                    <span>Sign out</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    onClick={onRequestClose}
+                    className={cn(
+                      "block w-full rounded-button border border-border bg-transparent px-4 py-2.5 text-center text-sm font-medium text-text",
+                      "transition-colors duration-200 ease-premium hover:border-border-hover hover:bg-surface",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    )}
+                  >
+                    Login
+                  </Link>
+
+                  <Link
+                    to="/register"
+                    onClick={onRequestClose}
+                    className={cn(
+                      "group flex w-full items-center justify-center gap-1.5 rounded-button bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground",
+                      "transition-[background-color,box-shadow] duration-200 ease-premium",
+                      "hover:bg-primary-bright hover:shadow-[0_2px_10px_rgba(77,130,255,0.28)]",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    )}
+                  >
+                    <span>Start Interview</span>
+                    <ArrowRight
+                      aria-hidden="true"
+                      className="h-4 w-4 transition-transform duration-200 ease-premium group-hover:translate-x-0.5"
+                    />
+                  </Link>
+                </>
+              )}
             </div>
           </motion.div>
         </Dialog.Content>
