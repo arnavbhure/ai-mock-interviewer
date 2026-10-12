@@ -1,9 +1,60 @@
-﻿import { useMemo } from "react";
+import { useMemo, Component, type ReactNode } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Mic, BrainCircuit } from "lucide-react";
 import type { OrbState } from "@/types/interview.types";
 import { Orb } from "@/components/ui/Orb";
 import { cn } from "@/lib/utils";
+
+class OrbErrorBoundary extends Component<
+  { fallback: ReactNode; children: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.warn("[AIOrb] Caught Orb render error:", error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
+
+function FallbackOrbVisual({ hue = 0 }: { hue?: number }) {
+  return (
+    <div
+      className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-slate-950/40 select-none"
+      style={{ filter: `hue-rotate(${hue}deg)` }}
+    >
+      <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-indigo-600/30 via-purple-600/30 to-cyan-500/30 blur-xl animate-pulse" />
+      <div
+        className="absolute inset-3 rounded-full opacity-90 animate-spin"
+        style={{
+          animationDuration: "14s",
+          background:
+            "radial-gradient(circle at 35% 35%, rgba(147, 51, 234, 0.8) 0%, rgba(99, 102, 241, 0.6) 35%, rgba(6, 182, 212, 0.4) 65%, transparent 80%)",
+        }}
+      />
+      <div
+        className="absolute inset-6 rounded-full opacity-80 animate-spin"
+        style={{
+          animationDuration: "9s",
+          animationDirection: "reverse",
+          background:
+            "radial-gradient(circle at 65% 65%, rgba(59, 130, 246, 0.7) 0%, rgba(168, 85, 247, 0.5) 40%, transparent 75%)",
+        }}
+      />
+      <div className="absolute inset-10 rounded-full bg-white/10 blur-md backdrop-blur-sm" />
+    </div>
+  );
+}
 
 type Props = {
   state?: OrbState;
@@ -165,16 +216,18 @@ export function AIOrb({
       <div
         style={containerStyle}
         className={cn(
-          "relative h-[200px] w-[200px] sm:h-[260px] sm:w-[260px] md:h-[300px] md:w-[300px]",
+          "relative h-[200px] w-[200px] sm:h-[260px] sm:w-[260px] md:h-[300px] md:w-[300px] overflow-hidden rounded-full bg-transparent",
         )}
       >
-        <Orb
-          hue={activeHue}
-          hoverIntensity={activeHoverIntensity}
-          rotateOnHover={rotateOnHover}
-          forceHoverState={forceHoverState}
-          backgroundColor={backgroundColor}
-        />
+        <OrbErrorBoundary fallback={<FallbackOrbVisual hue={activeHue} />}>
+          <Orb
+            hue={activeHue}
+            hoverIntensity={activeHoverIntensity}
+            rotateOnHover={rotateOnHover}
+            forceHoverState={forceHoverState}
+            backgroundColor={backgroundColor}
+          />
+        </OrbErrorBoundary>
 
         {/* Listening mic badge indicator */}
         <AnimatePresence>
