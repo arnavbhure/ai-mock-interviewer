@@ -18,27 +18,63 @@ const evaluateAnswerNode = async (state) => {
     throw new Error("Cannot evaluate: candidate answer is missing.");
   }
 
+  const questionText =
+    currentQuestion.question || currentQuestion.text || "";
+
   const evaluationResult = await EvaluationAnswerChain.invoke({
     role: state.role,
-    roundType: currentRound.roundType,
+    roundType: currentRound.roundType || currentRound.type,
     difficulty: state.currentDifficulty,
-    question: state.currentQuestion.question,
-    answer: state.currentAnswer,
+    question: questionText,
+    answer: currentAnswer,
   });
 
   const evaluation = {
     question: currentQuestion,
     answer: currentAnswer,
     roundNumber: state.currentRoundNumber,
-    roundType: currentRound.roundType,
+    roundType: currentRound.roundType || currentRound.type,
     questionNumber: state.currentQuestionNumber,
     ...evaluationResult,
   };
 
   await appendInterviewEvaluationModel(state.interviewId, evaluation);
 
+  const updatedConversationHistory = [
+    ...(state.conversationHistory ?? []),
+    {
+      role: "interviewer",
+      content: questionText,
+    },
+    {
+      role: "candidate",
+      content: currentAnswer,
+    },
+  ];
+
+  const topic =
+    currentQuestion.focusArea ||
+    (Array.isArray(currentRound.focusAreas) && currentRound.focusAreas[0]) ||
+    currentRound.displayName ||
+    "Technical";
+
+  const newQuestionScore = {
+    roundIndex: Math.max(0, state.currentRoundNumber - 1),
+    questionNumber: state.currentQuestionNumber,
+    score: evaluationResult.score,
+    difficulty: state.currentDifficulty,
+    topic: topic,
+  };
+
+  const updatedQuestionScores = [
+    ...(state.questionScores ?? []),
+    newQuestionScore,
+  ];
+
   return {
     lastEvaluation: evaluationResult,
+    conversationHistory: updatedConversationHistory,
+    questionScores: updatedQuestionScores,
     phase: "evaluation",
   };
 };

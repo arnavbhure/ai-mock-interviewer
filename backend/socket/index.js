@@ -1,7 +1,7 @@
 const {
   socketAuthMiddleware,
 } = require("../middlewares/socketAuth.middleware");
-const { registerInterviewSocket } = require("./startinterview.socket");
+const { registerInterviewSocket } = require("./startInterview.socket");
 
 const registerSocketHandlers = (io) => {
   // Authenticate every socket connection

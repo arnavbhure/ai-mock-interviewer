@@ -13,6 +13,7 @@ const initialState = (interview) => {
     currentDifficulty: interview.difficulty,
 
     questionScores: [],
+    conversationHistory: [],
 
     phase: "initialization",
     status: "active",
