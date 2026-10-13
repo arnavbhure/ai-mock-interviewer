@@ -47,6 +47,8 @@ const INITIAL_STATE = {
   aiState: "idle" as AIInterviewState,
   currentAIMessage: "",
   aiAudioStatus: "idle" as AIAudioPlaybackStatus,
+  canReplayAudio: false,
+  isReplayingAudio: false,
 
   candidateAnswer: "",
 
@@ -221,6 +223,8 @@ export const useInterviewStore = create<InterviewState>((set) => ({
         answer: "",
         aiState: "speaking",
         currentAIMessage: questionText,
+        canReplayAudio: false,
+        isReplayingAudio: false,
         errorCode: null,
         errorMessage: null,
         error: null,
@@ -243,6 +247,12 @@ export const useInterviewStore = create<InterviewState>((set) => ({
 
   setAIAudioStatus: (aiAudioStatus: AIAudioPlaybackStatus) =>
     set({ aiAudioStatus }),
+
+  setCanReplayAudio: (canReplayAudio: boolean) =>
+    set({ canReplayAudio }),
+
+  setIsReplayingAudio: (isReplayingAudio: boolean) =>
+    set({ isReplayingAudio }),
 
   setCandidateAnswer: (candidateAnswer: string | ((prev: string) => string)) =>
     set((state) => {

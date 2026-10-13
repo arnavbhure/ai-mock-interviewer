@@ -73,7 +73,7 @@ export function CandidateResponseArea({
   return (
     <div
       className={cn(
-        "mx-auto w-full max-w-2xl px-2 sm:px-4 flex flex-col items-center gap-2 select-none shrink-0",
+        "mx-auto w-full max-w-2xl px-2 sm:px-4 flex flex-col items-center gap-1.5 sm:gap-2 select-none min-h-0",
         className,
       )}
     >
@@ -153,7 +153,7 @@ export function CandidateResponseArea({
         <div className="w-full">
           {hasAnswerText || interimTranscript ? (
             /* Spoken Transcript Live Display Card */
-            <div className="w-full flex flex-col gap-2 rounded-2xl border border-emerald-500/30 bg-slate-950/80 p-3 sm:p-3.5 shadow-2xl backdrop-blur-xl">
+            <div className="w-full flex flex-col gap-1.5 rounded-2xl border border-emerald-500/40 bg-slate-950/90 p-2.5 sm:p-3 shadow-2xl backdrop-blur-xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span
@@ -175,14 +175,14 @@ export function CandidateResponseArea({
                         key={i}
                         className="w-0.5 rounded-full bg-emerald-400"
                         animate={{
-                          height: [`${h * 0.25}px`, `${h * 0.7}px`, `${h * 0.25}px`],
+                          height: [`${h * 0.2}px`, `${h * 0.55}px`, `${h * 0.2}px`],
                         }}
                         transition={{
                           duration: 0.6 + i * 0.08,
                           repeat: Infinity,
                           ease: "easeInOut",
                         }}
-                        style={{ height: `${h * 0.25}px` }}
+                        style={{ height: `${h * 0.2}px` }}
                       />
                     ))}
                   </div>
@@ -190,7 +190,7 @@ export function CandidateResponseArea({
               </div>
 
               {/* Transcribed text body */}
-              <div className="max-h-24 sm:max-h-28 overflow-y-auto px-1 py-1 text-sm text-slate-100 font-normal leading-relaxed select-text">
+              <div className="max-h-16 sm:max-h-20 overflow-y-auto px-1 py-0.5 text-xs sm:text-sm text-slate-100 font-normal leading-relaxed select-text">
                 <p>
                   &ldquo;{safeAnswer}&rdquo;
                   {interimTranscript && (
@@ -202,7 +202,7 @@ export function CandidateResponseArea({
               </div>
 
               {/* Bottom Actions for Voice */}
-              <div className="flex items-center justify-between border-t border-white/[0.08] pt-2">
+              <div className="flex items-center justify-between border-t border-white/[0.08] pt-1.5">
                 <button
                   type="button"
                   onClick={onClearAnswer}
@@ -216,10 +216,11 @@ export function CandidateResponseArea({
 
                 <Button
                   type="button"
+                  id="submit-answer-btn-voice"
                   onClick={onSubmitAnswer}
                   disabled={!hasAnswerText || isProcessing}
                   size="sm"
-                  className="h-8 gap-1.5 bg-emerald-600 px-4 text-xs font-medium text-white hover:bg-emerald-500 shadow-md shadow-emerald-600/30 cursor-pointer"
+                  className="h-8 gap-1.5 bg-emerald-600 px-3.5 text-xs font-semibold text-white hover:bg-emerald-500 shadow-md shadow-emerald-600/30 ring-1 ring-emerald-400/30 cursor-pointer"
                 >
                   {isProcessing ? (
                     <>

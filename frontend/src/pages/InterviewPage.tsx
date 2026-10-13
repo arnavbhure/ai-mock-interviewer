@@ -51,6 +51,11 @@ function LiveInterviewRoom() {
     toggleListening,
     submitCurrentAnswer,
     confirmEndInterview,
+    canReplayAudio,
+    isReplayingAudio,
+    replayAudio,
+    stopReplayAudio,
+    isAudioStreaming,
   } = useInterviewSession();
 
   return (
@@ -77,8 +82,8 @@ function LiveInterviewRoom() {
       />
 
       {/* ── Central AI Interviewer & Response Form ── */}
-      <main className="relative z-10 flex flex-1 flex-col items-center justify-between px-3 sm:px-4 py-2 sm:py-3 min-h-0 overflow-hidden">
-        <div className="flex flex-1 w-full max-w-3xl flex-col items-center justify-center gap-2.5 sm:gap-3 min-h-0 overflow-hidden">
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-between px-3 sm:px-4 py-1.5 sm:py-2.5 min-h-0 overflow-y-auto sm:overflow-hidden">
+        <div className="flex flex-1 w-full max-w-3xl flex-col items-center justify-evenly gap-1.5 sm:gap-2.5 min-h-0">
           {/* AI Orb */}
           <div className="relative flex items-center justify-center shrink-0">
             <AIOrb state={orbState} />
@@ -93,6 +98,11 @@ function LiveInterviewRoom() {
               questionNumber={currentQuestionNumber}
               difficulty={currentDifficulty}
               orbState={orbState}
+              canReplayAudio={canReplayAudio}
+              isReplayingAudio={isReplayingAudio}
+              onReplayAudio={replayAudio}
+              onStopReplayAudio={stopReplayAudio}
+              isAudioStreaming={isAudioStreaming}
             />
           )}
 
@@ -126,6 +136,7 @@ function LiveInterviewRoom() {
           onToggleMute={toggleMute}
           onToggleListening={toggleListening}
           onEndInterview={() => setIsEndDialogOpen(true)}
+          onSubmitAnswer={submitCurrentAnswer}
         />
       </main>
 

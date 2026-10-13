@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { Mic, MicOff, LogOut, Volume2, VolumeX, Loader2 } from "lucide-react";
+import { Mic, MicOff, LogOut, Volume2, VolumeX, Loader2, Send } from "lucide-react";
 import type { OrbState, InterviewStatus } from "@/types/interview.types";
 import type { CandidateInputMode } from "@/types/speechRecognition.types";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ type Props = {
   onToggleMute?: () => void;
   onToggleListening: () => void;
   onEndInterview: () => void;
+  onSubmitAnswer?: () => void;
 };
 
 /**
@@ -22,6 +23,7 @@ type Props = {
  * In Voice Mode:
  * - Tactile central green microphone button toggles live recording.
  * - Glowing aura and pulse rings when microphone is active.
+ * - Dedicated Submit Answer button right in the dock when voice is recorded.
  * - Secondary controls for AI speech audio mute and ending the interview session.
  *
  * In Text Mode:
@@ -38,6 +40,7 @@ export function InterviewControls({
   onToggleMute,
   onToggleListening,
   onEndInterview,
+  onSubmitAnswer,
 }: Props) {
   const reduced = useReducedMotion();
   const normalizedState = orbState.toUpperCase();
@@ -70,6 +73,30 @@ export function InterviewControls({
             Text Mode Active
           </span>
 
+          {/* Quick Submit in Text Dock */}
+          {hasAnswer && onSubmitAnswer && (
+            <button
+              type="button"
+              id="dock-submit-answer-btn-text"
+              onClick={onSubmitAnswer}
+              disabled={isSubmitting}
+              className="flex h-8 items-center gap-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 px-3.5 text-xs font-semibold text-white shadow-md shadow-indigo-600/30 cursor-pointer"
+              title="Submit your answer"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span>Submitting...</span>
+                </>
+              ) : (
+                <>
+                  <span>Submit</span>
+                  <Send className="h-3 w-3" />
+                </>
+              )}
+            </button>
+          )}
+
           {/* End Interview */}
           <button
             type="button"
@@ -93,7 +120,7 @@ export function InterviewControls({
   return (
     <footer className="relative z-20 flex flex-col items-center gap-2 pb-2.5 pt-1 select-none shrink-0">
       {/* ── Control Dock Container ── */}
-      <div className="flex items-center gap-5 sm:gap-7 rounded-full border border-white/10 bg-slate-950/80 px-5 py-2 shadow-2xl backdrop-blur-xl">
+      <div className="flex items-center gap-4 sm:gap-6 rounded-full border border-white/10 bg-slate-950/80 px-4 sm:px-5 py-1.5 sm:py-2 shadow-2xl backdrop-blur-xl">
         {/* Left Secondary: Audio Mute */}
         <button
           type="button"
@@ -119,7 +146,7 @@ export function InterviewControls({
             disabled={isSubmitting}
             whileTap={!reduced && !isSubmitting ? { scale: 0.93 } : undefined}
             className={cn(
-              "relative flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full transition-all duration-300 cursor-pointer",
+              "relative flex h-12 w-12 sm:h-13 sm:w-13 items-center justify-center rounded-full transition-all duration-300 cursor-pointer",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950",
               isSubmitting
                 ? "bg-slate-800 text-slate-400 border border-white/10 cursor-not-allowed opacity-50"
@@ -172,6 +199,40 @@ export function InterviewControls({
             )}
           </motion.button>
         </div>
+
+        {/* Submit Answer Action in Voice Dock (Prominently visible when voice response exists) */}
+        {hasAnswer && onSubmitAnswer && (
+          <motion.button
+            type="button"
+            id="dock-submit-answer-btn"
+            initial={reduced ? undefined : { opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={reduced ? undefined : { opacity: 0, scale: 0.85 }}
+            onClick={onSubmitAnswer}
+            disabled={isSubmitting}
+            className={cn(
+              "flex h-9 sm:h-10 items-center gap-1.5 rounded-full px-4 text-xs font-semibold text-white shadow-lg transition-all duration-200 cursor-pointer",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400",
+              isSubmitting
+                ? "bg-slate-800 text-slate-400 opacity-60 cursor-not-allowed"
+                : "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/40 ring-1 ring-emerald-400/40 hover:scale-[1.03]",
+            )}
+            aria-label="Submit answer"
+            title="Submit your spoken answer"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <span>Submitting...</span>
+              </>
+            ) : (
+              <>
+                <span>Submit Answer</span>
+                <Send className="h-3.5 w-3.5" />
+              </>
+            )}
+          </motion.button>
+        )}
 
         {/* Right Secondary Action: End Session */}
         <button

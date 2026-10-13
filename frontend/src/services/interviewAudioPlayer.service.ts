@@ -25,6 +25,8 @@ export interface AudioPlayerCallbacks {
   onStatusChange?: (status: AudioPlayerStatus) => void;
   onPlaybackComplete?: () => void;
   onError?: (message: string) => void;
+  onAudioReadyToReplay?: (questionId: string) => void;
+  onReplayStatusChange?: (isReplaying: boolean) => void;
 }
 
 interface StreamSession {
@@ -33,6 +35,7 @@ interface StreamSession {
   channels: number;
   format: string;
   chunks: Map<number, Float32Array>;
+  allChunks: Map<number, Float32Array>; // Preserved across playback for replay
   nextChunkToPlay: number;
   totalChunksReceived: number;
   streamEnded: boolean;
@@ -59,6 +62,13 @@ class InterviewAudioPlayer {
   private isPlaying = false;
   private isDisposed = false;
   private contextResumed = false;
+
+  // ── Replay State ─────────────────────────────────────────────
+  private cachedAudioBuffers: Map<string, AudioBuffer> = new Map();
+  private lastAudioBuffer: AudioBuffer | null = null;
+  private lastQuestionId: string | null = null;
+  private replaySource: AudioBufferSourceNode | null = null;
+  private isReplaying = false;
 
   // ── Public API ──────────────────────────────────────────────
 
@@ -117,21 +127,28 @@ class InterviewAudioPlayer {
    * Called when backend emits `interview:audio:start`.
    * Prepares a new streaming session.
    */
+  /**
+   * Called when backend emits `interview:audio:start`.
+   * Prepares a new streaming session.
+   */
   startStream(payload: {
     questionId: string;
     format: string;
     sampleRate: number;
     channels: number;
   }): void {
-    // Cancel any existing playback
+    // Cancel any existing playback or replay
     this.stopPlayback();
+    this.stopReplay();
 
+    this.lastQuestionId = payload.questionId;
     this.session = {
       questionId: payload.questionId,
       sampleRate: payload.sampleRate || DEFAULT_SAMPLE_RATE,
       channels: payload.channels || 1,
       format: payload.format || "pcm",
       chunks: new Map(),
+      allChunks: new Map(),
       nextChunkToPlay: 0,
       totalChunksReceived: 0,
       streamEnded: false,
@@ -168,6 +185,7 @@ class InterviewAudioPlayer {
     // Convert raw PCM bytes (16-bit signed LE) to Float32Array
     const float32 = this.pcm16ToFloat32(payload.audio);
     this.session.chunks.set(payload.index, float32);
+    this.session.allChunks.set(payload.index, float32);
     this.session.totalChunksReceived++;
 
     // If we've accumulated enough startup buffer chunks, begin playback
@@ -201,6 +219,9 @@ class InterviewAudioPlayer {
       );
     }
 
+    // Assemble the complete AudioBuffer so user can replay the audio anytime
+    this.assembleCompleteAudioBuffer();
+
     // If we never reached the startup threshold, start now with what we have
     if (!this.isPlaying && this.session.totalChunksReceived > 0) {
       this.beginPlayback();
@@ -223,7 +244,7 @@ class InterviewAudioPlayer {
   }
 
   /**
-   * Cancel current playback immediately.
+   * Cancel current streaming playback immediately.
    */
   stopPlayback(): void {
     this.teardownScriptProcessor();
@@ -232,6 +253,110 @@ class InterviewAudioPlayer {
     this.currentBufferOffset = 0;
     this.isPlaying = false;
     this.setStatus("idle");
+  }
+
+  /**
+   * Replay the full recorded question audio.
+   * Can be called after all audio chunks have streamed.
+   */
+  async replayAudio(questionId?: string): Promise<boolean> {
+    if (!this.audioContext) {
+      await this.initialize();
+    }
+    if (!this.audioContext) return false;
+
+    if (this.audioContext.state === "suspended") {
+      try {
+        await this.audioContext.resume();
+      } catch {
+        // ignore
+      }
+    }
+
+    // Stop any existing stream playback or replay
+    this.stopPlayback();
+    this.stopReplay();
+
+    const buffer =
+      (questionId && this.cachedAudioBuffers.get(questionId)) ||
+      this.lastAudioBuffer;
+
+    if (!buffer) {
+      if (import.meta.env.DEV) {
+        console.warn(
+          "[AudioPlayer] No audio buffer found for replay, target:",
+          questionId,
+        );
+      }
+      return false;
+    }
+
+    try {
+      const source = this.audioContext.createBufferSource();
+      source.buffer = buffer;
+      source.connect(this.gainNode || this.audioContext.destination);
+
+      this.replaySource = source;
+      this.isReplaying = true;
+      this.callbacks.onReplayStatusChange?.(true);
+
+      source.onended = () => {
+        if (this.replaySource === source) {
+          this.replaySource = null;
+          this.isReplaying = false;
+          this.callbacks.onReplayStatusChange?.(false);
+          if (import.meta.env.DEV) {
+            console.log("[AudioPlayer] Replay finished");
+          }
+        }
+      };
+
+      source.start(0);
+      if (import.meta.env.DEV) {
+        console.log("[AudioPlayer] Replay started");
+      }
+      return true;
+    } catch (err) {
+      console.error("[AudioPlayer] Replay failed:", err);
+      this.isReplaying = false;
+      this.callbacks.onReplayStatusChange?.(false);
+      return false;
+    }
+  }
+
+  /**
+   * Stop any active audio replay.
+   */
+  stopReplay(): void {
+    if (this.replaySource) {
+      try {
+        this.replaySource.stop();
+      } catch {
+        // already stopped
+      }
+      this.replaySource = null;
+    }
+    if (this.isReplaying) {
+      this.isReplaying = false;
+      this.callbacks.onReplayStatusChange?.(false);
+    }
+  }
+
+  /**
+   * Check whether audio is cached and ready to replay for a question.
+   */
+  hasAudioForQuestion(questionId?: string): boolean {
+    if (questionId && this.cachedAudioBuffers.has(questionId)) {
+      return true;
+    }
+    return this.lastAudioBuffer !== null;
+  }
+
+  /**
+   * Check if audio is currently replaying.
+   */
+  isCurrentlyReplaying(): boolean {
+    return this.isReplaying;
   }
 
   /**
@@ -248,6 +373,10 @@ class InterviewAudioPlayer {
    */
   async dispose(): Promise<void> {
     this.stopPlayback();
+    this.stopReplay();
+    this.cachedAudioBuffers.clear();
+    this.lastAudioBuffer = null;
+    this.lastQuestionId = null;
     if (this.audioContext && this.audioContext.state !== "closed") {
       try {
         await this.audioContext.close();
@@ -420,10 +549,60 @@ class InterviewAudioPlayer {
       console.log("[AudioPlayer] playback complete");
     }
 
+    // Ensure audio buffer is assembled if it wasn't already
+    this.assembleCompleteAudioBuffer();
+
     this.teardownScriptProcessor();
     this.isPlaying = false;
     this.setStatus("idle");
     this.callbacks.onPlaybackComplete?.();
+  }
+
+  /**
+   * Concatenate all received chunks in ordered sequence into a single AudioBuffer.
+   * This provides instant, glitch-free replaying via AudioBufferSourceNode.
+   */
+  private assembleCompleteAudioBuffer(): void {
+    if (!this.session || !this.audioContext || this.session.allChunks.size === 0) {
+      return;
+    }
+
+    const indices = Array.from(this.session.allChunks.keys()).sort((a, b) => a - b);
+    let totalSamples = 0;
+    for (const idx of indices) {
+      totalSamples += this.session.allChunks.get(idx)!.length;
+    }
+
+    if (totalSamples === 0) return;
+
+    try {
+      const buffer = this.audioContext.createBuffer(
+        this.session.channels || 1,
+        totalSamples,
+        this.session.sampleRate,
+      );
+      const channelData = buffer.getChannelData(0);
+      let offset = 0;
+      for (const idx of indices) {
+        const chunk = this.session.allChunks.get(idx)!;
+        channelData.set(chunk, offset);
+        offset += chunk.length;
+      }
+
+      this.cachedAudioBuffers.set(this.session.questionId, buffer);
+      this.lastAudioBuffer = buffer;
+      this.lastQuestionId = this.session.questionId;
+      this.callbacks.onAudioReadyToReplay?.(this.session.questionId);
+
+      if (import.meta.env.DEV) {
+        console.log(
+          `[AudioPlayer] Assembled complete audio buffer for question "${this.session.questionId}": ` +
+            `${totalSamples} samples (~${(totalSamples / this.session.sampleRate).toFixed(1)}s)`,
+        );
+      }
+    } catch (err) {
+      console.error("[AudioPlayer] Error creating complete AudioBuffer:", err);
+    }
   }
 
   /**

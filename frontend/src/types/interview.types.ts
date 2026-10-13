@@ -156,6 +156,8 @@ export interface InterviewState {
   aiState: AIInterviewState;
   currentAIMessage: string;
   aiAudioStatus: AIAudioPlaybackStatus;
+  canReplayAudio: boolean;
+  isReplayingAudio: boolean;
 
   candidateAnswer: string;
 
@@ -200,6 +202,8 @@ export interface InterviewState {
   setAIState: (aiState: AIInterviewState | OrbState) => void;
   setAIMessage: (message: string) => void;
   setAIAudioStatus: (status: AIAudioPlaybackStatus) => void;
+  setCanReplayAudio: (can: boolean) => void;
+  setIsReplayingAudio: (is: boolean) => void;
   setCandidateAnswer: (answer: string | ((prev: string) => string)) => void;
   setCodingState: (codingState: Partial<CodingState>) => void;
   setCode: (code: string) => void;

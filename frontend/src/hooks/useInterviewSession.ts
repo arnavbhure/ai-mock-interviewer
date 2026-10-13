@@ -22,10 +22,14 @@ export function useInterviewSession() {
     finalEvaluation,
     error,
     aiAudioStatus,
+    canReplayAudio,
+    isReplayingAudio,
     setCandidateAnswer,
     setSubmitting,
     setAIState,
     setAIAudioStatus,
+    setCanReplayAudio,
+    setIsReplayingAudio,
     resetInterview,
   } = useInterviewStore();
 
@@ -99,19 +103,30 @@ export function useInterviewSession() {
         setAIAudioStatus("idle");
         setAIState("listening");
         setIsSpeakingPhase(false);
+        setCanReplayAudio(true);
+      },
+      onAudioReadyToReplay: (questionId) => {
+        if (import.meta.env.DEV) {
+          console.log("[useInterviewSession] Audio ready to replay for:", questionId);
+        }
+        setCanReplayAudio(true);
+      },
+      onReplayStatusChange: (isReplaying) => {
+        setIsReplayingAudio(isReplaying);
       },
       onError: (message) => {
         console.error("[useInterviewSession] Audio error:", message);
         setAIAudioStatus("error");
         // Fallback: transition to candidate turn even on audio error
         setIsSpeakingPhase(false);
+        setCanReplayAudio(true);
       },
     });
 
     return () => {
       interviewAudioPlayer.setCallbacks({});
     };
-  }, [setAIAudioStatus, setAIState]);
+  }, [setAIAudioStatus, setAIState, setCanReplayAudio, setIsReplayingAudio]);
 
   // Initialize AudioContext when interview becomes active
   useEffect(() => {
@@ -204,8 +219,9 @@ export function useInterviewSession() {
     }
     if (status === "submitting") return "PROCESSING";
     if (status === "active") {
-      // If AI audio is actively playing/buffering, show speaking state
+      // If AI audio is actively playing, buffering, draining, or replaying, show speaking state
       if (
+        isReplayingAudio ||
         aiAudioStatus === "playing" ||
         aiAudioStatus === "buffering" ||
         aiAudioStatus === "draining"
@@ -217,6 +233,36 @@ export function useInterviewSession() {
     }
     return "idle";
   })();
+
+  // ─── Audio Replay Controls ────────────────────────────────────
+
+  const stopReplayAudio = useCallback(() => {
+    interviewAudioPlayer.stopReplay();
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsReplayingAudio(false);
+  }, [setIsReplayingAudio]);
+
+  const replayAudio = useCallback(async () => {
+    // If candidate microphone is listening, stop it first
+    if (speech.isListening) {
+      speech.stopListening();
+    }
+    const currentQ = useInterviewStore.getState().currentQuestion;
+    const questionId = currentQ?.id || "";
+    const played = await interviewAudioPlayer.replayAudio(questionId);
+
+    // If backend TTS PCM was unavailable or empty, fallback to browser SpeechSynthesis
+    if (!played && currentQ?.text && typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(currentQ.text);
+      utterance.onend = () => setIsReplayingAudio(false);
+      utterance.onerror = () => setIsReplayingAudio(false);
+      setIsReplayingAudio(true);
+      window.speechSynthesis.speak(utterance);
+    }
+  }, [speech, setIsReplayingAudio]);
 
   // ─── User Actions ─────────────────────────────────────────────
 
@@ -237,17 +283,19 @@ export function useInterviewSession() {
   const selectMode = useCallback(
     (newMode: CandidateInputMode) => {
       if (newMode === mode) return;
+      stopReplayAudio();
       if (newMode === "voice" && !speech.isSupported) return;
       if (speech.isListening) {
         speech.stopListening();
       }
       setMode(newMode);
     },
-    [mode, speech],
+    [mode, speech, stopReplayAudio],
   );
 
   const toggleListening = useCallback(() => {
     if (status === "submitting") return;
+    stopReplayAudio();
     if (isSpeakingPhase) {
       setIsSpeakingPhase(false);
       // Stop audio playback if user wants to start speaking
@@ -261,7 +309,7 @@ export function useInterviewSession() {
     } else {
       speech.startListening();
     }
-  }, [status, isSpeakingPhase, mode, speech]);
+  }, [status, isSpeakingPhase, mode, speech, stopReplayAudio]);
 
   const clearCurrentAnswer = useCallback(() => {
     if (status === "submitting") return;
@@ -275,7 +323,8 @@ export function useInterviewSession() {
     if (speech.isListening) {
       speech.stopListening();
     }
-    // Stop any ongoing audio playback when candidate submits
+    // Stop any ongoing audio playback or replay when candidate submits
+    stopReplayAudio();
     interviewAudioPlayer.stopPlayback();
 
     const rawAns =
@@ -288,7 +337,7 @@ export function useInterviewSession() {
     if (!trimmed || status === "submitting") return;
 
     emitSubmitAnswer(trimmed);
-  }, [candidateAnswer, answer, status, speech]);
+  }, [candidateAnswer, answer, status, speech, stopReplayAudio]);
 
   const toggleMute = useCallback(() => {
     setIsMuted((prev) => {
@@ -305,10 +354,11 @@ export function useInterviewSession() {
       speech.stopListening();
     }
     // Stop audio and dispose player
+    stopReplayAudio();
     interviewAudioPlayer.stopPlayback();
     setIsEndDialogOpen(false);
     resetInterview();
-  }, [speech, resetInterview]);
+  }, [speech, resetInterview, stopReplayAudio]);
 
   const formattedTime = `${String(Math.floor(elapsedSeconds / 60)).padStart(2, "0")}:${String(
     elapsedSeconds % 60,
@@ -353,5 +403,13 @@ export function useInterviewSession() {
     submitCurrentAnswer,
     confirmEndInterview,
     aiAudioStatus,
+    canReplayAudio,
+    isReplayingAudio,
+    replayAudio,
+    stopReplayAudio,
+    isAudioStreaming:
+      aiAudioStatus === "buffering" ||
+      aiAudioStatus === "playing" ||
+      aiAudioStatus === "draining",
   };
 }
