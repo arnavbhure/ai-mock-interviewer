@@ -1,6 +1,6 @@
 import { useMemo, Component, type ReactNode } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Mic, BrainCircuit } from "lucide-react";
+import { Mic, BrainCircuit, Volume2 } from "lucide-react";
 import type { OrbState } from "@/types/interview.types";
 import { Orb } from "@/components/ui/Orb";
 import { cn } from "@/lib/utils";
@@ -229,8 +229,23 @@ export function AIOrb({
           />
         </OrbErrorBoundary>
 
-        {/* Listening mic badge indicator */}
+        {/* Speaking audio badge indicator */}
         <AnimatePresence>
+          {normalized === "speaking" && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.7 }}
+              transition={{ duration: 0.25 }}
+              className="pointer-events-none absolute inset-0 flex items-center justify-center"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-950/60 shadow-sm backdrop-blur-md border border-indigo-500/30 sm:h-12 sm:w-12">
+                <Volume2 className="h-5 w-5 text-indigo-400 sm:h-6 sm:w-6 animate-pulse" />
+              </div>
+            </motion.div>
+          )}
+
+          {/* Listening mic badge indicator */}
           {normalized === "listening" && (
             <motion.div
               initial={{ opacity: 0, scale: 0.7 }}

@@ -1,10 +1,15 @@
 import socket from "@/socket/socket";
 import { useInterviewStore } from "@/store/interview.store";
 import { toastError } from "@/components/ui/toast";
+import { interviewAudioPlayer } from "@/services/interviewAudioPlayer.service";
 import type {
   QuestionPayload,
   CompletedPayload,
   ErrorPayload,
+  AudioStartPayload,
+  AudioChunkPayload,
+  AudioEndPayload,
+  AudioErrorPayload,
 } from "@/types/interview.types";
 
 let isInitialized = false;
@@ -37,6 +42,36 @@ const handleError = (data: ErrorPayload) => {
   }
 };
 
+// ─── Audio Streaming Event Handlers ──────────────────────────
+
+const handleAudioStart = (data: AudioStartPayload) => {
+  if (import.meta.env.DEV) {
+    console.log("[InterviewSocket] interview:audio:start", data);
+  }
+  useInterviewStore.getState().setAIAudioStatus("buffering");
+  useInterviewStore.getState().setAIState("speaking");
+  interviewAudioPlayer.startStream(data);
+};
+
+const handleAudioChunk = (data: AudioChunkPayload) => {
+  interviewAudioPlayer.enqueueChunk(data);
+};
+
+const handleAudioEnd = (data: AudioEndPayload) => {
+  if (import.meta.env.DEV) {
+    console.log("[InterviewSocket] interview:audio:end", data);
+  }
+  interviewAudioPlayer.endStream(data);
+};
+
+const handleAudioError = (data: AudioErrorPayload) => {
+  if (import.meta.env.DEV) {
+    console.error("[InterviewSocket] interview:audio:error", data);
+  }
+  interviewAudioPlayer.handleStreamError(data);
+  useInterviewStore.getState().setAIAudioStatus("error");
+};
+
 // ─── Socket Listener Lifecycle Management ─────────────────────
 
 /**
@@ -53,6 +88,13 @@ export function initializeInterviewSocketListeners(): () => void {
     socket.on("interview:question", handleQuestion);
     socket.on("interview:completed", handleCompleted);
     socket.on("interview:error", handleError);
+
+    // Audio streaming listeners
+    socket.on("interview:audio:start", handleAudioStart);
+    socket.on("interview:audio:chunk", handleAudioChunk);
+    socket.on("interview:audio:end", handleAudioEnd);
+    socket.on("interview:audio:error", handleAudioError);
+
     isInitialized = true;
   }
 
@@ -69,6 +111,13 @@ export function cleanupInterviewSocketListeners(): void {
   socket.off("interview:question", handleQuestion);
   socket.off("interview:completed", handleCompleted);
   socket.off("interview:error", handleError);
+
+  // Audio streaming listeners
+  socket.off("interview:audio:start", handleAudioStart);
+  socket.off("interview:audio:chunk", handleAudioChunk);
+  socket.off("interview:audio:end", handleAudioEnd);
+  socket.off("interview:audio:error", handleAudioError);
+
   isInitialized = false;
 }
 

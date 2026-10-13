@@ -103,6 +103,43 @@ export interface AnswerPayload {
   answer: string;
 }
 
+// ─── Audio Streaming Payloads (Backend → Frontend) ───────────
+
+/** Backend -> Frontend: "interview:audio:start" */
+export interface AudioStartPayload {
+  questionId: string;
+  format: string;
+  sampleRate: number;
+  channels: number;
+}
+
+/** Backend -> Frontend: "interview:audio:chunk" */
+export interface AudioChunkPayload {
+  questionId: string;
+  index: number;
+  audio: ArrayBuffer | Buffer | Uint8Array;
+}
+
+/** Backend -> Frontend: "interview:audio:end" */
+export interface AudioEndPayload {
+  questionId: string;
+  totalChunks: number;
+}
+
+/** Backend -> Frontend: "interview:audio:error" */
+export interface AudioErrorPayload {
+  questionId: string;
+  message: string;
+}
+
+/** Audio playback status tracked in the Zustand store */
+export type AIAudioPlaybackStatus =
+  | "idle"
+  | "buffering"
+  | "playing"
+  | "draining"
+  | "error";
+
 // ─── Zustand Store State & Actions ───────────────────────────
 
 export interface InterviewState {
@@ -118,6 +155,7 @@ export interface InterviewState {
 
   aiState: AIInterviewState;
   currentAIMessage: string;
+  aiAudioStatus: AIAudioPlaybackStatus;
 
   candidateAnswer: string;
 
@@ -161,6 +199,7 @@ export interface InterviewState {
   setQuestion: (data: QuestionPayload | InterviewQuestion | string) => void;
   setAIState: (aiState: AIInterviewState | OrbState) => void;
   setAIMessage: (message: string) => void;
+  setAIAudioStatus: (status: AIAudioPlaybackStatus) => void;
   setCandidateAnswer: (answer: string | ((prev: string) => string)) => void;
   setCodingState: (codingState: Partial<CodingState>) => void;
   setCode: (code: string) => void;

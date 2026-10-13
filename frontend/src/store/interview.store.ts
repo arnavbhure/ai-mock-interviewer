@@ -8,6 +8,7 @@ import type {
   PreparationState,
   AIInterviewState,
   OrbState,
+  AIAudioPlaybackStatus,
 } from "@/types/interview.types";
 import type { DSALanguage, DSATestCase, DSASubmissionSummary } from "@/types/dsaInterview.types";
 
@@ -45,6 +46,7 @@ const INITIAL_STATE = {
 
   aiState: "idle" as AIInterviewState,
   currentAIMessage: "",
+  aiAudioStatus: "idle" as AIAudioPlaybackStatus,
 
   candidateAnswer: "",
 
@@ -238,6 +240,9 @@ export const useInterviewStore = create<InterviewState>((set) => ({
     set({
       currentAIMessage,
     }),
+
+  setAIAudioStatus: (aiAudioStatus: AIAudioPlaybackStatus) =>
+    set({ aiAudioStatus }),
 
   setCandidateAnswer: (candidateAnswer: string | ((prev: string) => string)) =>
     set((state) => {

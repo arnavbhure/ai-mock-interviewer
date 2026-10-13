@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useInterviewStore } from "@/store/interview.store";
 import type { OrbState } from "@/types/interview.types";
 import type { CandidateInputMode } from "@/types/speechRecognition.types";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { emitSubmitAnswer } from "@/services/interviewSocket.service";
+import { interviewAudioPlayer } from "@/services/interviewAudioPlayer.service";
 import { MOCK_INTERVIEW_CONFIG } from "@/data/interview.mock";
 
 export function useInterviewSession() {
@@ -20,8 +21,11 @@ export function useInterviewSession() {
     evaluation,
     finalEvaluation,
     error,
+    aiAudioStatus,
     setCandidateAnswer,
     setSubmitting,
+    setAIState,
+    setAIAudioStatus,
     resetInterview,
   } = useInterviewStore();
 
@@ -30,6 +34,7 @@ export function useInterviewSession() {
   const [isMuted, setIsMuted] = useState(false);
   const [isEndDialogOpen, setIsEndDialogOpen] = useState(false);
   const [isSpeakingPhase, setIsSpeakingPhase] = useState(true);
+  const audioInitializedRef = useRef(false);
 
   // ─── Input Mode State (Voice default if supported, else Text) ───
   const [mode, setMode] = useState<CandidateInputMode>(() => {
@@ -72,17 +77,89 @@ export function useInterviewSession() {
     }
   }, [status, speech]);
 
+  // ─── Audio Player Lifecycle ──────────────────────────────────
+  // Initialize AudioContext early (called from handleStartInterview user gesture)
+  // and register callbacks that sync store state
+  useEffect(() => {
+    // Register audio player callbacks
+    interviewAudioPlayer.setCallbacks({
+      onStatusChange: (audioStatus) => {
+        setAIAudioStatus(audioStatus);
+
+        // When playback starts, ensure AI state is "speaking"
+        if (audioStatus === "playing") {
+          setAIState("speaking");
+          setIsSpeakingPhase(true);
+        }
+      },
+      onPlaybackComplete: () => {
+        if (import.meta.env.DEV) {
+          console.log("[useInterviewSession] AI audio playback complete → candidate turn");
+        }
+        setAIAudioStatus("idle");
+        setAIState("listening");
+        setIsSpeakingPhase(false);
+      },
+      onError: (message) => {
+        console.error("[useInterviewSession] Audio error:", message);
+        setAIAudioStatus("error");
+        // Fallback: transition to candidate turn even on audio error
+        setIsSpeakingPhase(false);
+      },
+    });
+
+    return () => {
+      interviewAudioPlayer.setCallbacks({});
+    };
+  }, [setAIAudioStatus, setAIState]);
+
+  // Initialize AudioContext when interview becomes active
+  useEffect(() => {
+    if (
+      (status === "starting" || status === "waiting" || status === "active") &&
+      !audioInitializedRef.current
+    ) {
+      interviewAudioPlayer.initialize().then(() => {
+        audioInitializedRef.current = true;
+        if (import.meta.env.DEV) {
+          console.log("[useInterviewSession] AudioContext initialized for session");
+        }
+      });
+    }
+  }, [status]);
+
+  // Dispose audio player when interview completes or resets
+  useEffect(() => {
+    if (status === "idle" || status === "completed") {
+      if (audioInitializedRef.current) {
+        interviewAudioPlayer.dispose();
+        audioInitializedRef.current = false;
+      }
+    }
+  }, [status]);
+
+  // Sync mute state with audio player
+  useEffect(() => {
+    interviewAudioPlayer.setVolume(isMuted ? 0 : 1);
+  }, [isMuted]);
+
   // ─── AI Speech -> Candidate Turn Transition Timer ────────────
+  // Fallback timer: if no TTS audio arrives, use the 3.5s timer
   useEffect(() => {
     if (!currentQuestion) return;
 
-    // AI speaks initially for ~3.5s upon question arrival, then candidate turns
     const startTimer = setTimeout(() => {
       setIsSpeakingPhase(true);
     }, 0);
 
+    // Only use the fallback timer if audio is NOT streaming
     const endTimer = setTimeout(() => {
-      setIsSpeakingPhase(false);
+      const currentAudioStatus = useInterviewStore.getState().aiAudioStatus;
+      // If audio is idle (no TTS audio was received), use fallback transition
+      if (currentAudioStatus === "idle" || currentAudioStatus === "error") {
+        setIsSpeakingPhase(false);
+      }
+      // Otherwise, the audio player's onPlaybackComplete will handle the transition
     }, 3500);
 
     return () => {
@@ -127,6 +204,14 @@ export function useInterviewSession() {
     }
     if (status === "submitting") return "PROCESSING";
     if (status === "active") {
+      // If AI audio is actively playing/buffering, show speaking state
+      if (
+        aiAudioStatus === "playing" ||
+        aiAudioStatus === "buffering" ||
+        aiAudioStatus === "draining"
+      ) {
+        return "AI_SPEAKING";
+      }
       if (speech.isListening) return "LISTENING";
       return isSpeakingPhase ? "AI_SPEAKING" : "LISTENING";
     }
@@ -165,6 +250,8 @@ export function useInterviewSession() {
     if (status === "submitting") return;
     if (isSpeakingPhase) {
       setIsSpeakingPhase(false);
+      // Stop audio playback if user wants to start speaking
+      interviewAudioPlayer.stopPlayback();
     }
     if (mode !== "voice") {
       setMode("voice");
@@ -188,6 +275,9 @@ export function useInterviewSession() {
     if (speech.isListening) {
       speech.stopListening();
     }
+    // Stop any ongoing audio playback when candidate submits
+    interviewAudioPlayer.stopPlayback();
+
     const rawAns =
       typeof candidateAnswer === "string"
         ? candidateAnswer
@@ -214,6 +304,8 @@ export function useInterviewSession() {
     if (speech.isListening) {
       speech.stopListening();
     }
+    // Stop audio and dispose player
+    interviewAudioPlayer.stopPlayback();
     setIsEndDialogOpen(false);
     resetInterview();
   }, [speech, resetInterview]);
@@ -260,5 +352,6 @@ export function useInterviewSession() {
     toggleListening,
     submitCurrentAnswer,
     confirmEndInterview,
+    aiAudioStatus,
   };
 }
