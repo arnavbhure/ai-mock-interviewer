@@ -216,7 +216,7 @@ export function AIOrb({
       <div
         style={containerStyle}
         className={cn(
-          "relative h-[200px] w-[200px] sm:h-[260px] sm:w-[260px] md:h-[300px] md:w-[300px] overflow-hidden rounded-full bg-transparent",
+          "relative h-[210px] w-[210px] sm:h-[250px] sm:w-[250px] md:h-[280px] md:w-[280px] lg:h-[300px] lg:w-[300px] max-h-[34vh] max-w-[34vh] aspect-square overflow-hidden rounded-full bg-transparent shrink-0",
         )}
       >
         <OrbErrorBoundary fallback={<FallbackOrbVisual hue={activeHue} />}>
@@ -298,7 +298,7 @@ export function AIOrb({
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.25 }}
           className={cn(
-            "mt-2 text-xs font-medium tracking-wide sm:text-sm transition-colors duration-300",
+            "mt-1 text-xs font-medium tracking-wide transition-colors duration-300",
             stageConfig.badgeColor,
           )}
         >

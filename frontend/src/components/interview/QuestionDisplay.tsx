@@ -1,4 +1,4 @@
-﻿import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import type { OrbState } from "@/types/interview.types";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +43,7 @@ export function QuestionDisplay({
         initial={reduced ? undefined : { opacity: 0, y: -4 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium tracking-wide text-slate-400 backdrop-blur-md"
+        className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-[10px] font-medium tracking-wide text-slate-400 backdrop-blur-md"
       >
         {questionNumber !== null && questionNumber !== undefined && (
           <span className="font-semibold text-indigo-400">
@@ -82,7 +82,7 @@ export function QuestionDisplay({
         >
           <p
             className={cn(
-              "text-lg sm:text-xl md:text-2xl font-normal leading-relaxed tracking-tight transition-all duration-300",
+              "text-base sm:text-lg md:text-xl font-medium leading-snug tracking-tight max-w-2xl transition-all duration-300",
               isSpeaking
                 ? "text-white drop-shadow-[0_2px_16px_rgba(255,255,255,0.15)]"
                 : "text-slate-200/90",

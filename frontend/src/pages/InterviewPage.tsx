@@ -32,6 +32,13 @@ function LiveInterviewRoom() {
     currentQuestion,
     answer,
     setAnswer,
+    clearCurrentAnswer,
+    mode,
+    setMode,
+    isListening,
+    interimTranscript,
+    speechError,
+    isSpeechSupported,
     error,
     role,
     interviewType,
@@ -47,14 +54,14 @@ function LiveInterviewRoom() {
   } = useInterviewSession();
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-[#060813] text-slate-100 antialiased overflow-hidden">
+    <div className="relative flex h-dvh max-h-dvh flex-col bg-[#060813] text-slate-100 antialiased overflow-hidden select-none">
       {/* ── Background Subtle Ambient Glows ── */}
       <div
-        className="pointer-events-none absolute left-1/2 top-1/4 h-[550px] w-[550px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-600/10 blur-[140px]"
+        className="pointer-events-none absolute left-1/2 top-1/4 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-600/10 blur-[120px]"
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none absolute right-10 bottom-10 h-[350px] w-[350px] rounded-full bg-cyan-600/5 blur-[120px]"
+        className="pointer-events-none absolute right-10 bottom-10 h-[300px] w-[300px] rounded-full bg-cyan-600/5 blur-[100px]"
         aria-hidden="true"
       />
 
@@ -70,10 +77,10 @@ function LiveInterviewRoom() {
       />
 
       {/* ── Central AI Interviewer & Response Form ── */}
-      <main className="relative z-10 flex flex-1 flex-col items-center justify-between px-4 py-6 sm:py-8">
-        <div className="flex flex-1 w-full max-w-4xl flex-col items-center justify-center gap-6 sm:gap-8">
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-between px-3 sm:px-4 py-2 sm:py-3 min-h-0 overflow-hidden">
+        <div className="flex flex-1 w-full max-w-3xl flex-col items-center justify-center gap-2.5 sm:gap-3 min-h-0 overflow-hidden">
           {/* AI Orb */}
-          <div className="relative flex items-center justify-center">
+          <div className="relative flex items-center justify-center shrink-0">
             <AIOrb state={orbState} />
           </div>
 
@@ -93,8 +100,15 @@ function LiveInterviewRoom() {
           <CandidateResponseArea
             orbState={orbState}
             status={status}
+            mode={mode}
+            onSelectMode={setMode}
+            isListening={isListening}
+            interimTranscript={interimTranscript}
+            isSpeechSupported={isSpeechSupported}
+            speechError={speechError}
             answer={typeof answer === "string" ? answer : ""}
             setAnswer={setAnswer}
+            onClearAnswer={clearCurrentAnswer}
             onSubmitAnswer={submitCurrentAnswer}
             formattedAnswerTime={formattedAnswerTime}
             error={error}
@@ -105,6 +119,8 @@ function LiveInterviewRoom() {
         <InterviewControls
           orbState={orbState}
           status={status}
+          mode={mode}
+          isListening={isListening}
           hasAnswer={typeof answer === "string" && Boolean(answer.trim())}
           isMuted={isMuted}
           onToggleMute={toggleMute}

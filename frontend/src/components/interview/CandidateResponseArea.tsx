@@ -1,28 +1,30 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { useReducedMotion, motion, AnimatePresence } from "framer-motion";
 import {
   Mic,
-  MicOff,
   Keyboard,
-  Sparkles,
   Send,
+  Trash2,
   AlertTriangle,
   Loader2,
   Volume2,
-  Trash2,
-  Info,
 } from "lucide-react";
 import type { OrbState, InterviewStatus, InterviewError } from "@/types/interview.types";
 import type { CandidateInputMode } from "@/types/speechRecognition.types";
-import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type Props = {
   orbState: OrbState;
   status: InterviewStatus;
+  mode: CandidateInputMode;
+  onSelectMode: (mode: CandidateInputMode) => void;
+  isListening: boolean;
+  interimTranscript?: string;
+  isSpeechSupported?: boolean;
+  speechError?: string | null;
   answer: string;
   setAnswer: (answer: string | ((prev: string) => string)) => void;
+  onClearAnswer: () => void;
   onSubmitAnswer: () => void;
   formattedAnswerTime?: string;
   error?: InterviewError | null;
@@ -32,135 +34,46 @@ type Props = {
 /**
  * Candidate Response Area
  *
- * Implements dual-mode response input:
- * 1. Voice Mode: Native Web Speech API speech-to-text with interim preview,
- *    duplicate-prevention accumulation, and editable transcript review.
- * 2. Text Mode: Direct keyboard input.
- *
- * Switching modes preserves answer state and cleans up recognition sessions.
+ * Implements strict separation:
+ * 1. Voice Mode:
+ *    - Absolutely NO textarea.
+ *    - Displays clean live transcript preview, audio visualizer, Clear, and Submit.
+ * 2. Text Mode:
+ *    - Absolutely NO microphone or audio cues.
+ *    - Pure keyboard textarea with Clear and Submit.
  */
 export function CandidateResponseArea({
-  orbState,
   status,
+  mode,
+  onSelectMode,
+  isListening,
+  interimTranscript = "",
+  isSpeechSupported = true,
+  speechError = null,
   answer,
   setAnswer,
+  onClearAnswer,
   onSubmitAnswer,
-  formattedAnswerTime = "00:00",
   error,
   className,
 }: Props) {
   const safeAnswer = typeof answer === "string" ? answer : "";
   const hasAnswerText = Boolean(safeAnswer.trim());
-
-  const reduced = useReducedMotion();
-  const normalizedState = orbState.toUpperCase();
-  const isSpeaking = normalizedState === "AI_SPEAKING" || normalizedState === "SPEAKING";
-  const isProcessing = status === "submitting" || normalizedState === "PROCESSING";
-  const isStarting = status === "starting";
-  const isError = status === "error";
-
-  // ─── Input Mode State (Voice default if supported, else Text) ───
-  const [mode, setMode] = useState<CandidateInputMode>(() => {
-    if (typeof window === "undefined") return "text";
-    const hasSupport = Boolean(
-      window.SpeechRecognition || window.webkitSpeechRecognition,
-    );
-    return hasSupport ? "voice" : "text";
-  });
-
-  // ─── Speech Recognition Callback (Safe Accumulation) ───────────
-  const handleFinalSpeechSegment = useCallback(
-    (finalChunk: string) => {
-      const cleanChunk = finalChunk.trim();
-      if (!cleanChunk) return;
-
-      setAnswer((prev) => {
-        const prevStr = typeof prev === "string" ? prev : "";
-        const prevTrimmed = prevStr.trim();
-        if (!prevTrimmed) return cleanChunk;
-        return `${prevTrimmed} ${cleanChunk}`;
-      });
-    },
-    [setAnswer],
-  );
-
-  const speech = useSpeechRecognition({
-    lang: "en-US",
-    disabled: isProcessing || mode !== "voice",
-    onFinalResult: handleFinalSpeechSegment,
-  });
-
-  // ─── Stop listening if interview advances or submits ───────────
-  useEffect(() => {
-    if (isProcessing || status === "completed" || isStarting) {
-      if (speech.isListening) {
-        speech.stopListening();
-      }
-    }
-  }, [isProcessing, status, isStarting, speech]);
-
-  // ─── Switch Modes Safely ───────────────────────────────────────
-  const handleSelectMode = (newMode: CandidateInputMode) => {
-    if (newMode === mode) return;
-
-    if (newMode === "voice") {
-      if (!speech.isSupported) {
-        return; // Voice unsupported, stay in text
-      }
-      setMode("voice");
-    } else {
-      // Switching to text: stop active recognition session immediately
-      if (speech.isListening) {
-        speech.stopListening();
-      }
-      setMode("text");
-    }
-  };
-
-  // ─── Voice Mic Toggle (Start / Stop Speaking) ───────────────────
-  const handleToggleVoiceRecording = () => {
-    if (isProcessing) return;
-
-    if (speech.isListening) {
-      speech.stopListening();
-    } else {
-      speech.startListening();
-    }
-  };
-
-  // ─── Clear current answer ─────────────────────────────────────
-  const handleClearAnswer = () => {
-    if (isProcessing) return;
-    if (speech.isListening) {
-      speech.stopListening();
-    }
-    setAnswer("");
-  };
-
-  // ─── Submit Answer Handler ────────────────────────────────────
-  const handleSubmit = () => {
-    // 1. Immediately halt recognition session before submit
-    if (speech.isListening) {
-      speech.stopListening();
-    }
-
-    const trimmed = (typeof answer === "string" ? answer : "").trim();
-    if (!trimmed || isProcessing) return;
-
-    onSubmitAnswer();
-  };
+  const isProcessing = status === "submitting";
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit();
+      if (hasAnswerText && !isProcessing) {
+        onSubmitAnswer();
+      }
     }
   };
 
   return (
     <div
       className={cn(
-        "mx-auto w-full max-w-2xl px-4 flex flex-col items-center gap-3.5",
+        "mx-auto w-full max-w-2xl px-2 sm:px-4 flex flex-col items-center gap-2 select-none shrink-0",
         className,
       )}
     >
@@ -168,27 +81,26 @@ export function CandidateResponseArea({
       <div
         role="tablist"
         aria-label="Input Mode"
-        className="inline-flex items-center gap-1 rounded-xl border border-white/10 bg-slate-950/80 p-1 shadow-lg backdrop-blur-xl"
+        className="inline-flex items-center gap-1 rounded-xl border border-white/10 bg-slate-950/80 p-1 shadow-md backdrop-blur-xl"
       >
         <button
           type="button"
           role="tab"
           aria-selected={mode === "voice"}
-          aria-pressed={mode === "voice"}
-          disabled={!speech.isSupported || isProcessing}
-          onClick={() => handleSelectMode("voice")}
+          disabled={!isSpeechSupported || isProcessing}
+          onClick={() => onSelectMode("voice")}
           className={cn(
-            "flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all duration-200",
+            "flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all duration-200 cursor-pointer",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400",
             mode === "voice"
               ? "bg-indigo-600 text-white shadow-sm"
               : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]",
-            !speech.isSupported && "opacity-50 cursor-not-allowed",
+            !isSpeechSupported && "opacity-50 cursor-not-allowed",
           )}
         >
           <Mic className="size-3.5" aria-hidden="true" />
           <span>Voice Mode</span>
-          {!speech.isSupported && (
+          {!isSpeechSupported && (
             <span className="text-[10px] text-slate-400 font-normal">
               (Unavailable)
             </span>
@@ -199,11 +111,10 @@ export function CandidateResponseArea({
           type="button"
           role="tab"
           aria-selected={mode === "text"}
-          aria-pressed={mode === "text"}
           disabled={isProcessing}
-          onClick={() => handleSelectMode("text")}
+          onClick={() => onSelectMode("text")}
           className={cn(
-            "flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all duration-200",
+            "flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all duration-200 cursor-pointer",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400",
             mode === "text"
               ? "bg-indigo-600 text-white shadow-sm"
@@ -215,242 +126,100 @@ export function CandidateResponseArea({
         </button>
       </div>
 
-      {/* ── Global Session Error Banner ── */}
-      {isError && error && (
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full flex items-center gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-left text-xs text-red-300"
-        >
-          <AlertTriangle className="h-5 w-5 shrink-0 text-red-400" />
-          <div className="flex-1">
-            <p className="font-semibold text-red-200">Session Error [{error.code}]</p>
-            <p className="mt-0.5 text-red-300/90">{error.message}</p>
+      {/* ── Session / Speech Error Alert ── */}
+      {(error || speechError) && (
+        <div className="w-full flex items-start justify-between gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200 backdrop-blur-md">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="size-4 shrink-0 text-amber-400 mt-0.5" />
+            <span>{speechError || error?.message || "An issue occurred."}</span>
           </div>
-        </motion.div>
-      )}
-
-      {/* ── Voice Recognition Error Banner ── */}
-      {mode === "voice" && speech.error && (
-        <motion.div
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-left text-xs text-amber-200"
-        >
-          <div className="flex items-center gap-2.5">
-            <AlertTriangle className="size-4 shrink-0 text-amber-400" />
-            <p>{speech.error}</p>
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => handleSelectMode("text")}
-            className="h-7 text-xs font-medium text-amber-300 hover:text-white hover:bg-amber-500/20 shrink-0"
-          >
-            Switch to Text
-          </Button>
-        </motion.div>
-      )}
-
-      {/* ── Connecting Indicator ── */}
-      {isStarting && (
-        <div className="flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-4 py-1.5 text-xs font-medium text-indigo-300">
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-400" />
-          <span>Connecting to AI interviewer...</span>
+          {mode === "voice" && (
+            <button
+              type="button"
+              onClick={() => onSelectMode("text")}
+              className="text-[11px] font-semibold text-amber-300 underline hover:text-white shrink-0 ml-2 cursor-pointer"
+            >
+              Switch to Text Mode
+            </button>
+          )}
         </div>
       )}
 
-      {/* ── Active Response Container ── */}
-      {(status === "active" || isProcessing || isError) && (
-        <motion.div
-          initial={reduced ? undefined : { opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="w-full flex flex-col items-center gap-3"
-        >
-          {/* Status Header: Mode-Specific Turn Indicators & Timers */}
-          <div className="flex items-center justify-between w-full px-1 text-xs">
-            {mode === "voice" ? (
-              <div className="flex items-center gap-2">
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-medium border transition-colors",
-                    speech.isListening
-                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-                      : "border-slate-800 bg-slate-900/60 text-slate-400",
-                  )}
-                >
+      {/* ─────────────────────────────────────────────────────────────
+          1. VOICE MODE: NO TEXT BOX!
+          Only voice status card / spoken transcript with clear & submit
+          ───────────────────────────────────────────────────────────── */}
+      {mode === "voice" ? (
+        <div className="w-full">
+          {hasAnswerText || interimTranscript ? (
+            /* Spoken Transcript Live Display Card */
+            <div className="w-full flex flex-col gap-2 rounded-2xl border border-emerald-500/30 bg-slate-950/80 p-3 sm:p-3.5 shadow-2xl backdrop-blur-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
                   <span
                     className={cn(
                       "size-2 rounded-full",
-                      speech.isListening
-                        ? "bg-emerald-400 animate-ping"
-                        : "bg-slate-600",
+                      isListening ? "bg-emerald-400 animate-pulse" : "bg-emerald-500",
                     )}
                   />
-                  <span>
-                    {speech.isListening
-                      ? "Listening to your answer..."
-                      : answer.trim()
-                        ? "Review transcript before submitting"
-                        : "Click microphone to begin speaking"}
-                  </span>
-                </span>
-
-                {speech.isListening && (
-                  <span className="font-mono text-emerald-300/90 text-xs">
-                    {formattedAnswerTime}
-                  </span>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/60 px-3 py-1 text-slate-300 font-medium">
-                  <Keyboard className="size-3 text-slate-400" />
-                  <span>Text Mode • Type your response</span>
-                </span>
-                <span className="font-mono text-slate-400 text-xs">
-                  {formattedAnswerTime}
-                </span>
-              </div>
-            )}
-
-            {/* Audio Waveform while listening */}
-            {speech.isListening && mode === "voice" && (
-              <div className="flex items-center gap-0.5" aria-hidden="true">
-                {[30, 65, 95, 50, 80, 40, 85, 60, 75, 45, 90].map((height, i) => (
-                  <motion.span
-                    key={i}
-                    className="w-0.5 rounded-full bg-emerald-400/80"
-                    animate={
-                      reduced
-                        ? undefined
-                        : {
-                            height: [
-                              `${height * 0.25}%`,
-                              `${height}%`,
-                              `${height * 0.3}%`,
-                            ],
-                          }
-                    }
-                    transition={{
-                      duration: 0.6 + (i % 3) * 0.15,
-                      repeat: Infinity,
-                      repeatType: "reverse",
-                      ease: "easeInOut",
-                      delay: i * 0.04,
-                    }}
-                    style={{ height: `${height * 0.25}px`, minHeight: "4px" }}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* ── Voice Mode Interactive Mic Banner ── */}
-          {mode === "voice" && (
-            <div className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-slate-950/60 p-3 backdrop-blur-md">
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleToggleVoiceRecording}
-                  disabled={isProcessing}
-                  aria-label={
-                    speech.isListening ? "Stop speaking" : "Start speaking"
-                  }
-                  className={cn(
-                    "relative flex size-10 items-center justify-center rounded-full transition-all duration-200",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400",
-                    speech.isListening
-                      ? "bg-emerald-500 text-slate-950 shadow-[0_0_16px_rgba(16,185,129,0.4)]"
-                      : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-white/10",
-                  )}
-                >
-                  {speech.isListening ? (
-                    <Mic className="size-5 animate-pulse" />
-                  ) : (
-                    <Mic className="size-5" />
-                  )}
-                </button>
-
-                <div className="flex flex-col text-left">
                   <span className="text-xs font-semibold text-slate-200">
-                    {speech.isListening
-                      ? "Microphone Active"
-                      : hasAnswerText
-                        ? "Microphone Paused"
-                        : "Start Speaking"}
-                  </span>
-                  <span className="text-[11px] text-slate-400">
-                    {speech.isListening
-                      ? "Speak clearly. Click to pause or finish."
-                      : hasAnswerText
-                        ? "Click mic to append more speech or edit below."
-                        : "Click the mic when you are ready to answer."}
+                    {isListening ? "Listening & Transcribing..." : "Recorded Response"}
                   </span>
                 </div>
+
+                {/* Audio Waveform while listening */}
+                {isListening && (
+                  <div className="flex items-center gap-0.5" aria-hidden="true">
+                    {[30, 75, 45, 90, 60, 80, 40].map((h, i) => (
+                      <motion.span
+                        key={i}
+                        className="w-0.5 rounded-full bg-emerald-400"
+                        animate={{
+                          height: [`${h * 0.25}px`, `${h * 0.7}px`, `${h * 0.25}px`],
+                        }}
+                        transition={{
+                          duration: 0.6 + i * 0.08,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                        style={{ height: `${h * 0.25}px` }}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {hasAnswerText && (
+              {/* Transcribed text body */}
+              <div className="max-h-24 sm:max-h-28 overflow-y-auto px-1 py-1 text-sm text-slate-100 font-normal leading-relaxed select-text">
+                <p>
+                  &ldquo;{safeAnswer}&rdquo;
+                  {interimTranscript && (
+                    <span className="text-cyan-300 italic ml-1.5 animate-pulse">
+                      {interimTranscript}...
+                    </span>
+                  )}
+                </p>
+              </div>
+
+              {/* Bottom Actions for Voice */}
+              <div className="flex items-center justify-between border-t border-white/[0.08] pt-2">
                 <button
                   type="button"
-                  onClick={handleClearAnswer}
+                  onClick={onClearAnswer}
                   disabled={isProcessing}
-                  title="Clear transcript"
-                  aria-label="Clear answer"
-                  className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-red-400 transition-colors p-1"
+                  className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-red-400 transition-colors cursor-pointer"
+                  title="Clear spoken answer"
                 >
                   <Trash2 className="size-3.5" />
-                  <span className="hidden sm:inline">Clear</span>
+                  <span>Clear & re-record</span>
                 </button>
-              )}
-            </div>
-          )}
 
-          {/* ── Textarea & Live Interim Preview Box ── */}
-          <div className="relative w-full rounded-2xl border border-white/10 bg-slate-900/80 p-2 shadow-2xl backdrop-blur-xl transition-all focus-within:border-indigo-500/50 focus-within:ring-1 focus-within:ring-indigo-500/30">
-            <textarea
-              value={safeAnswer}
-              onChange={(e) => setAnswer(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={isProcessing}
-              placeholder={
-                mode === "voice"
-                  ? speech.isListening
-                    ? "Listening... Your speech will appear here as you talk..."
-                    : "Your spoken transcript will appear here. You can also edit it directly..."
-                  : "Type your response here (Shift + Enter for new line, Enter to submit)..."
-              }
-              rows={3}
-              className="w-full resize-none bg-transparent px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none disabled:opacity-50"
-            />
-
-            {/* Interim Transcript Live Preview */}
-            {mode === "voice" && speech.interimTranscript && (
-              <div className="mx-3 mb-2 flex items-start gap-2 rounded-lg border border-cyan-500/20 bg-cyan-500/[0.06] px-2.5 py-1.5 text-xs text-cyan-200/90 animate-pulse">
-                <Volume2 className="size-3.5 shrink-0 text-cyan-400 mt-0.5" />
-                <span className="italic leading-relaxed">
-                  {speech.interimTranscript}
-                </span>
-              </div>
-            )}
-
-            {/* Bottom Actions Bar */}
-            <div className="flex items-center justify-between border-t border-white/[0.06] px-3 pt-2">
-              <span className="text-[11px] text-slate-500">
-                {mode === "voice"
-                  ? "Review & edit transcript before submitting"
-                  : "Shift + Enter for new line • Enter to submit"}
-              </span>
-
-              <div className="flex items-center gap-2">
                 <Button
                   type="button"
-                  onClick={handleSubmit}
+                  onClick={onSubmitAnswer}
                   disabled={!hasAnswerText || isProcessing}
                   size="sm"
-                  className="h-8 gap-1.5 bg-indigo-600 px-4 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-40"
+                  className="h-8 gap-1.5 bg-emerald-600 px-4 text-xs font-medium text-white hover:bg-emerald-500 shadow-md shadow-emerald-600/30 cursor-pointer"
                 >
                   {isProcessing ? (
                     <>
@@ -466,24 +235,118 @@ export function CandidateResponseArea({
                 </Button>
               </div>
             </div>
-          </div>
-        </motion.div>
-      )}
+          ) : (
+            /* Voice Prompt Card (Before speaking) */
+            <div className="w-full flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/70 p-3 sm:p-3.5 backdrop-blur-xl">
+              <div className="flex items-center gap-3">
+                <div
+                  className={cn(
+                    "flex size-10 items-center justify-center rounded-full transition-all duration-300",
+                    isListening
+                      ? "bg-emerald-500 text-slate-950 shadow-[0_0_16px_rgba(16,185,129,0.5)]"
+                      : "bg-slate-800 text-emerald-400 border border-white/10",
+                  )}
+                >
+                  <Mic className={cn("size-5", isListening && "animate-pulse")} />
+                </div>
 
-      {/* ── Processing Evaluation Feedback ── */}
-      <AnimatePresence>
-        {isProcessing && (
-          <motion.div
-            initial={reduced ? undefined : { opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reduced ? undefined : { opacity: 0, y: -4 }}
-            className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-4 py-1.5 text-xs font-medium text-cyan-300"
-          >
-            <Sparkles className="h-3.5 w-3.5 text-cyan-400 animate-spin" />
-            <span>Evaluating answer & synthesizing next question...</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                <div className="flex flex-col text-left">
+                  <span className="text-xs font-semibold text-slate-200">
+                    {isListening ? "Microphone Active" : "Voice Mode Ready"}
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    {isListening
+                      ? "Speak clearly. Your words will appear here in real-time."
+                      : "Click the green microphone below to answer."}
+                  </span>
+                </div>
+              </div>
+
+              {/* Animated waveform while microphone is actively listening */}
+              {isListening ? (
+                <div className="flex items-center gap-0.5" aria-hidden="true">
+                  {[25, 60, 85, 45, 75, 35, 80, 50].map((h, i) => (
+                    <motion.span
+                      key={i}
+                      className="w-0.5 rounded-full bg-emerald-400"
+                      animate={{
+                        height: [`${h * 0.25}px`, `${h * 0.7}px`, `${h * 0.25}px`],
+                      }}
+                      transition={{
+                        duration: 0.5 + i * 0.08,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                      style={{ height: `${h * 0.25}px` }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300">
+                  Ready to Speak
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      ) : (
+        /* ─────────────────────────────────────────────────────────────
+           2. TEXT MODE: NO MIC, NO AUDIO ELEMENTS!
+           Clean focused keyboard input
+           ───────────────────────────────────────────────────────────── */
+        <div className="relative w-full rounded-2xl border border-white/10 bg-slate-900/80 p-2 shadow-2xl backdrop-blur-xl transition-all focus-within:border-indigo-500/50 focus-within:ring-1 focus-within:ring-indigo-500/30">
+          <textarea
+            value={safeAnswer}
+            onChange={(e) => setAnswer(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={isProcessing}
+            placeholder="Type your response here (Shift + Enter for new line, Enter to submit)..."
+            rows={3}
+            className="w-full resize-none bg-transparent px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none disabled:opacity-50"
+          />
+
+          {/* Bottom Actions Bar */}
+          <div className="flex items-center justify-between border-t border-white/[0.06] px-3 pt-2">
+            <span className="text-[11px] text-slate-500">
+              Shift + Enter for new line • Enter to submit
+            </span>
+
+            <div className="flex items-center gap-2">
+              {hasAnswerText && (
+                <button
+                  type="button"
+                  onClick={onClearAnswer}
+                  disabled={isProcessing}
+                  className="text-[11px] text-slate-400 hover:text-red-400 transition-colors p-1 cursor-pointer"
+                  title="Clear text"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              )}
+
+              <Button
+                type="button"
+                onClick={onSubmitAnswer}
+                disabled={!hasAnswerText || isProcessing}
+                size="sm"
+                className="h-8 gap-1.5 bg-indigo-600 px-4 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-40 cursor-pointer"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>Submitting...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Submit Answer</span>
+                    <Send className="h-3 w-3" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
