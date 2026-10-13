@@ -73,19 +73,22 @@ const registerInterviewSocket = async (socket) => {
         const result = interviewGraphResponse.result;
         const roundNumber = result.currentRoundNumber;
         const questionNumber = result.currentQuestionNumber;
+        const questionObj = interviewGraphResponse.result.currentQuestion;
+        const questionText =
+          typeof questionObj === "string"
+            ? questionObj
+            : questionObj?.question || questionObj?.text || "";
+
         socket.emit("interview:question", {
           roundNumber: interviewGraphResponse.result.currentRoundNumber,
-
           questionNumber: interviewGraphResponse.result.currentQuestionNumber,
-
           difficulty: interviewGraphResponse.result.currentDifficulty,
-
-          question: interviewGraphResponse.result.currentQuestion,
+          question: questionText,
         });
 
         void streamQuestionAudio(socket, {
           questionId: `${interviewGraphResponse.threadId}:${roundNumber}:${questionNumber}`,
-          questionText: result.currentQuestion.question,
+          questionText: questionText,
         });
 
         return;

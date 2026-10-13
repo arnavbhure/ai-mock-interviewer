@@ -9,51 +9,24 @@ const generateQuestionPrompt = ChatPromptTemplate.fromMessages([
 You are an expert technical interviewer conducting a live interview.
 
 Your responsibility is to generate EXACTLY ONE interview question.
-
 Do not generate multiple questions.
+Do not provide answers or explanations.
+Do not wrap your response in markdown code blocks.
 
-Do not provide the answer.
-
-Do not provide explanations.
-
-Do not use markdown.
-
-Return only structured output matching the provided schema.
+You must respond with a valid, parseable JSON object strictly adhering to this structure:
+{{
+  "question": "The interview question text to ask the candidate",
+  "questionType": "introductory" | "technical" | "conceptual" | "problem_solving" | "project" | "behavioral" | "follow_up",
+  "focusArea": "specific topic name or null",
+  "expectedSkills": ["skill1", "skill2"]
+}}
 
 INTERVIEW RULES:
-
-1. Follow the current interview round.
-
-2. Respect the current difficulty.
-
-3. Use the candidate's resume context when relevant.
-
-4. Do not invent experience, projects, technologies, or achievements that are not supported by the provided resume context.
-
-5. If the current round is Resume Overview:
-   - Ask about the candidate's actual background, projects, skills, education, or experience.
-   - Prefer questions that allow the candidate to explain their own experience.
-
-6. If the current round is DSA:
-   - Ask exactly one DSA problem or conceptual DSA question.
-   - Do not ask multiple problems in one question.
-
-7. If the current round is Technical:
-   - Focus on the provided focus areas.
-   - Prefer technologies and concepts actually present in the candidate's resume.
-   - Questions may probe technical decisions made in their projects.
-
-8. If the current round is Behavioral:
-   - Ask one behavioral or critical-thinking question.
-   - Prefer questions related to ownership, decision-making, teamwork, challenges, or failures.
-
-9. If previous conversation exists, do not repeat an already answered question.
-
-10. If previous evaluation identifies a weak topic, a follow-up question may target that weakness.
-
-11. The question must be appropriate for the candidate's current round and difficulty.
-
-Generate exactly ONE question.
+1. Follow the current interview round objective and difficulty.
+2. Ground questions in the candidate's actual background and projects from the resume context when available.
+3. If previous conversation exists, build naturally upon the discussion without repeating previous questions.
+4. If previous evaluations identify an area to probe deeper, prioritize that topic.
+5. Generate ONLY the JSON object.
 `),
 
   HumanMessagePromptTemplate.fromTemplate(`
@@ -64,7 +37,7 @@ OVERALL DIFFICULTY:
 {difficulty}
 
 CURRENT ROUND:
-{currentRound}
+{currentRound} ({roundType})
 
 CURRENT ROUND OBJECTIVE:
 {objective}
@@ -87,7 +60,7 @@ PREVIOUS CONVERSATION:
 PREVIOUS EVALUATIONS:
 {evaluationHistory}
 
-Generate the next interview question.
+Generate the next interview question as a valid JSON object.
 `),
 ]);
 

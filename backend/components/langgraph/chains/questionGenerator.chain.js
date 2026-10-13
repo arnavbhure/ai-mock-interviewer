@@ -9,6 +9,7 @@ const {
 
 const structuredLLM = resumeParserLLM.withStructuredOutput(
   GeneratedQuestionSchema,
+  { method: "jsonMode" }
 );
 
 const QuestionGeneratorChain = RunnableSequence.from([

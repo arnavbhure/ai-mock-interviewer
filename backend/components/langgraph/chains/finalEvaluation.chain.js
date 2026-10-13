@@ -5,6 +5,7 @@ const { finalEvaluationPrompt } = require("../prompts/finalEvaluation.prompt");
 
 const finalEvaluationLLM = resumeParserLLM.withStructuredOutput(
   FinalEvaluationSchema,
+  { method: "jsonMode" }
 );
 
 const finalEvaluationChain = RunnableSequence.from([
