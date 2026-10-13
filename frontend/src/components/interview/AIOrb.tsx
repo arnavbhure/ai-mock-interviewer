@@ -216,7 +216,8 @@ export function AIOrb({
       <div
         style={containerStyle}
         className={cn(
-          "relative h-[180px] w-[180px] sm:h-[210px] sm:w-[210px] md:h-[240px] md:w-[240px] lg:h-[260px] lg:w-[260px] max-h-[26vh] max-w-[26vh] aspect-square overflow-hidden rounded-full bg-transparent shrink-0",
+          "relative aspect-square overflow-hidden rounded-full bg-transparent shrink-0",
+          !size && "h-[260px] w-[260px] sm:h-[300px] sm:w-[300px] md:h-[340px] md:w-[340px] lg:h-[360px] lg:w-[360px]",
         )}
       >
         <OrbErrorBoundary fallback={<FallbackOrbVisual hue={activeHue} />}>

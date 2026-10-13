@@ -70,6 +70,8 @@ const handleAudioError = (data: AudioErrorPayload) => {
   }
   interviewAudioPlayer.handleStreamError(data);
   useInterviewStore.getState().setAIAudioStatus("error");
+  useInterviewStore.getState().setAIState("listening");
+  useInterviewStore.getState().setCanReplayAudio(true);
 };
 
 // ─── Socket Listener Lifecycle Management ─────────────────────

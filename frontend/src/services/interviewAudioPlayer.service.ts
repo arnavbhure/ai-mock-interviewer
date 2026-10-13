@@ -2,14 +2,15 @@
  * InterviewAudioPlayer — Low-latency PCM streaming audio player
  *
  * Handles raw PCM data streamed from backend TTS via Socket.IO.
- * Uses Web Audio API with a ScriptProcessorNode for progressive playback.
+ * Uses Web Audio API with timeline-scheduled AudioBufferSourceNodes
+ * for crystal-clear, low-latency, glitch-free progressive playback.
  *
  * Architecture:
- * - Single AudioContext managed across the session lifetime
- * - Chunks arrive via `enqueueChunk()`, buffered in order by index
- * - Startup buffer collects initial chunks before playback begins
- * - When streaming ends, remaining buffer drains then fires `onPlaybackComplete`
- * - Full cancellation/disposal support without memory leaks
+ * - Single AudioContext managed across the session lifetime with auto-recovery
+ * - Seamless timeline chunk scheduling (no deprecated ScriptProcessor glitches)
+ * - Watchdog safety timers preventing any hanging or frozen speaking states
+ * - Ordered chunk reassembly into persistent AudioBuffer for instant replaying
+ * - Automatic Web Audio autoplay resume upon user interaction
  */
 
 // ─── Types ────────────────────────────────────────────────────
@@ -35,7 +36,7 @@ interface StreamSession {
   channels: number;
   format: string;
   chunks: Map<number, Float32Array>;
-  allChunks: Map<number, Float32Array>; // Preserved across playback for replay
+  allChunks: Map<number, Float32Array>; // Preserved for replay
   nextChunkToPlay: number;
   totalChunksReceived: number;
   streamEnded: boolean;
@@ -44,26 +45,28 @@ interface StreamSession {
 
 // ─── Constants ────────────────────────────────────────────────
 
-const STARTUP_BUFFER_CHUNKS = 3; // Wait for N chunks before starting playback
-const SCRIPT_PROCESSOR_BUFFER_SIZE = 4096; // Frames per processing callback
 const DEFAULT_SAMPLE_RATE = 24000;
 
 // ─── Service Class ────────────────────────────────────────────
 
 class InterviewAudioPlayer {
   private audioContext: AudioContext | null = null;
-  private scriptProcessor: ScriptProcessorNode | null = null;
   private gainNode: GainNode | null = null;
   private session: StreamSession | null = null;
   private status: AudioPlayerStatus = "idle";
   private callbacks: AudioPlayerCallbacks = {};
-  private playbackBuffer: Float32Array[] = [];
-  private currentBufferOffset = 0;
   private isPlaying = false;
   private isDisposed = false;
-  private contextResumed = false;
 
-  // ── Replay State ─────────────────────────────────────────────
+  // Progressive streaming timeline state
+  private nextScheduleTime = 0;
+  private activeSources: AudioBufferSourceNode[] = [];
+  private lastScheduledSource: AudioBufferSourceNode | null = null;
+  private streamWatchdogTimer: ReturnType<typeof setTimeout> | null = null;
+  private drainWatchdogTimer: ReturnType<typeof setTimeout> | null = null;
+  private inactivityWatchdogTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // Replay State
   private cachedAudioBuffers: Map<string, AudioBuffer> = new Map();
   private lastAudioBuffer: AudioBuffer | null = null;
   private lastQuestionId: string | null = null;
@@ -77,42 +80,16 @@ class InterviewAudioPlayer {
    * (e.g. "Start Interview" button click) to satisfy browser autoplay policy.
    */
   async initialize(): Promise<void> {
-    if (this.audioContext && this.audioContext.state !== "closed") {
-      if (this.audioContext.state === "suspended") {
-        await this.audioContext.resume();
-        this.contextResumed = true;
+    const ctx = this.ensureAudioContext();
+    if (ctx && ctx.state === "suspended") {
+      try {
+        await ctx.resume();
+        if (import.meta.env.DEV) {
+          console.log("[AudioPlayer] Context resumed successfully, state:", ctx.state);
+        }
+      } catch (err) {
+        console.warn("[AudioPlayer] Context resume deferred:", err);
       }
-      return;
-    }
-
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      this.audioContext = new AudioCtx({ sampleRate: DEFAULT_SAMPLE_RATE });
-
-      // Create a gain node for volume control / muting
-      this.gainNode = this.audioContext.createGain();
-      this.gainNode.gain.value = 1.0;
-      this.gainNode.connect(this.audioContext.destination);
-
-      // Resume immediately (requires user gesture context)
-      if (this.audioContext.state === "suspended") {
-        await this.audioContext.resume();
-      }
-      this.contextResumed = true;
-      this.isDisposed = false;
-
-      if (import.meta.env.DEV) {
-        console.log(
-          "[AudioPlayer] initialized, sampleRate:",
-          this.audioContext.sampleRate,
-          "state:",
-          this.audioContext.state,
-        );
-      }
-    } catch (err) {
-      console.error("[AudioPlayer] failed to initialize AudioContext:", err);
-      this.setStatus("error");
-      this.callbacks.onError?.("Failed to initialize audio playback.");
     }
   }
 
@@ -127,10 +104,6 @@ class InterviewAudioPlayer {
    * Called when backend emits `interview:audio:start`.
    * Prepares a new streaming session.
    */
-  /**
-   * Called when backend emits `interview:audio:start`.
-   * Prepares a new streaming session.
-   */
   startStream(payload: {
     questionId: string;
     format: string;
@@ -140,6 +113,7 @@ class InterviewAudioPlayer {
     // Cancel any existing playback or replay
     this.stopPlayback();
     this.stopReplay();
+    this.ensureAudioContext();
 
     this.lastQuestionId = payload.questionId;
     this.session = {
@@ -155,6 +129,8 @@ class InterviewAudioPlayer {
       totalChunksExpected: null,
     };
 
+    this.nextScheduleTime = 0;
+    this.lastScheduledSource = null;
     this.setStatus("buffering");
 
     if (import.meta.env.DEV) {
@@ -165,38 +141,65 @@ class InterviewAudioPlayer {
         payload.sampleRate,
       );
     }
+
+    // Safety Watchdog: If no chunks arrive within 5s, release lock
+    this.clearWatchdogs();
+    this.streamWatchdogTimer = setTimeout(() => {
+      if (this.session && this.session.totalChunksReceived === 0) {
+        console.warn("[AudioPlayer] Watchdog: No audio chunks arrived within 5s, releasing stream");
+        this.onPlaybackFinished();
+      }
+    }, 5000);
   }
 
   /**
    * Called when backend emits `interview:audio:chunk`.
-   * Accepts raw PCM data (Buffer/ArrayBuffer) and its ordered index.
+   * Accepts raw PCM data (Buffer/ArrayBuffer/Uint8Array) and its ordered index.
    */
   enqueueChunk(payload: {
     questionId: string;
     index: number;
-    audio: ArrayBuffer | Buffer | Uint8Array;
+    audio: any;
   }): void {
     if (!this.session) return;
     if (payload.questionId !== this.session.questionId) return;
 
     // Deduplicate
-    if (this.session.chunks.has(payload.index)) return;
+    if (this.session.allChunks.has(payload.index)) return;
 
     // Convert raw PCM bytes (16-bit signed LE) to Float32Array
     const float32 = this.pcm16ToFloat32(payload.audio);
+    if (float32.length === 0) return;
+
     this.session.chunks.set(payload.index, float32);
     this.session.allChunks.set(payload.index, float32);
     this.session.totalChunksReceived++;
 
-    // If we've accumulated enough startup buffer chunks, begin playback
-    if (!this.isPlaying && this.session.totalChunksReceived >= STARTUP_BUFFER_CHUNKS) {
-      this.beginPlayback();
+    // Clear start watchdog since chunks are flowing
+    if (this.streamWatchdogTimer) {
+      clearTimeout(this.streamWatchdogTimer);
+      this.streamWatchdogTimer = null;
     }
 
-    // If already playing, flush any contiguous chunks into the playback buffer
-    if (this.isPlaying) {
-      this.flushChunksToPlaybackBuffer();
+    // Inactivity watchdog: if backend drops connection without sending interview:audio:end,
+    // drain and finish after 3.5s of chunk silence
+    if (this.inactivityWatchdogTimer) {
+      clearTimeout(this.inactivityWatchdogTimer);
     }
+    this.inactivityWatchdogTimer = setTimeout(() => {
+      if (this.session && !this.session.streamEnded && this.session.totalChunksReceived > 0) {
+        console.warn(
+          "[AudioPlayer] Inactivity watchdog: No new chunks for 3.5s, ending stream automatically",
+        );
+        this.endStream({
+          questionId: this.session.questionId,
+          totalChunks: this.session.totalChunksReceived,
+        });
+      }
+    }, 3500);
+
+    // Schedule contiguous chunks onto Web Audio timeline
+    this.scheduleContiguousChunks();
   }
 
   /**
@@ -222,20 +225,62 @@ class InterviewAudioPlayer {
     // Assemble the complete AudioBuffer so user can replay the audio anytime
     this.assembleCompleteAudioBuffer();
 
-    // If we never reached the startup threshold, start now with what we have
-    if (!this.isPlaying && this.session.totalChunksReceived > 0) {
-      this.beginPlayback();
+    // Schedule any remaining contiguous chunks
+    this.scheduleContiguousChunks();
+
+    // If any gaps or packet loss left chunks unplayed, schedule them now in ascending order
+    if (this.session.chunks.size > 0) {
+      const remainingIndices = Array.from(this.session.chunks.keys()).sort((a, b) => a - b);
+      for (const idx of remainingIndices) {
+        const chunkFloat32 = this.session.chunks.get(idx)!;
+        this.session.chunks.delete(idx);
+        this.scheduleSingleChunk(chunkFloat32);
+      }
     }
 
-    this.flushChunksToPlaybackBuffer();
+    // If zero chunks were received, complete immediately
+    if (this.session.totalChunksReceived === 0) {
+      this.onPlaybackFinished();
+      return;
+    }
+
     this.setStatus("draining");
+
+    // Calculate when the scheduled timeline finishes
+    const ctx = this.audioContext;
+    const now = ctx ? ctx.currentTime : 0;
+    const remainingSec = Math.max(0, this.nextScheduleTime - now);
+
+    this.clearWatchdogs();
+
+    // Attach hardware completion callback to the final scheduled audio chunk
+    if (this.lastScheduledSource) {
+      const targetSource = this.lastScheduledSource;
+      targetSource.onended = () => {
+        const idx = this.activeSources.indexOf(targetSource);
+        if (idx !== -1) this.activeSources.splice(idx, 1);
+        if (this.session && this.session.streamEnded) {
+          if (import.meta.env.DEV) {
+            console.log("[AudioPlayer] Hardware playback ended for final chunk");
+          }
+          this.onPlaybackFinished();
+        }
+      };
+    }
+
+    // Safety watchdog: ensure playback finish fires even if onended is delayed or throttled
+    this.drainWatchdogTimer = setTimeout(() => {
+      this.onPlaybackFinished();
+    }, Math.max(300, Math.ceil((remainingSec + 0.35) * 1000)));
   }
 
   /**
    * Called on `interview:audio:error` from backend.
    */
   handleStreamError(payload: { questionId: string; message: string }): void {
-    if (this.session && payload.questionId !== this.session.questionId) return;
+    if (this.session && payload.questionId && payload.questionId !== this.session.questionId) {
+      return;
+    }
 
     console.error("[AudioPlayer] stream error:", payload.message);
     this.stopPlayback();
@@ -247,10 +292,19 @@ class InterviewAudioPlayer {
    * Cancel current streaming playback immediately.
    */
   stopPlayback(): void {
-    this.teardownScriptProcessor();
+    this.clearWatchdogs();
+    for (const source of this.activeSources) {
+      try {
+        source.stop();
+        source.disconnect();
+      } catch {
+        // Already stopped
+      }
+    }
+    this.activeSources = [];
+    this.lastScheduledSource = null;
+    this.nextScheduleTime = 0;
     this.session = null;
-    this.playbackBuffer = [];
-    this.currentBufferOffset = 0;
     this.isPlaying = false;
     this.setStatus("idle");
   }
@@ -260,14 +314,12 @@ class InterviewAudioPlayer {
    * Can be called after all audio chunks have streamed.
    */
   async replayAudio(questionId?: string): Promise<boolean> {
-    if (!this.audioContext) {
-      await this.initialize();
-    }
-    if (!this.audioContext) return false;
+    const ctx = this.ensureAudioContext();
+    if (!ctx) return false;
 
-    if (this.audioContext.state === "suspended") {
+    if (ctx.state === "suspended") {
       try {
-        await this.audioContext.resume();
+        await ctx.resume();
       } catch {
         // ignore
       }
@@ -292,9 +344,9 @@ class InterviewAudioPlayer {
     }
 
     try {
-      const source = this.audioContext.createBufferSource();
+      const source = ctx.createBufferSource();
       source.buffer = buffer;
-      source.connect(this.gainNode || this.audioContext.destination);
+      source.connect(this.gainNode || ctx.destination);
 
       this.replaySource = source;
       this.isReplaying = true;
@@ -331,8 +383,9 @@ class InterviewAudioPlayer {
     if (this.replaySource) {
       try {
         this.replaySource.stop();
+        this.replaySource.disconnect();
       } catch {
-        // already stopped
+        // Already stopped
       }
       this.replaySource = null;
     }
@@ -387,7 +440,6 @@ class InterviewAudioPlayer {
     this.audioContext = null;
     this.gainNode = null;
     this.isDisposed = true;
-    this.contextResumed = false;
     if (import.meta.env.DEV) {
       console.log("[AudioPlayer] disposed");
     }
@@ -413,18 +465,98 @@ class InterviewAudioPlayer {
 
   // ── Private Implementation ──────────────────────────────────
 
+  private ensureAudioContext(): AudioContext | null {
+    if (this.audioContext && this.audioContext.state !== "closed") {
+      if (this.audioContext.state === "suspended") {
+        this.audioContext.resume().catch(() => {});
+      }
+      return this.audioContext;
+    }
+
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return null;
+
+      // Allow browser to pick native output hardware sample rate (e.g. 44.1kHz or 48kHz)
+      // Web Audio AudioBufferSourceNode natively resamples the 24kHz buffer to hardware rate
+      try {
+        this.audioContext = new AudioCtx();
+      } catch {
+        this.audioContext = new AudioCtx({ sampleRate: DEFAULT_SAMPLE_RATE });
+      }
+
+      this.gainNode = this.audioContext.createGain();
+      this.gainNode.gain.value = 1.0;
+      this.gainNode.connect(this.audioContext.destination);
+
+      if (this.audioContext.state === "suspended") {
+        this.audioContext.resume().catch(() => {});
+      }
+      this.isDisposed = false;
+
+      if (import.meta.env.DEV) {
+        console.log(
+          "[AudioPlayer] Context created, sampleRate:",
+          this.audioContext.sampleRate,
+          "state:",
+          this.audioContext.state,
+        );
+      }
+      return this.audioContext;
+    } catch (err) {
+      console.error("[AudioPlayer] Failed to create AudioContext:", err);
+      return null;
+    }
+  }
+
   private setStatus(newStatus: AudioPlayerStatus): void {
     if (this.status === newStatus) return;
     this.status = newStatus;
     this.callbacks.onStatusChange?.(newStatus);
   }
 
+  private clearWatchdogs(): void {
+    if (this.streamWatchdogTimer) {
+      clearTimeout(this.streamWatchdogTimer);
+      this.streamWatchdogTimer = null;
+    }
+    if (this.drainWatchdogTimer) {
+      clearTimeout(this.drainWatchdogTimer);
+      this.drainWatchdogTimer = null;
+    }
+    if (this.inactivityWatchdogTimer) {
+      clearTimeout(this.inactivityWatchdogTimer);
+      this.inactivityWatchdogTimer = null;
+    }
+  }
+
   /**
-   * Convert raw PCM 16-bit signed little-endian bytes to Float32Array.
+   * Convert incoming PCM 16-bit signed LE bytes to Float32Array.
+   * Handles ArrayBuffer, Uint8Array, Node Buffer, and JSON-serialized Buffer objects.
    */
-  private pcm16ToFloat32(raw: ArrayBuffer | Buffer | Uint8Array): Float32Array {
-    const bytes = raw instanceof Uint8Array ? raw : new Uint8Array(raw);
+  private pcm16ToFloat32(raw: any): Float32Array {
+    if (!raw) return new Float32Array(0);
+
+    let bytes: Uint8Array;
+    if (raw instanceof Uint8Array) {
+      bytes = raw;
+    } else if (raw instanceof ArrayBuffer) {
+      bytes = new Uint8Array(raw);
+    } else if (raw.buffer instanceof ArrayBuffer) {
+      bytes = new Uint8Array(raw.buffer, raw.byteOffset || 0, raw.byteLength || raw.length);
+    } else if (Array.isArray(raw)) {
+      bytes = new Uint8Array(raw);
+    } else if (raw.data && (Array.isArray(raw.data) || raw.data instanceof Uint8Array)) {
+      bytes = new Uint8Array(raw.data);
+    } else if (raw.data && raw.data instanceof ArrayBuffer) {
+      bytes = new Uint8Array(raw.data);
+    } else {
+      bytes = new Uint8Array(0);
+    }
+
     const numSamples = Math.floor(bytes.length / 2);
+    if (numSamples === 0) return new Float32Array(0);
+
     const float32 = new Float32Array(numSamples);
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 
@@ -437,125 +569,74 @@ class InterviewAudioPlayer {
   }
 
   /**
-   * Move contiguous chunks (by index) from the session map into the flat playback buffer.
+   * Schedule a single Float32Array PCM chunk onto Web Audio timeline.
    */
-  private flushChunksToPlaybackBuffer(): void {
+  private scheduleSingleChunk(chunkFloat32: Float32Array): void {
     if (!this.session) return;
+    const ctx = this.ensureAudioContext();
+    if (!ctx || !this.gainNode) return;
 
-    while (this.session.chunks.has(this.session.nextChunkToPlay)) {
-      const chunk = this.session.chunks.get(this.session.nextChunkToPlay)!;
-      this.playbackBuffer.push(chunk);
-      this.session.chunks.delete(this.session.nextChunkToPlay);
-      this.session.nextChunkToPlay++;
-    }
-  }
-
-  /**
-   * Begin ScriptProcessorNode-based playback.
-   */
-  private beginPlayback(): void {
-    if (!this.audioContext || !this.gainNode || !this.session) return;
-
-    // Ensure context is running
-    if (this.audioContext.state === "suspended") {
-      this.audioContext.resume().catch(() => {});
-    }
-
-    this.flushChunksToPlaybackBuffer();
-
-    // Create ScriptProcessorNode
-    // (deprecated but widely supported; AudioWorklet alternative requires separate file)
-    this.scriptProcessor = this.audioContext.createScriptProcessor(
-      SCRIPT_PROCESSOR_BUFFER_SIZE,
-      0, // no input channels
+    const buffer = ctx.createBuffer(
       this.session.channels || 1,
+      chunkFloat32.length,
+      this.session.sampleRate,
     );
+    buffer.copyToChannel(chunkFloat32, 0);
 
-    this.scriptProcessor.onaudioprocess = (event) => {
-      const output = event.outputBuffer.getChannelData(0);
-      let outputOffset = 0;
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(this.gainNode);
 
-      while (outputOffset < output.length) {
-        // Get current buffer segment
-        if (this.playbackBuffer.length === 0) {
-          // No data available — fill silence
-          output.fill(0, outputOffset);
-          break;
-        }
+    const now = ctx.currentTime;
+    // Start immediately (with 20ms safety pad) or queue seamlessly after previous chunk
+    const startTime = Math.max(now + 0.02, this.nextScheduleTime);
+    source.start(startTime);
+    this.nextScheduleTime = startTime + buffer.duration;
+    this.activeSources.push(source);
+    this.lastScheduledSource = source;
 
-        const currentChunk = this.playbackBuffer[0];
-        const remainingInChunk = currentChunk.length - this.currentBufferOffset;
-        const remainingInOutput = output.length - outputOffset;
-        const toCopy = Math.min(remainingInChunk, remainingInOutput);
-
-        output.set(
-          currentChunk.subarray(
-            this.currentBufferOffset,
-            this.currentBufferOffset + toCopy,
-          ),
-          outputOffset,
-        );
-
-        outputOffset += toCopy;
-        this.currentBufferOffset += toCopy;
-
-        // Consumed entire chunk
-        if (this.currentBufferOffset >= currentChunk.length) {
-          this.playbackBuffer.shift();
-          this.currentBufferOffset = 0;
-        }
-      }
-
-      // Check if playback is complete
-      if (
-        this.session?.streamEnded &&
-        this.playbackBuffer.length === 0 &&
-        this.session.chunks.size === 0
-      ) {
-        // Schedule completion on next tick to avoid issues during audioprocess callback
-        setTimeout(() => {
-          this.onPlaybackFinished();
-        }, 0);
+    source.onended = () => {
+      const idx = this.activeSources.indexOf(source);
+      if (idx !== -1) {
+        this.activeSources.splice(idx, 1);
       }
     };
 
-    // Need to handle sample rate conversion if backend rate differs from AudioContext rate
-    const sourceSampleRate = this.session.sampleRate;
-    const contextSampleRate = this.audioContext.sampleRate;
-
-    if (sourceSampleRate !== contextSampleRate && import.meta.env.DEV) {
-      console.warn(
-        `[AudioPlayer] Sample rate mismatch: source=${sourceSampleRate}, context=${contextSampleRate}. ` +
-          `Audio may play at incorrect speed. Consider resampling.`,
-      );
-    }
-
-    this.scriptProcessor.connect(this.gainNode);
-    this.isPlaying = true;
-    this.setStatus("playing");
-
-    if (import.meta.env.DEV) {
-      console.log("[AudioPlayer] playback started");
+    if (!this.isPlaying) {
+      this.isPlaying = true;
+      this.setStatus("playing");
     }
   }
 
   /**
-   * Called when all buffered audio has been played.
+   * Schedule available contiguous chunks onto Web Audio timeline.
+   */
+  private scheduleContiguousChunks(): void {
+    if (!this.session) return;
+    while (this.session.chunks.has(this.session.nextChunkToPlay)) {
+      const chunkFloat32 = this.session.chunks.get(this.session.nextChunkToPlay)!;
+      this.session.chunks.delete(this.session.nextChunkToPlay);
+      this.session.nextChunkToPlay++;
+      this.scheduleSingleChunk(chunkFloat32);
+    }
+  }
+
+  /**
+   * Called when all scheduled audio has finished playing.
    */
   private onPlaybackFinished(): void {
-    if (!this.isPlaying) return;
-
-    if (import.meta.env.DEV) {
-      console.log("[AudioPlayer] playback complete");
-    }
-
-    // Ensure audio buffer is assembled if it wasn't already
-    this.assembleCompleteAudioBuffer();
-
-    this.teardownScriptProcessor();
+    this.clearWatchdogs();
+    this.activeSources = [];
+    this.lastScheduledSource = null;
+    this.nextScheduleTime = 0;
+    this.session = null;
     this.isPlaying = false;
     this.setStatus("idle");
     this.callbacks.onPlaybackComplete?.();
+
+    if (import.meta.env.DEV) {
+      console.log("[AudioPlayer] playback finished, transitioned to idle");
+    }
   }
 
   /**
@@ -563,9 +644,11 @@ class InterviewAudioPlayer {
    * This provides instant, glitch-free replaying via AudioBufferSourceNode.
    */
   private assembleCompleteAudioBuffer(): void {
-    if (!this.session || !this.audioContext || this.session.allChunks.size === 0) {
+    if (!this.session || this.session.allChunks.size === 0) {
       return;
     }
+    const ctx = this.ensureAudioContext();
+    if (!ctx) return;
 
     const indices = Array.from(this.session.allChunks.keys()).sort((a, b) => a - b);
     let totalSamples = 0;
@@ -576,7 +659,7 @@ class InterviewAudioPlayer {
     if (totalSamples === 0) return;
 
     try {
-      const buffer = this.audioContext.createBuffer(
+      const buffer = ctx.createBuffer(
         this.session.channels || 1,
         totalSamples,
         this.session.sampleRate,
@@ -602,21 +685,6 @@ class InterviewAudioPlayer {
       }
     } catch (err) {
       console.error("[AudioPlayer] Error creating complete AudioBuffer:", err);
-    }
-  }
-
-  /**
-   * Disconnect and clean up the ScriptProcessorNode.
-   */
-  private teardownScriptProcessor(): void {
-    if (this.scriptProcessor) {
-      this.scriptProcessor.onaudioprocess = null;
-      try {
-        this.scriptProcessor.disconnect();
-      } catch {
-        // Already disconnected
-      }
-      this.scriptProcessor = null;
     }
   }
 }

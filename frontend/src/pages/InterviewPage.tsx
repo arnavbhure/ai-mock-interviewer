@@ -7,6 +7,7 @@ import {
   initializeInterviewSocketListeners,
   emitStartInterview,
 } from "@/services/interviewSocket.service";
+import { interviewAudioPlayer } from "@/services/interviewAudioPlayer.service";
 import { useInterviewSession } from "@/hooks/useInterviewSession";
 import {
   InterviewLobby,
@@ -86,7 +87,7 @@ function LiveInterviewRoom() {
         <div className="flex flex-1 w-full max-w-3xl flex-col items-center justify-evenly gap-1.5 sm:gap-2.5 min-h-0">
           {/* AI Orb */}
           <div className="relative flex items-center justify-center shrink-0">
-            <AIOrb state={orbState} />
+            <AIOrb state={orbState} size={280} />
           </div>
 
           {/* Current Question */}
@@ -201,6 +202,11 @@ export function InterviewPage() {
       console.log("[InterviewPage] handleStartInterview invoked");
     }
 
+    // Initialize AudioContext directly inside user click gesture to unlock browser audio
+    interviewAudioPlayer.initialize().catch((err) => {
+      console.warn("[InterviewPage] AudioPlayer init error on user gesture:", err);
+    });
+
     emitStartInterview();
   }, []);
 
@@ -208,6 +214,9 @@ export function InterviewPage() {
   const handleRetryStart = useCallback(() => {
     hasStartedRef.current = false;
     useInterviewStore.getState().setStatus("idle");
+    interviewAudioPlayer.initialize().catch((err) => {
+      console.warn("[InterviewPage] AudioPlayer init error on retry:", err);
+    });
     // Let user click Start again — don't auto-emit
   }, []);
 

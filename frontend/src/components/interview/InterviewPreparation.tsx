@@ -67,7 +67,7 @@ export function InterviewPreparation({ onRetry, onBack }: Props) {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.45, ease }}
         >
-          <AIOrb state="thinking" />
+          <AIOrb state="thinking" size={320} />
         </motion.div>
 
         {/* ── Title ── */}

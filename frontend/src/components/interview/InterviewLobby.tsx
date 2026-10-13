@@ -57,7 +57,7 @@ export function InterviewLobby({ onStart }: Props) {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, ease, delay: 0.05 }}
         >
-          <AIOrb state="idle" />
+          <AIOrb state="idle" size={340} />
         </motion.div>
 
         {/* ── Title ── */}

@@ -167,21 +167,39 @@ export function useInterviewSession() {
       setIsSpeakingPhase(true);
     }, 0);
 
-    // Only use the fallback timer if audio is NOT streaming
-    const endTimer = setTimeout(() => {
+    // Fallback timer: if audio is idle or error, transition after 3.5s
+    const fallbackTimer = setTimeout(() => {
       const currentAudioStatus = useInterviewStore.getState().aiAudioStatus;
-      // If audio is idle (no TTS audio was received), use fallback transition
       if (currentAudioStatus === "idle" || currentAudioStatus === "error") {
         setIsSpeakingPhase(false);
+        setCanReplayAudio(true);
       }
-      // Otherwise, the audio player's onPlaybackComplete will handle the transition
     }, 3500);
+
+    // Hard safety watchdog: no speaking phase should ever exceed 12 seconds
+    // Guarantees UI never hangs even on dropped packets or audio issues
+    const safetyWatchdog = setTimeout(() => {
+      const currentAudioStatus = useInterviewStore.getState().aiAudioStatus;
+      if (currentAudioStatus !== "idle") {
+        if (import.meta.env.DEV) {
+          console.warn(
+            "[useInterviewSession] Hard safety watchdog (12s) reached, releasing speaking turn to candidate",
+          );
+        }
+        interviewAudioPlayer.stopPlayback();
+        setAIAudioStatus("idle");
+        setAIState("listening");
+        setIsSpeakingPhase(false);
+        setCanReplayAudio(true);
+      }
+    }, 12000);
 
     return () => {
       clearTimeout(startTimer);
-      clearTimeout(endTimer);
+      clearTimeout(fallbackTimer);
+      clearTimeout(safetyWatchdog);
     };
-  }, [currentQuestion]);
+  }, [currentQuestion, setAIAudioStatus, setAIState, setCanReplayAudio]);
 
   // ─── Elapsed interview timer ─────────────────────────────────
   useEffect(() => {
@@ -275,9 +293,16 @@ export function useInterviewSession() {
 
   const handleSetAnswer = useCallback(
     (newAnswer: string | ((prev: string) => string)) => {
+      if (isSpeakingPhase) {
+        setIsSpeakingPhase(false);
+        interviewAudioPlayer.stopPlayback();
+        setAIAudioStatus("idle");
+        setAIState("listening");
+        setCanReplayAudio(true);
+      }
       setCandidateAnswer(newAnswer);
     },
-    [setCandidateAnswer],
+    [isSpeakingPhase, setCandidateAnswer, setAIAudioStatus, setAIState, setCanReplayAudio],
   );
 
   const selectMode = useCallback(
@@ -300,6 +325,9 @@ export function useInterviewSession() {
       setIsSpeakingPhase(false);
       // Stop audio playback if user wants to start speaking
       interviewAudioPlayer.stopPlayback();
+      setAIAudioStatus("idle");
+      setAIState("listening");
+      setCanReplayAudio(true);
     }
     if (mode !== "voice") {
       setMode("voice");
@@ -309,7 +337,7 @@ export function useInterviewSession() {
     } else {
       speech.startListening();
     }
-  }, [status, isSpeakingPhase, mode, speech, stopReplayAudio]);
+  }, [status, isSpeakingPhase, mode, speech, stopReplayAudio, setAIAudioStatus, setAIState, setCanReplayAudio]);
 
   const clearCurrentAnswer = useCallback(() => {
     if (status === "submitting") return;
