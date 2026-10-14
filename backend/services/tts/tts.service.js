@@ -43,8 +43,11 @@ const streamQuestionAudio = async (socket, { questionId, questionText }) => {
     });
 
     let chunkIndex = 0;
+    let pendingBuffer = Buffer.alloc(0);
+    // 2048 bytes = 1024 samples at 24kHz = ~42.6ms of audio per chunk
+    const TARGET_CHUNK_SIZE = 2048;
 
-    for await (const chunk of response.data) {
+    for await (const rawChunk of response.data) {
       if (
         controller.signal.aborted ||
         !socket.connected ||
@@ -52,11 +55,20 @@ const streamQuestionAudio = async (socket, { questionId, questionText }) => {
       ) {
         break;
       }
-      socket.emit("interview:audio:chunk", {
-        questionId,
-        index: chunkIndex++,
-        audio: Buffer.from(chunk),
-      });
+
+      const chunkBuf = Buffer.isBuffer(rawChunk) ? rawChunk : Buffer.from(rawChunk);
+      pendingBuffer = Buffer.concat([pendingBuffer, chunkBuf]);
+
+      while (pendingBuffer.length >= TARGET_CHUNK_SIZE) {
+        const emitChunk = pendingBuffer.subarray(0, TARGET_CHUNK_SIZE);
+        pendingBuffer = pendingBuffer.subarray(TARGET_CHUNK_SIZE);
+
+        socket.emit("interview:audio:chunk", {
+          questionId,
+          index: chunkIndex++,
+          audio: emitChunk,
+        });
+      }
     }
 
     if (
@@ -64,6 +76,18 @@ const streamQuestionAudio = async (socket, { questionId, questionText }) => {
       socket.connected &&
       activeStreams.get(socket.id) === controller
     ) {
+      // Flush any remaining even bytes
+      if (pendingBuffer.length > 0) {
+        const evenLength = pendingBuffer.length - (pendingBuffer.length % 2);
+        if (evenLength > 0) {
+          socket.emit("interview:audio:chunk", {
+            questionId,
+            index: chunkIndex++,
+            audio: pendingBuffer.subarray(0, evenLength),
+          });
+        }
+      }
+
       socket.emit("interview:audio:end", {
         questionId,
         totalChunks: chunkIndex,

@@ -65,6 +65,10 @@ class InterviewAudioPlayer {
   private streamWatchdogTimer: ReturnType<typeof setTimeout> | null = null;
   private drainWatchdogTimer: ReturnType<typeof setTimeout> | null = null;
   private inactivityWatchdogTimer: ReturnType<typeof setTimeout> | null = null;
+  private prebufferTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // Remainder byte accumulator to ensure 16-bit PCM word alignment across network chunks
+  private remainderByte: number | null = null;
 
   // Replay State
   private cachedAudioBuffers: Map<string, AudioBuffer> = new Map();
@@ -115,6 +119,7 @@ class InterviewAudioPlayer {
     this.stopReplay();
     this.ensureAudioContext();
 
+    this.remainderByte = null;
     this.lastQuestionId = payload.questionId;
     this.session = {
       questionId: payload.questionId,
@@ -225,8 +230,8 @@ class InterviewAudioPlayer {
     // Assemble the complete AudioBuffer so user can replay the audio anytime
     this.assembleCompleteAudioBuffer();
 
-    // Schedule any remaining contiguous chunks
-    this.scheduleContiguousChunks();
+    // Schedule any remaining contiguous chunks (forcing start if prebuffer was pending)
+    this.scheduleContiguousChunks(true);
 
     // If any gaps or packet loss left chunks unplayed, schedule them now in ascending order
     if (this.session.chunks.size > 0) {
@@ -293,6 +298,7 @@ class InterviewAudioPlayer {
    */
   stopPlayback(): void {
     this.clearWatchdogs();
+    this.remainderByte = null;
     for (const source of this.activeSources) {
       try {
         source.stop();
@@ -363,7 +369,15 @@ class InterviewAudioPlayer {
         }
       };
 
-      source.start(0);
+      const now = ctx.currentTime;
+      // Gentle micro-fade in to prevent DAC click on replay
+      if (this.gainNode) {
+        this.gainNode.gain.cancelScheduledValues(now);
+        this.gainNode.gain.setValueAtTime(0, now);
+        this.gainNode.gain.linearRampToValueAtTime(1.0, now + 0.005);
+      }
+
+      source.start(now);
       if (import.meta.env.DEV) {
         console.log("[AudioPlayer] Replay started");
       }
@@ -528,33 +542,58 @@ class InterviewAudioPlayer {
       clearTimeout(this.inactivityWatchdogTimer);
       this.inactivityWatchdogTimer = null;
     }
+    if (this.prebufferTimer) {
+      clearTimeout(this.prebufferTimer);
+      this.prebufferTimer = null;
+    }
   }
 
   /**
    * Convert incoming PCM 16-bit signed LE bytes to Float32Array.
    * Handles ArrayBuffer, Uint8Array, Node Buffer, and JSON-serialized Buffer objects.
+   * Carries over trailing odd bytes across chunk boundaries to strictly maintain
+   * 16-bit sample alignment.
    */
   private pcm16ToFloat32(raw: any): Float32Array {
     if (!raw) return new Float32Array(0);
 
-    let bytes: Uint8Array;
+    let inputBytes: Uint8Array;
     if (raw instanceof Uint8Array) {
-      bytes = raw;
+      inputBytes = raw;
     } else if (raw instanceof ArrayBuffer) {
-      bytes = new Uint8Array(raw);
+      inputBytes = new Uint8Array(raw);
     } else if (raw.buffer instanceof ArrayBuffer) {
-      bytes = new Uint8Array(raw.buffer, raw.byteOffset || 0, raw.byteLength || raw.length);
+      inputBytes = new Uint8Array(raw.buffer, raw.byteOffset || 0, raw.byteLength || raw.length);
     } else if (Array.isArray(raw)) {
-      bytes = new Uint8Array(raw);
+      inputBytes = new Uint8Array(raw);
     } else if (raw.data && (Array.isArray(raw.data) || raw.data instanceof Uint8Array)) {
-      bytes = new Uint8Array(raw.data);
+      inputBytes = new Uint8Array(raw.data);
     } else if (raw.data && raw.data instanceof ArrayBuffer) {
-      bytes = new Uint8Array(raw.data);
+      inputBytes = new Uint8Array(raw.data);
     } else {
-      bytes = new Uint8Array(0);
+      inputBytes = new Uint8Array(0);
     }
 
-    const numSamples = Math.floor(bytes.length / 2);
+    if (inputBytes.length === 0) return new Float32Array(0);
+
+    // Prepend remainder byte from previous chunk if present
+    let bytes: Uint8Array;
+    if (this.remainderByte !== null) {
+      bytes = new Uint8Array(inputBytes.length + 1);
+      bytes[0] = this.remainderByte;
+      bytes.set(inputBytes, 1);
+      this.remainderByte = null;
+    } else {
+      bytes = inputBytes;
+    }
+
+    // If an odd byte remains, save it for the next chunk
+    if (bytes.length % 2 !== 0) {
+      this.remainderByte = bytes[bytes.length - 1];
+      bytes = bytes.subarray(0, bytes.length - 1);
+    }
+
+    const numSamples = bytes.length / 2;
     if (numSamples === 0) return new Float32Array(0);
 
     const float32 = new Float32Array(numSamples);
@@ -587,9 +626,24 @@ class InterviewAudioPlayer {
     source.buffer = buffer;
     source.connect(this.gainNode);
 
+    const isFirstChunk = !this.isPlaying;
     const now = ctx.currentTime;
-    // Start immediately (with 20ms safety pad) or queue seamlessly after previous chunk
-    const startTime = Math.max(now + 0.02, this.nextScheduleTime);
+
+    let startTime: number;
+    if (isFirstChunk) {
+      // Lookahead of 35ms gives the browser audio thread time to start without drop-out
+      startTime = now + 0.035;
+      this.nextScheduleTime = startTime;
+
+      // Apply a smooth 4ms micro-fadein at start to eliminate any zero-crossing DAC pop
+      this.gainNode.gain.cancelScheduledValues(startTime);
+      this.gainNode.gain.setValueAtTime(0, startTime);
+      this.gainNode.gain.linearRampToValueAtTime(1.0, startTime + 0.004);
+    } else {
+      // Seamlessly concatenate; if network underrun occurred, recover cleanly
+      startTime = Math.max(now + 0.005, this.nextScheduleTime);
+    }
+
     source.start(startTime);
     this.nextScheduleTime = startTime + buffer.duration;
     this.activeSources.push(source);
@@ -610,9 +664,40 @@ class InterviewAudioPlayer {
 
   /**
    * Schedule available contiguous chunks onto Web Audio timeline.
+   * If not yet playing, pre-buffers ~120ms of contiguous audio to absorb network jitter.
    */
-  private scheduleContiguousChunks(): void {
+  private scheduleContiguousChunks(forceStart = false): void {
     if (!this.session) return;
+
+    if (!this.isPlaying && !forceStart && !this.session.streamEnded) {
+      // Calculate how many samples of contiguous audio we have ready
+      let availableSamples = 0;
+      let checkIdx = this.session.nextChunkToPlay;
+      while (this.session.chunks.has(checkIdx)) {
+        availableSamples += this.session.chunks.get(checkIdx)!.length;
+        checkIdx++;
+      }
+
+      const availableDuration = availableSamples / this.session.sampleRate;
+      const PREBUFFER_TARGET_SEC = 0.12; // 120ms pre-buffer
+
+      if (availableDuration < PREBUFFER_TARGET_SEC) {
+        // Set a fallback timer so we don't wait indefinitely if fewer chunks arrive
+        if (!this.prebufferTimer) {
+          this.prebufferTimer = setTimeout(() => {
+            this.prebufferTimer = null;
+            this.scheduleContiguousChunks(true);
+          }, 200);
+        }
+        return;
+      }
+    }
+
+    if (this.prebufferTimer) {
+      clearTimeout(this.prebufferTimer);
+      this.prebufferTimer = null;
+    }
+
     while (this.session.chunks.has(this.session.nextChunkToPlay)) {
       const chunkFloat32 = this.session.chunks.get(this.session.nextChunkToPlay)!;
       this.session.chunks.delete(this.session.nextChunkToPlay);
@@ -626,6 +711,7 @@ class InterviewAudioPlayer {
    */
   private onPlaybackFinished(): void {
     this.clearWatchdogs();
+    this.remainderByte = null;
     this.activeSources = [];
     this.lastScheduledSource = null;
     this.nextScheduleTime = 0;
