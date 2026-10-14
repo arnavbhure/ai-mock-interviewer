@@ -83,62 +83,65 @@ function LiveInterviewRoom() {
       />
 
       {/* ── Central AI Interviewer & Response Form ── */}
-      <main className="relative z-10 flex flex-1 flex-col items-center justify-between px-3 sm:px-4 py-1.5 sm:py-2.5 min-h-0 overflow-y-auto sm:overflow-hidden">
-        <div className="flex flex-1 w-full max-w-3xl flex-col items-center justify-evenly gap-1.5 sm:gap-2.5 min-h-0">
-          {/* AI Orb */}
-          <div className="relative flex items-center justify-center shrink-0">
-            <AIOrb state={orbState} size={280} />
+      <main className="relative z-10 flex flex-1 flex-col items-center px-3 sm:px-4 py-1.5 sm:py-2 min-h-0 overflow-y-auto overflow-x-hidden">
+        <div className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between min-h-0 gap-2 sm:gap-3">
+          {/* Top Section: AI Orb & Spoken Question */}
+          <div className="flex flex-col items-center justify-center w-full gap-2 sm:gap-2.5 shrink-0 my-auto">
+            {/* AI Orb - responsive clamp keeps it large on desktop while fitting laptops */}
+            <div className="relative flex items-center justify-center shrink-0">
+              <AIOrb state={orbState} size="clamp(185px, 24vh, 275px)" />
+            </div>
+
+            {/* Current Question */}
+            {currentQuestion && (
+              <QuestionDisplay
+                question={currentQuestion.text}
+                topic={currentQuestion.topic}
+                roundNumber={currentRoundNumber}
+                questionNumber={currentQuestionNumber}
+                difficulty={currentDifficulty}
+                orbState={orbState}
+                canReplayAudio={canReplayAudio}
+                isReplayingAudio={isReplayingAudio}
+                onReplayAudio={replayAudio}
+                onStopReplayAudio={stopReplayAudio}
+                isAudioStreaming={isAudioStreaming}
+              />
+            )}
           </div>
 
-          {/* Current Question */}
-          {currentQuestion && (
-            <QuestionDisplay
-              question={currentQuestion.text}
-              topic={currentQuestion.topic}
-              roundNumber={currentRoundNumber}
-              questionNumber={currentQuestionNumber}
-              difficulty={currentDifficulty}
+          {/* Bottom Section: Response Area & Controls Dock (Grouped together to prevent any overlap) */}
+          <div className="flex flex-col items-center w-full max-w-2xl gap-2 sm:gap-2.5 shrink-0 mt-auto pb-1 z-20">
+            <CandidateResponseArea
               orbState={orbState}
-              canReplayAudio={canReplayAudio}
-              isReplayingAudio={isReplayingAudio}
-              onReplayAudio={replayAudio}
-              onStopReplayAudio={stopReplayAudio}
-              isAudioStreaming={isAudioStreaming}
+              status={status}
+              mode={mode}
+              onSelectMode={setMode}
+              isListening={isListening}
+              interimTranscript={interimTranscript}
+              isSpeechSupported={isSpeechSupported}
+              speechError={speechError}
+              answer={typeof answer === "string" ? answer : ""}
+              setAnswer={setAnswer}
+              onClearAnswer={clearCurrentAnswer}
+              onSubmitAnswer={submitCurrentAnswer}
+              formattedAnswerTime={formattedAnswerTime}
+              error={error}
             />
-          )}
 
-          {/* Candidate Response Area */}
-          <CandidateResponseArea
-            orbState={orbState}
-            status={status}
-            mode={mode}
-            onSelectMode={setMode}
-            isListening={isListening}
-            interimTranscript={interimTranscript}
-            isSpeechSupported={isSpeechSupported}
-            speechError={speechError}
-            answer={typeof answer === "string" ? answer : ""}
-            setAnswer={setAnswer}
-            onClearAnswer={clearCurrentAnswer}
-            onSubmitAnswer={submitCurrentAnswer}
-            formattedAnswerTime={formattedAnswerTime}
-            error={error}
-          />
+            <InterviewControls
+              orbState={orbState}
+              status={status}
+              mode={mode}
+              isListening={isListening}
+              hasAnswer={typeof answer === "string" && Boolean(answer.trim())}
+              isMuted={isMuted}
+              onToggleMute={toggleMute}
+              onToggleListening={toggleListening}
+              onEndInterview={() => setIsEndDialogOpen(true)}
+            />
+          </div>
         </div>
-
-        {/* ── Bottom Controls ── */}
-        <InterviewControls
-          orbState={orbState}
-          status={status}
-          mode={mode}
-          isListening={isListening}
-          hasAnswer={typeof answer === "string" && Boolean(answer.trim())}
-          isMuted={isMuted}
-          onToggleMute={toggleMute}
-          onToggleListening={toggleListening}
-          onEndInterview={() => setIsEndDialogOpen(true)}
-          onSubmitAnswer={submitCurrentAnswer}
-        />
       </main>
 
       {/* ── End Interview Confirmation Modal ── */}

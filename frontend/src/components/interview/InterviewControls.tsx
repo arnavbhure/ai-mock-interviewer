@@ -73,30 +73,6 @@ export function InterviewControls({
             Text Mode Active
           </span>
 
-          {/* Quick Submit in Text Dock */}
-          {hasAnswer && onSubmitAnswer && (
-            <button
-              type="button"
-              id="dock-submit-answer-btn-text"
-              onClick={onSubmitAnswer}
-              disabled={isSubmitting}
-              className="flex h-8 items-center gap-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 px-3.5 text-xs font-semibold text-white shadow-md shadow-indigo-600/30 cursor-pointer"
-              title="Submit your answer"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  <span>Submitting...</span>
-                </>
-              ) : (
-                <>
-                  <span>Submit</span>
-                  <Send className="h-3 w-3" />
-                </>
-              )}
-            </button>
-          )}
-
           {/* End Interview */}
           <button
             type="button"
@@ -118,15 +94,15 @@ export function InterviewControls({
 
   // ─── Voice Mode: Full functional microphone controls ───
   return (
-    <footer className="relative z-20 flex flex-col items-center gap-2 pb-2.5 pt-1 select-none shrink-0">
+    <footer className="relative z-20 flex flex-col items-center gap-1.5 pb-2 pt-0.5 select-none shrink-0">
       {/* ── Control Dock Container ── */}
-      <div className="flex items-center gap-4 sm:gap-6 rounded-full border border-white/10 bg-slate-950/80 px-4 sm:px-5 py-1.5 sm:py-2 shadow-2xl backdrop-blur-xl">
+      <div className="flex items-center gap-5 sm:gap-7 rounded-full border border-white/10 bg-slate-950/80 px-5 sm:px-6 py-1.5 sm:py-2 shadow-2xl backdrop-blur-xl">
         {/* Left Secondary: Audio Mute */}
         <button
           type="button"
           onClick={onToggleMute}
           className={cn(
-            "flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200",
+            "flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200 cursor-pointer",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500",
             isMuted
               ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
@@ -200,45 +176,11 @@ export function InterviewControls({
           </motion.button>
         </div>
 
-        {/* Submit Answer Action in Voice Dock (Prominently visible when voice response exists) */}
-        {hasAnswer && onSubmitAnswer && (
-          <motion.button
-            type="button"
-            id="dock-submit-answer-btn"
-            initial={reduced ? undefined : { opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={reduced ? undefined : { opacity: 0, scale: 0.85 }}
-            onClick={onSubmitAnswer}
-            disabled={isSubmitting}
-            className={cn(
-              "flex h-9 sm:h-10 items-center gap-1.5 rounded-full px-4 text-xs font-semibold text-white shadow-lg transition-all duration-200 cursor-pointer",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400",
-              isSubmitting
-                ? "bg-slate-800 text-slate-400 opacity-60 cursor-not-allowed"
-                : "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/40 ring-1 ring-emerald-400/40 hover:scale-[1.03]",
-            )}
-            aria-label="Submit answer"
-            title="Submit your spoken answer"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                <span>Submitting...</span>
-              </>
-            ) : (
-              <>
-                <span>Submit Answer</span>
-                <Send className="h-3.5 w-3.5" />
-              </>
-            )}
-          </motion.button>
-        )}
-
         {/* Right Secondary Action: End Session */}
         <button
           type="button"
           onClick={onEndInterview}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10 text-red-400 transition-all duration-200 hover:bg-red-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10 text-red-400 transition-all duration-200 hover:bg-red-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 cursor-pointer"
           aria-label="End interview"
           title="End interview"
         >
@@ -253,7 +195,7 @@ export function InterviewControls({
           : isListening
             ? "Microphone active • Speak clearly into your mic..."
             : hasAnswer
-              ? "Voice response recorded • Click Submit Answer or click mic to add more"
+              ? "Voice response recorded • Click Submit Answer above or click mic to add more"
               : isSpeaking
                 ? "AI interviewer is speaking... (Click green mic to start answering)"
                 : "Click the green microphone to speak your answer"}
