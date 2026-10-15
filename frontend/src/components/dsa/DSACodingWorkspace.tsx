@@ -1,4 +1,4 @@
-﻿import { useEffect } from "react";
+import { useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import { Play, Send, RotateCcw, Loader2, Code2, ArrowRight } from "lucide-react";
 import type { DSALanguage, DSAInterviewStage } from "@/types/dsaInterview.types";
@@ -139,7 +139,7 @@ export function DSACodingWorkspace({
       {/* ── Discussion Phase Guidance Banner ── */}
       {isDiscussion && (
         <div className="flex items-center justify-between border-b border-indigo-500/20 bg-indigo-500/[0.07] px-3.5 py-1.5 text-xs text-indigo-300">
-          <span>💡 Walk through your approach with the interviewer on the left first.</span>
+          <span>💡 Walk through your approach with the interviewer on the right first.</span>
           {onSkipToCoding && (
             <button
               type="button"
