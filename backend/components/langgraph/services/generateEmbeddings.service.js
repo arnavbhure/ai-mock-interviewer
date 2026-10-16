@@ -1,7 +1,15 @@
-const { embeddingModel } = require("../../../config/llm");
+let embeddingModel = null;
+function getEmbeddingModel() {
+  if (!embeddingModel) {
+    const llm = require("../../../config/llm");
+    embeddingModel = llm.embeddingModel;
+  }
+  return embeddingModel;
+}
 
 const generateEmbeddings = async (text) => {
-  const response = await embeddingModel.embedQuery(text);
+  const model = getEmbeddingModel();
+  const response = await model.embedQuery(text);
   return response;
 };
 

@@ -10,4 +10,6 @@ const interviewTools = [
   fetchAllDsaQuestionFromDBTool,
 ];
 
-module.exports = { interviewTools };
+const availableTools = interviewTools;
+
+module.exports = { interviewTools, availableTools };

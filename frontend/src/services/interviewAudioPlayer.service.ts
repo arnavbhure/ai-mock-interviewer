@@ -482,7 +482,7 @@ class InterviewAudioPlayer {
   private ensureAudioContext(): AudioContext | null {
     if (this.audioContext && this.audioContext.state !== "closed") {
       if (this.audioContext.state === "suspended") {
-        this.audioContext.resume().catch(() => {});
+        this.audioContext.resume().catch(() => { });
       }
       return this.audioContext;
     }
@@ -504,7 +504,7 @@ class InterviewAudioPlayer {
       this.gainNode.connect(this.audioContext.destination);
 
       if (this.audioContext.state === "suspended") {
-        this.audioContext.resume().catch(() => {});
+        this.audioContext.resume().catch(() => { });
       }
       this.isDisposed = false;
 
@@ -766,7 +766,7 @@ class InterviewAudioPlayer {
       if (import.meta.env.DEV) {
         console.log(
           `[AudioPlayer] Assembled complete audio buffer for question "${this.session.questionId}": ` +
-            `${totalSamples} samples (~${(totalSamples / this.session.sampleRate).toFixed(1)}s)`,
+          `${totalSamples} samples (~${(totalSamples / this.session.sampleRate).toFixed(1)}s)`,
         );
       }
     } catch (err) {

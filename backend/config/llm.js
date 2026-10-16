@@ -1,5 +1,6 @@
 const { ChatOpenAI } = require("@langchain/openai");
 const { OpenAIEmbeddings } = require("@langchain/openai");
+const { interviewTools } = require("../components/langgraph/tools");
 require("dotenv").config({ path: ".env" });
 
 const resumeParserLLM = new ChatOpenAI({
@@ -12,6 +13,8 @@ const resumeParserLLM = new ChatOpenAI({
   maxRetries: 3,
 });
 
+const llmWithTools = resumeParserLLM.bindTools(interviewTools);
+
 const embeddingModel = new OpenAIEmbeddings({
   model: process.env.EMBEDDING_MODEL,
   apiKey: process.env.OPENROUTER_API_KEY,
@@ -21,4 +24,4 @@ const embeddingModel = new OpenAIEmbeddings({
   encodingFormat: "float",
 });
 
-module.exports = { resumeParserLLM, embeddingModel };
+module.exports = { resumeParserLLM, embeddingModel, llmWithTools };

@@ -14,6 +14,7 @@ const initialState = (interview) => {
 
     questionScores: [],
     conversationHistory: [],
+    messages: [],
 
     phase: "initialization",
     status: "active",

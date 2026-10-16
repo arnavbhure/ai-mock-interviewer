@@ -1,8 +1,15 @@
-const { QuestionGeneratorChain } = require("../chains/questionGenerator.chain");
-const { resumeParserLLM } = require("../../../config/llm");
+const { resumeParserLLM, llmWithTools } = require("../../../config/llm");
 const {
   GeneratedQuestionSchema,
 } = require("../schema/questiongenerate.schema");
+const {
+  generateQuestionPrompt,
+} = require("../prompts/questionGenerator.prompt");
+const {
+  ToolMessage,
+  HumanMessage,
+  RemoveMessage,
+} = require("@langchain/core/messages");
 
 /**
  * Format conversation history into clean conversational dialog
@@ -18,11 +25,11 @@ function formatConversationHistory(history) {
         item.role === "candidate" || item.role === "user"
           ? "Candidate"
           : "Interviewer";
-      const content =
-        (typeof item.content === "string"
+      const content = (
+        typeof item.content === "string"
           ? item.content
           : item.text || item.message || ""
-        ).trim();
+      ).trim();
       return `${role}: ${content}`;
     })
     .filter((line) => line.length > 0)
@@ -65,9 +72,7 @@ function formatEvaluationHistory(questionScores, lastEvaluation) {
       Array.isArray(lastEvaluation.strengths) &&
       lastEvaluation.strengths.length > 0
     ) {
-      details.push(
-        `Strengths noted: ${lastEvaluation.strengths.join(", ")}`,
-      );
+      details.push(`Strengths noted: ${lastEvaluation.strengths.join(", ")}`);
     }
     if (details.length > 0) {
       sections.push(`Latest Answer Evaluation:\n${details.join("\n")}`);
@@ -88,8 +93,7 @@ function formatResumeContext(resumeContext) {
   }
   return resumeContext
     .map((chunk, idx) => {
-      const text =
-        typeof chunk === "string" ? chunk : chunk?.text || "";
+      const text = typeof chunk === "string" ? chunk : chunk?.text || "";
       return `[Resume Excerpt ${idx + 1}]:\n${text.trim()}`;
     })
     .filter((s) => s.length > 0)
@@ -166,14 +170,20 @@ function getFallbackQuestion({
     const topicToProbe = lastEvaluation.weaknesses[0];
     questionText = `Could you elaborate further on how you would address ${topicToProbe} in a production ${role} system?`;
     questionType = "follow_up";
-  } else if (normRoundType.includes("resume") || normRoundType.includes("intro")) {
+  } else if (
+    normRoundType.includes("resume") ||
+    normRoundType.includes("intro")
+  ) {
     questionType = "introductory";
     if (currentQuestionNumber === 1) {
       questionText = `To begin, could you walk me through your background as a ${role} and highlight your primary technical accomplishments?`;
     } else {
       questionText = `In your recent projects, what was one of the most demanding engineering trade-offs you had to make, and what was the outcome?`;
     }
-  } else if (normRoundType.includes("dsa") || normRoundType.includes("problem")) {
+  } else if (
+    normRoundType.includes("dsa") ||
+    normRoundType.includes("problem")
+  ) {
     questionType = "problem_solving";
     questionText = `Can you explain your methodology for analyzing and optimizing the time and space complexity of algorithms handling high-throughput data?`;
   } else if (normRoundType.includes("behavior")) {
@@ -225,43 +235,130 @@ const generateQuestionNode = async (state) => {
   const formattedResumeContext = formatResumeContext(state.resumeContext);
   const formattedResume = formatResume(state.resume);
 
-  let questionResult = null;
+  const chainInput = {
+    role: state.role || "Software Engineer",
+    roundType: currentRound.roundType || currentRound.type || "technical",
+    currentRound: currentRound.displayName || "Technical Interview",
+    objective:
+      currentRound.objective || "Assess candidate technical capability",
+    difficulty: state.currentDifficulty || "medium",
+    roundDifficulty:
+      currentRound.difficulty || state.currentDifficulty || "medium",
+    focusAreas: focusAreas || "Core engineering principles",
+    topics: focusAreas || "Core engineering principles",
+    questionNumber: state.currentQuestionNumber,
+    resume: formattedResume,
+    resumeContext: formattedResumeContext,
+    conversationHistory: formattedConversationHistory,
+    evaluationHistory: formattedEvaluationHistory,
+  };
 
-  // Attempt 1: Invoke QuestionGeneratorChain with jsonMode
-  try {
-    const chainInput = {
-      role: state.role || "Software Engineer",
-      roundType: currentRound.roundType || currentRound.type || "technical",
-      currentRound: currentRound.displayName || "Technical Interview",
-      objective:
-        currentRound.objective || "Assess candidate technical capability",
-      difficulty: state.currentDifficulty || "medium",
-      roundDifficulty:
-        currentRound.difficulty || state.currentDifficulty || "medium",
-      focusAreas: focusAreas || "Core engineering principles",
-      topics: focusAreas || "Core engineering principles",
-      questionNumber: state.currentQuestionNumber,
-      resume: formattedResume,
-      resumeContext: formattedResumeContext,
-      conversationHistory: formattedConversationHistory,
-      evaluationHistory: formattedEvaluationHistory,
-    };
+  const messages = Array.isArray(state.messages) ? state.messages : [];
+  const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
 
-    questionResult = await QuestionGeneratorChain.invoke(chainInput);
+  const isToolReturn =
+    lastMessage != null &&
+    (lastMessage instanceof ToolMessage ||
+      lastMessage._getType?.() === "tool" ||
+      lastMessage.tool_call_id != null ||
+      lastMessage.constructor?.name === "ToolMessage");
 
-    if (
-      !questionResult?.question ||
-      typeof questionResult.question !== "string" ||
-      questionResult.question.trim().length === 0
-    ) {
-      throw new Error("Generated question was empty or missing question text.");
+  // Safeguard against infinite tool loops
+  const toolMessageCount = messages.filter(
+    (m) =>
+      m instanceof ToolMessage ||
+      m._getType?.() === "tool" ||
+      m.tool_call_id != null ||
+      m.constructor?.name === "ToolMessage",
+  ).length;
+
+  const MAX_TOOL_ITERATIONS = 5;
+  const forceNoTools = isToolReturn && toolMessageCount >= MAX_TOOL_ITERATIONS;
+
+  let messagesToSend;
+  let promptMessages = null;
+
+  if (isToolReturn) {
+    if (forceNoTools) {
+      console.warn(
+        `[generateQuestionNode] Tool iteration limit (${MAX_TOOL_ITERATIONS}) reached. Forcing final question generation without further tools.`,
+      );
+      messagesToSend = [
+        ...messages,
+        new HumanMessage(
+          "You have gathered sufficient context from the tools. Do not call any more tools. Respond with ONLY the final interview question JSON object now.",
+        ),
+      ];
+    } else {
+      messagesToSend = messages;
     }
-  } catch (err) {
-    console.warn(
-      `[generateQuestionNode] Initial generation failed: ${err.message}. Retrying with direct fallback...`,
-    );
+  } else {
+    promptMessages = await generateQuestionPrompt.formatMessages(chainInput);
+    messagesToSend = promptMessages;
+  }
 
-    // Attempt 2: Direct prompt completion retry with JSON parser
+  let response;
+  try {
+    if (forceNoTools) {
+      response = await resumeParserLLM.invoke(messagesToSend);
+    } else {
+      response = await llmWithTools.invoke(messagesToSend);
+    }
+  } catch (llmErr) {
+    console.warn(
+      `[generateQuestionNode] LLM invocation failed: ${llmErr.message}. Falling back to default question.`,
+    );
+    const fallbackQuestion = getFallbackQuestion({
+      role: state.role || "Software Engineer",
+      roundType: currentRound.roundType || currentRound.type,
+      currentQuestionNumber: state.currentQuestionNumber,
+      focusAreas,
+      lastEvaluation: state.lastEvaluation,
+    });
+    return {
+      currentQuestion: fallbackQuestion,
+      phase: "waiting_for_answer",
+    };
+  }
+
+  const hasToolCalls =
+    !forceNoTools &&
+    Array.isArray(response?.tool_calls) &&
+    response.tool_calls.length > 0;
+
+  if (hasToolCalls) {
+    const updatedMessages = !isToolReturn
+      ? [
+          new RemoveMessage({ id: "__remove_all__" }),
+          ...promptMessages,
+          response,
+        ]
+      : [response];
+
+    return {
+      messages: updatedMessages,
+      phase: "question_generation",
+    };
+  }
+
+  // Final question generation path (no tool calls)
+  let questionResult = null;
+  const rawText =
+    typeof response?.content === "string" ? response.content : "";
+  const parsedJson = extractAndParseJson(rawText);
+
+  if (parsedJson && parsedJson.question) {
+    try {
+      questionResult = GeneratedQuestionSchema.parse(parsedJson);
+    } catch (parseErr) {
+      console.warn(
+        `[generateQuestionNode] Schema validation failed: ${parseErr.message}. Retrying with direct completion...`,
+      );
+    }
+  }
+
+  // Attempt 2: If parsing failed, retry with direct completion
+  if (!questionResult || !questionResult.question) {
     try {
       const retryPrompt = `You are an expert technical interviewer for a ${state.role || "Software Engineer"} position.
 Current Round: ${currentRound.displayName || currentRound.roundType} (Focus: ${focusAreas || "general technical capability"}).
@@ -274,13 +371,13 @@ Generate exactly ONE interview question.
 Respond with ONLY a valid JSON object strictly matching:
 {"question": "Your question text here", "questionType": "technical", "focusArea": null, "expectedSkills": []}`;
 
-      const rawResponse = await resumeParserLLM.invoke(retryPrompt);
-      const rawText =
-        typeof rawResponse?.content === "string" ? rawResponse.content : "";
-      const parsedJson = extractAndParseJson(rawText);
+      const retryResponse = await resumeParserLLM.invoke(retryPrompt);
+      const retryText =
+        typeof retryResponse?.content === "string" ? retryResponse.content : "";
+      const retryParsed = extractAndParseJson(retryText);
 
-      if (parsedJson && parsedJson.question) {
-        questionResult = GeneratedQuestionSchema.parse(parsedJson);
+      if (retryParsed && retryParsed.question) {
+        questionResult = GeneratedQuestionSchema.parse(retryParsed);
       }
     } catch (retryErr) {
       console.warn(
@@ -303,11 +400,19 @@ Respond with ONLY a valid JSON object strictly matching:
     });
   }
 
+  const updatedMessages = !isToolReturn
+    ? [
+        new RemoveMessage({ id: "__remove_all__" }),
+        ...(promptMessages || []),
+        response,
+      ]
+    : [response];
+
   return {
     currentQuestion: questionResult,
+    messages: updatedMessages,
     phase: "waiting_for_answer",
   };
 };
 
 module.exports = { generateQuestionNode };
-

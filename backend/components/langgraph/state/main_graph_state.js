@@ -1,4 +1,5 @@
 const { z } = require("zod");
+const { Annotation, messagesStateReducer } = require("@langchain/langgraph");
 const {
   InterviewPlanSchema,
 } = require("../../langchain/schemas/interviewPlan.schema");
@@ -170,10 +171,35 @@ const InterviewState = z.object({
   /* State version */
 
   stateVersion: z.number().int().positive(),
+
+  /* LangGraph messages channel for LLM tool calls and tool execution */
+  messages: z.array(z.any()).default([]),
 });
+
+/* =========================================
+   LANGGRAPH ANNOTATION STATE WITH REDUCERS
+========================================= */
+
+const annotationShape = {
+  messages: Annotation({
+    reducer: messagesStateReducer,
+    default: () => [],
+  }),
+};
+
+for (const key of Object.keys(InterviewState.shape)) {
+  if (key !== "messages") {
+    annotationShape[key] = Annotation({
+      reducer: (x, y) => (y !== undefined ? y : x),
+    });
+  }
+}
+
+const InterviewGraphAnnotation = Annotation.Root(annotationShape);
 
 module.exports = {
   InterviewState,
+  InterviewGraphAnnotation,
   AnswerEvaluationSchema,
   DifficultySchema,
   RoundTypeSchema,
