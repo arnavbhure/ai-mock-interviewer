@@ -116,20 +116,24 @@ export function QuestionDisplay({
           >
             <Volume2 className="h-3.5 w-3.5 text-indigo-400 animate-pulse" />
             <span className="font-medium text-[11px]">AI Interviewer speaking...</span>
-            <div className="flex items-center gap-0.5 ml-1" aria-hidden="true">
+            <div className="flex h-4 items-center gap-0.5 ml-1 shrink-0 overflow-hidden" aria-hidden="true">
               {[35, 75, 45, 90, 60].map((h, i) => (
                 <motion.span
                   key={i}
                   className="w-0.5 rounded-full bg-indigo-400"
                   animate={{
-                    height: [`${h * 0.12}px`, `${h * 0.3}px`, `${h * 0.12}px`],
+                    height: [
+                      `${Math.max(3, Math.round(h * 0.06))}px`,
+                      `${Math.round(h * 0.14)}px`,
+                      `${Math.max(3, Math.round(h * 0.06))}px`,
+                    ],
                   }}
                   transition={{
                     duration: 0.5 + i * 0.1,
                     repeat: Infinity,
                     ease: "easeInOut",
                   }}
-                  style={{ height: `${h * 0.12}px` }}
+                  style={{ height: `${Math.max(3, Math.round(h * 0.06))}px` }}
                 />
               ))}
             </div>
@@ -158,20 +162,24 @@ export function QuestionDisplay({
                 <>
                   <Square className="h-3 w-3 fill-current text-cyan-300" />
                   <span className="text-[11px]">Stop Audio</span>
-                  <div className="flex items-center gap-0.5 ml-0.5" aria-hidden="true">
+                  <div className="flex h-4 items-center gap-0.5 ml-0.5 shrink-0 overflow-hidden" aria-hidden="true">
                     {[40, 80, 50, 95].map((h, i) => (
                       <motion.span
                         key={i}
                         className="w-0.5 rounded-full bg-cyan-300"
                         animate={{
-                          height: [`${h * 0.12}px`, `${h * 0.28}px`, `${h * 0.12}px`],
+                          height: [
+                            `${Math.max(3, Math.round(h * 0.06))}px`,
+                            `${Math.round(h * 0.14)}px`,
+                            `${Math.max(3, Math.round(h * 0.06))}px`,
+                          ],
                         }}
                         transition={{
                           duration: 0.4 + i * 0.1,
                           repeat: Infinity,
                           ease: "easeInOut",
                         }}
-                        style={{ height: `${h * 0.12}px` }}
+                        style={{ height: `${Math.max(3, Math.round(h * 0.06))}px` }}
                       />
                     ))}
                   </div>

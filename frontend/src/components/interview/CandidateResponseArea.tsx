@@ -193,20 +193,24 @@ export function CandidateResponseArea({
 
                   {/* Audio Waveform while listening */}
                   {isListening && (
-                    <div className="flex items-center gap-0.5" aria-hidden="true">
+                    <div className="flex h-5 items-center justify-center gap-0.5 shrink-0 overflow-hidden" aria-hidden="true">
                       {[30, 75, 45, 90, 60, 80, 40].map((h, i) => (
                         <motion.span
                           key={i}
                           className="w-0.5 rounded-full bg-emerald-400"
                           animate={{
-                            height: [`${h * 0.2}px`, `${h * 0.55}px`, `${h * 0.2}px`],
+                            height: [
+                              `${Math.max(3, Math.round(h * 0.08))}px`,
+                              `${Math.round(h * 0.16)}px`,
+                              `${Math.max(3, Math.round(h * 0.08))}px`,
+                            ],
                           }}
                           transition={{
                             duration: 0.6 + i * 0.08,
                             repeat: Infinity,
                             ease: "easeInOut",
                           }}
-                          style={{ height: `${h * 0.2}px` }}
+                          style={{ height: `${Math.max(3, Math.round(h * 0.08))}px` }}
                         />
                       ))}
                     </div>
@@ -263,12 +267,12 @@ export function CandidateResponseArea({
               </div>
             </div>
           ) : (
-            /* Voice Prompt Card (Before speaking) */
-            <div className="w-full flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/70 p-3 sm:p-3.5 backdrop-blur-xl">
+            /* Voice Prompt Card (Before speaking) - Fixed min-height to prevent jumping */
+            <div className="w-full min-h-[72px] sm:min-h-[76px] flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/70 p-3 sm:p-3.5 backdrop-blur-xl">
               <div className="flex items-center gap-3">
                 <div
                   className={cn(
-                    "flex size-10 items-center justify-center rounded-full transition-all duration-300",
+                    "flex size-10 shrink-0 items-center justify-center rounded-full transition-all duration-300",
                     isListening
                       ? "bg-emerald-500 text-slate-950 shadow-[0_0_16px_rgba(16,185,129,0.5)]"
                       : "bg-slate-800 text-emerald-400 border border-white/10",
@@ -289,30 +293,36 @@ export function CandidateResponseArea({
                 </div>
               </div>
 
-              {/* Animated waveform while microphone is actively listening */}
-              {isListening ? (
-                <div className="flex items-center gap-0.5" aria-hidden="true">
-                  {[25, 60, 85, 45, 75, 35, 80, 50].map((h, i) => (
-                    <motion.span
-                      key={i}
-                      className="w-0.5 rounded-full bg-emerald-400"
-                      animate={{
-                        height: [`${h * 0.25}px`, `${h * 0.7}px`, `${h * 0.25}px`],
-                      }}
-                      transition={{
-                        duration: 0.5 + i * 0.08,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
-                      style={{ height: `${h * 0.25}px` }}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300">
-                  Ready to Speak
-                </span>
-              )}
+              {/* Right Side Slot: Fixed height container to prevent div resizing during waveform animation */}
+              <div className="flex h-10 items-center justify-end shrink-0 min-w-[76px] overflow-hidden">
+                {isListening ? (
+                  <div className="flex h-8 items-center justify-center gap-1 px-1" aria-hidden="true">
+                    {[35, 70, 95, 55, 85, 45, 90, 60].map((h, i) => (
+                      <motion.span
+                        key={i}
+                        className="w-1 rounded-full bg-emerald-400"
+                        animate={{
+                          height: [
+                            `${Math.max(4, Math.round(h * 0.08))}px`,
+                            `${Math.round(h * 0.24)}px`,
+                            `${Math.max(4, Math.round(h * 0.08))}px`,
+                          ],
+                        }}
+                        transition={{
+                          duration: 0.5 + i * 0.07,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                        style={{ height: `${Math.max(4, Math.round(h * 0.08))}px` }}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300 whitespace-nowrap">
+                    Ready to Speak
+                  </span>
+                )}
+              </div>
             </div>
           )}
         </div>
