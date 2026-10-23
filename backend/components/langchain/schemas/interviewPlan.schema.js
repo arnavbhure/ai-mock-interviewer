@@ -29,7 +29,7 @@ const InterviewRoundSchema = z.object({
     .number()
     .int()
     .min(1)
-    .max(10)
+    .max(3)
     .describe("Total questions to ask in this round"),
   focusAreas: z
     .array(z.string())
@@ -46,18 +46,18 @@ const InterviewPlanSchema = z.object({
     .number()
     .int()
     .min(5)
-    .max(120)
+    .max(40)
     .describe("Total estimated duration in minutes"),
   totalQuestions: z
     .number()
     .int()
     .min(1)
-    .max(30)
+    .max(15)
     .describe("Sum of questions across all rounds"),
   rounds: z
     .array(InterviewRoundSchema)
     .min(1)
-    .max(6)
+    .max(4)
     .describe("Ordered array of interview rounds"),
 });
 

@@ -254,7 +254,8 @@ const generateQuestionNode = async (state) => {
   };
 
   const messages = Array.isArray(state.messages) ? state.messages : [];
-  const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
+  const lastMessage =
+    messages.length > 0 ? messages[messages.length - 1] : null;
 
   const isToolReturn =
     lastMessage != null &&
@@ -343,8 +344,7 @@ const generateQuestionNode = async (state) => {
 
   // Final question generation path (no tool calls)
   let questionResult = null;
-  const rawText =
-    typeof response?.content === "string" ? response.content : "";
+  const rawText = typeof response?.content === "string" ? response.content : "";
   const parsedJson = extractAndParseJson(rawText);
 
   if (parsedJson && parsedJson.question) {
@@ -369,7 +369,10 @@ ${formattedConversationHistory.slice(0, 500)}
 
 Generate exactly ONE interview question.
 Respond with ONLY a valid JSON object strictly matching:
-{"question": "Your question text here", "questionType": "technical", "focusArea": null, "expectedSkills": []}`;
+{"question": "Your question text here", "questionType": "technical", "focusArea": null, "expectedSkills": []}
+and if the candidate given answer give it cheer , good answer and if it is bad answer tell in one line feedback and then give next question,
+And if it is the first round and first question, ensure the question is introductory and open-ended like introduce yourself like that dont jump directly into the real interveiw question. Do not include any extra text or explanation.
+`;
 
       const retryResponse = await resumeParserLLM.invoke(retryPrompt);
       const retryText =
