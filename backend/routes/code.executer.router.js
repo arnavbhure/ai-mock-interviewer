@@ -8,6 +8,6 @@ const codeExecutorRouter = express.Router();
 codeExecutorRouter.post("/run-code", runCodeController);
 
 // to run code with hidden test cases
-codeExecutorRouter.post("/submit-code", submitCodeController);
+//codeExecutorRouter.post("/submit-code", submitCodeController);
 
 module.exports = { codeExecutorRouter };

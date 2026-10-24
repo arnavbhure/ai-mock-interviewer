@@ -1,13 +1,18 @@
+const {
+  checkInterviewModel,
+} = require("../../models/interview/checkInterviewModel");
+
 const runCodeController = async (req, res) => {
   try {
     const user = req.user;
     if (!user) {
       return res.status(401).json({ message: "Unauthorized", success: false });
     }
-    const { code, language, interviewId } = req.body;
-    if (!code || !language || !interviewId) {
+    const { code, language, interviewId, problemId } = req.body;
+    if (!code || !language || !interviewId || !problemId) {
       return res.status(400).json({
-        message: "Please provide code and language to execute the code.",
+        message:
+          "Please provide code , Problem id and language to execute the code.",
         success: false,
       });
     }
