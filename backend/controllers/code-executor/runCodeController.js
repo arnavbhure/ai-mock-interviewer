@@ -1,6 +1,9 @@
 const {
   checkInterviewModel,
 } = require("../../models/interview/checkInterviewModel");
+const {
+  codeExecutionService,
+} = require("../../services/dsa/codeExecution.service");
 
 const runCodeController = async (req, res) => {
   try {
@@ -8,11 +11,11 @@ const runCodeController = async (req, res) => {
     if (!user) {
       return res.status(401).json({ message: "Unauthorized", success: false });
     }
-    const { code, language, interviewId, problemId } = req.body;
-    if (!code || !language || !interviewId || !problemId) {
+    const { code, language, interviewId, problemId, test_cases } = req.body;
+    if (!code || !language || !interviewId || !problemId || !test_cases) {
       return res.status(400).json({
         message:
-          "Please provide code , Problem id and language to execute the code.",
+          "Please provide code , Problem id , test cases and language to execute the code.",
         success: false,
       });
     }
@@ -23,6 +26,18 @@ const runCodeController = async (req, res) => {
         success: false,
       });
     }
+
+    const code_execution_result = await codeExecutionService({
+      code,
+      language,
+      test_cases,
+    });
+
+    return res.status(200).json({
+      message: "Code executed successfully.",
+      success: true,
+      data: code_execution_result,
+    });
   } catch (err) {
     console.log("Error in runCodeController : ", err);
     return res
