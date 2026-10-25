@@ -17,11 +17,10 @@ Return valid JSON containing: score (0-10), correctness, timeComplexity,
 spaceComplexity, strengths, weaknesses, and feedback.
 `),
   HumanMessagePromptTemplate.fromTemplate(`
+Problem Title: {title}
 Statement: {problemStatement}
-Outcome: {outcome}
 Candidate's Code: {code}
 Judge verdict: {judgeVerdict}
-Passed tests: {passedTestCases}/{totalTestCases}
 `),
 ]);
 

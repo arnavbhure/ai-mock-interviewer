@@ -1,4 +1,10 @@
 const {
+  dsaEvaluationChain,
+} = require("../../components/langchain/chains/dsaEvaluationChain");
+const {
+  getProblemStatementDeatils,
+} = require("../../models/dsaProblems/getProblemStatement");
+const {
   checkInterviewModel,
 } = require("../../models/interview/checkInterviewModel");
 const {
@@ -45,6 +51,19 @@ const submitCodeController = async (req, res) => {
         hidden: true,
       })),
     });
+
+    const problemDetails = await getProblemStatementDeatils(problemId);
+
+    const { id, title, description } = problemDetails;
+
+    const evaluation_result = await dsaEvaluationChain.invoke({
+      code,
+      title,
+      problemStatement: description,
+      judgeVerdict: JSON.stringify(code_execution_result),
+    });
+
+    await saveEvaluationResult(evaluation_result); //  to be implemented
 
     return res.status(200).json({
       message: "Code submitted successfully.",

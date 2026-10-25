@@ -120,6 +120,27 @@ id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
 );
 
+# dsa_evaluations :
+
+    CREATE TABLE dsa_evaluations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    interview_id UUID NOT NULL REFERENCES interviews(id),
+    problem_id bigint NOT NULL REFERENCES problems(id),
+
+    score INTEGER NOT NULL CHECK (score BETWEEN 0 AND 10),
+    correctness TEXT NOT NULL,
+    time_complexity TEXT NOT NULL,
+    space_complexity TEXT NOT NULL,
+
+    strengths JSONB NOT NULL DEFAULT '[]'::jsonb,
+    weaknesses JSONB NOT NULL DEFAULT '[]'::jsonb,
+    feedback TEXT NOT NULL,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+
+);
+
 # Indexes:
 
 CREATE INDEX idx_candidate_resumes_user_id
