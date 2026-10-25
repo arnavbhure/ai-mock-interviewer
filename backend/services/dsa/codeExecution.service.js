@@ -43,7 +43,7 @@ const codeExecutionService = async ({ code, language, test_cases }) => {
         })),
         time_limit: 2,
         checker: "tokens",
-        scoring: "all_or_nothing",
+        scoring: "percent",
         stop_on_failure: true,
       },
       {

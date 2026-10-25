@@ -5,6 +5,9 @@ const {
   getProblemStatementDeatils,
 } = require("../../models/dsaProblems/getProblemStatement");
 const {
+  saveDsaEvaluationResultModel,
+} = require("../../models/dsaProblems/saveDsaEvaluationResultModel");
+const {
   checkInterviewModel,
 } = require("../../models/interview/checkInterviewModel");
 const {
@@ -54,7 +57,7 @@ const submitCodeController = async (req, res) => {
 
     const problemDetails = await getProblemStatementDeatils(problemId);
 
-    const { id, title, description } = problemDetails;
+    const { title, description } = problemDetails;
 
     const evaluation_result = await dsaEvaluationChain.invoke({
       code,
@@ -63,7 +66,63 @@ const submitCodeController = async (req, res) => {
       judgeVerdict: JSON.stringify(code_execution_result),
     });
 
-    await saveEvaluationResult(evaluation_result); //  to be implemented
+    await saveDsaEvaluationResultModel({
+      evaluation_result,
+      interviewId,
+      problemId,
+    });
+
+    /* Sample output for code_execution_result : 
+        {
+  verdict: 'wrong_answer',
+  score: 66.67,
+  passed: 2,
+  total: 3,
+  time_limit: 2,
+  compile_error: null,
+  tests: [
+    {
+      verdict: 'accepted',
+      hidden: false,
+      time: '0.0372',
+      memory: '14376',
+      exit_code: 0,
+      signal: null,
+      output: '3\n',
+      error: '',
+      truncated: false,
+      files: [],
+      files_truncated: false
+    },
+    {
+      verdict: 'wrong_answer',
+      hidden: false,
+      time: '0.0345',
+      memory: '13008',
+      exit_code: 0,
+      signal: null,
+      output: '11\n',
+      error: '',
+      truncated: false,
+      files: [],
+      files_truncated: false
+    },
+    {
+      verdict: 'accepted',
+      hidden: false,
+      time: '0.0329',
+      memory: '13032',
+      exit_code: 0,
+      signal: null,
+      output: '6\n',
+      error: '',
+      truncated: false,
+      files: [],
+      files_truncated: false
+    }
+  ]
+}
+    */
 
     return res.status(200).json({
       message: "Code submitted successfully.",
