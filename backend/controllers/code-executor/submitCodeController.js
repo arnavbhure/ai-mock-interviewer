@@ -11,10 +11,16 @@ const {
   checkInterviewModel,
 } = require("../../models/interview/checkInterviewModel");
 const {
+  getLatestInterviewByUserId,
+} = require("../../models/interview/getLatestInterviewOfCandidiate");
+const {
   codeExecutionService,
 } = require("../../services/dsa/codeExecution.service");
 const { main_graph } = require("../../components/langgraph/graph/main_graph");
 const { Command } = require("@langchain/langgraph");
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const submitCodeController = async (req, res) => {
   try {
@@ -22,7 +28,16 @@ const submitCodeController = async (req, res) => {
     if (!user) {
       return res.status(401).json({ message: "Unauthorized", success: false });
     }
-    const { code, language, interviewId, problemId } = req.body;
+    const { code, language, problemId } = req.body;
+    let interviewId = req.body.interviewId;
+
+    if (!interviewId || !UUID_REGEX.test(String(interviewId))) {
+      const latest = await getLatestInterviewByUserId(user.id);
+      if (latest) {
+        interviewId = latest.id;
+      }
+    }
+
     if (!code || !language || !interviewId || !problemId) {
       return res.status(400).json({
         message:
@@ -97,64 +112,13 @@ const submitCodeController = async (req, res) => {
       );
     }
 
-    /* Sample output for code_execution_result : 
-        {
-  verdict: 'wrong_answer',
-  score: 66.67,
-  passed: 2,
-  total: 3,
-  time_limit: 2,
-  compile_error: null,
-  tests: [
-    {
-      verdict: 'accepted',
-      hidden: false,
-      time: '0.0372',
-      memory: '14376',
-      exit_code: 0,
-      signal: null,
-      output: '3\n',
-      error: '',
-      truncated: false,
-      files: [],
-      files_truncated: false
-    },
-    {
-      verdict: 'wrong_answer',
-      hidden: false,
-      time: '0.0345',
-      memory: '13008',
-      exit_code: 0,
-      signal: null,
-      output: '11\n',
-      error: '',
-      truncated: false,
-      files: [],
-      files_truncated: false
-    },
-    {
-      verdict: 'accepted',
-      hidden: false,
-      time: '0.0329',
-      memory: '13032',
-      exit_code: 0,
-      signal: null,
-      output: '6\n',
-      error: '',
-      truncated: false,
-      files: [],
-      files_truncated: false
-    }
-  ]
-}
-    */
-
     return res.status(200).json({
       message: "Code submitted successfully.",
       success: true,
       data: code_execution_result,
       evaluation: evaluation_result,
       graphResult: graphResumeResult,
+      interviewId,
     });
   } catch (err) {
     console.log("Error in submitCodeController : ", err);

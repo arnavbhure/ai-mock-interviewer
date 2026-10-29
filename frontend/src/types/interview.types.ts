@@ -105,6 +105,7 @@ export interface AnswerPayload {
 
 /** Backend -> Frontend: "interview:dsa" payload */
 export interface DSAPayload {
+  interviewId?: string;
   problemId: string | number;
   problemTitle: string;
   problemDescription: string;

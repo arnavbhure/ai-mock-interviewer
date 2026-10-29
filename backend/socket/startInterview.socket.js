@@ -30,6 +30,7 @@ const registerInterviewSocket = async (socket) => {
         if (interruptInfo?.value?.type === "dsa_round") {
           const DSAproblem = interruptInfo.value.problem;
           const dsaData = {
+            interviewId: String(interviewId),
             problemId: DSAproblem.id,
             problemTitle: DSAproblem.title,
             problemDescription: DSAproblem.description,
@@ -55,6 +56,7 @@ const registerInterviewSocket = async (socket) => {
             : questionObj?.question || questionObj?.text || "";
 
         socket.emit("interview:question", {
+          interviewId: String(interviewId),
           roundNumber: roundNumber,
           questionNumber: questionNumber,
           difficulty: result.currentDifficulty,
@@ -94,8 +96,9 @@ const registerInterviewSocket = async (socket) => {
         return;
       }
 
+      const interviewId = socket.interview.interview_id;
       const interviewGraphResponse = await submitAnswerService({
-        interviewId: socket.interview.interview_id,
+        interviewId,
         answer: answer.trim(),
       });
 
@@ -108,6 +111,7 @@ const registerInterviewSocket = async (socket) => {
         if (interruptInfo?.value?.type === "dsa_round") {
           const DSAproblem = interruptInfo.value.problem;
           const dsaData = {
+            interviewId: String(interviewId),
             problemId: DSAproblem.id,
             problemTitle: DSAproblem.title,
             problemDescription: DSAproblem.description,
@@ -132,6 +136,7 @@ const registerInterviewSocket = async (socket) => {
             : questionObj?.question || questionObj?.text || "";
 
         socket.emit("interview:question", {
+          interviewId: String(interviewId),
           roundNumber: roundNumber,
           questionNumber: questionNumber,
           difficulty: result.currentDifficulty,

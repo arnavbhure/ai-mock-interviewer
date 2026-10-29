@@ -4,9 +4,15 @@ const {
 const {
   checkInterviewModel,
 } = require("../../models/interview/checkInterviewModel");
+const {
+  getLatestInterviewByUserId,
+} = require("../../models/interview/getLatestInterviewOfCandidiate");
 const { main_graph } = require("../../components/langgraph/graph/main_graph");
 const { Command } = require("@langchain/langgraph");
 const { io } = require("../../config/socket");
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const skipCodeController = async (req, res) => {
   try {
@@ -15,7 +21,16 @@ const skipCodeController = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized", success: false });
     }
 
-    const { interviewId, problemId, code = "", language = "javascript" } = req.body;
+    const { problemId, code = "", language = "javascript" } = req.body;
+    let interviewId = req.body.interviewId;
+
+    if (!interviewId || !UUID_REGEX.test(String(interviewId))) {
+      const latest = await getLatestInterviewByUserId(user.id);
+      if (latest) {
+        interviewId = latest.id;
+      }
+    }
+
     if (!interviewId || !problemId) {
       return res.status(400).json({
         message: "Please provide interviewId and problemId to skip problem.",
@@ -73,6 +88,7 @@ const skipCodeController = async (req, res) => {
           if (nextInterrupt?.value?.type === "dsa_round") {
             const nextProblem = nextInterrupt.value.problem;
             io.to(interviewId).emit("interview:dsa", {
+              interviewId: String(interviewId),
               problemId: nextProblem.id,
               problemTitle: nextProblem.title,
               problemDescription: nextProblem.description,
@@ -84,6 +100,7 @@ const skipCodeController = async (req, res) => {
             });
           } else if (nextInterrupt?.value?.type === "wait_for_answer") {
             io.to(interviewId).emit("interview:question", {
+              interviewId: String(interviewId),
               roundNumber: graphResumeResult.currentRoundNumber,
               questionNumber: graphResumeResult.currentQuestionNumber,
               difficulty: graphResumeResult.currentDifficulty,
@@ -109,6 +126,7 @@ const skipCodeController = async (req, res) => {
       success: true,
       evaluation: skipEvaluation,
       graphResult: graphResumeResult,
+      interviewId,
     });
   } catch (err) {
     console.error("Error in skipCodeController:", err);

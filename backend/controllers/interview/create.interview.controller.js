@@ -33,7 +33,6 @@ const createInterviewController = async (req, res) => {
     });
 
     // storing the interview plan in the db
-
     const store_result = await storeInterviewPlanModel(
       user?.id,
       interviewPlan,
@@ -47,9 +46,13 @@ const createInterviewController = async (req, res) => {
         success: false,
       });
     }
+
     return res.status(200).json({
       message: "Interview plan created successfully",
       success: true,
+      interview_id: store_result.id,
+      interviewId: store_result.id,
+      id: store_result.id,
     });
   } catch (err) {
     console.log("Error in interviewController : ", err);

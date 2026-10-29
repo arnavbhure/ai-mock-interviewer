@@ -4,7 +4,6 @@ import {
   Lightbulb,
   Code2,
   ListFilter,
-  AlertCircle,
   Copy,
   Check,
   FileText,
@@ -17,7 +16,7 @@ type Props = {
 };
 
 /**
- * Left/Center Problem Description Panel.
+ * Problem Description Panel.
  * High-readability technical problem statement with examples, constraints, and hints.
  */
 export function DSAProblemPanel({ problem }: Props) {
@@ -50,7 +49,11 @@ export function DSAProblemPanel({ problem }: Props) {
     Easy: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 shadow-emerald-500/10",
     Medium: "border-amber-500/30 bg-amber-500/10 text-amber-300 shadow-amber-500/10",
     Hard: "border-rose-500/30 bg-rose-500/10 text-rose-300 shadow-rose-500/10",
-  }[problem.difficulty];
+  }[problem.difficulty] ?? "border-indigo-500/30 bg-indigo-500/10 text-indigo-300";
+
+  const hasExamples = Array.isArray(problem.examples) && problem.examples.length > 0;
+  const hasConstraints = Array.isArray(problem.constraints) && problem.constraints.length > 0;
+  const hasHints = Array.isArray(problem.hints) && problem.hints.length > 0;
 
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-xl border border-white/[0.08] bg-slate-950/90 shadow-2xl text-slate-200">
@@ -78,16 +81,18 @@ export function DSAProblemPanel({ problem }: Props) {
         </h1>
 
         {/* Algorithm Tags */}
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          {problem.tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-0.5 text-[11px] font-medium text-slate-400 hover:text-slate-300 transition-colors"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
+        {Array.isArray(problem.tags) && problem.tags.length > 0 && (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {problem.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-0.5 text-[11px] font-medium text-slate-400 hover:text-slate-300 transition-colors"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Quick Anchor Navigation Tabs */}
         <div className="mt-3 flex items-center gap-1 border-t border-white/[0.06] pt-2 overflow-x-auto no-scrollbar">
@@ -104,33 +109,37 @@ export function DSAProblemPanel({ problem }: Props) {
             <span>Description</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => scrollToSection("section-examples", "examples")}
-            className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${
-              activeSection === "examples"
-                ? "bg-indigo-600/30 text-indigo-300 border border-indigo-500/40"
-                : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
-            }`}
-          >
-            <Code2 className="h-3 w-3" />
-            <span>Examples ({problem.examples.length})</span>
-          </button>
+          {hasExamples && (
+            <button
+              type="button"
+              onClick={() => scrollToSection("section-examples", "examples")}
+              className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${
+                activeSection === "examples"
+                  ? "bg-indigo-600/30 text-indigo-300 border border-indigo-500/40"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
+              }`}
+            >
+              <Code2 className="h-3 w-3" />
+              <span>Examples ({problem.examples.length})</span>
+            </button>
+          )}
 
-          <button
-            type="button"
-            onClick={() => scrollToSection("section-constraints", "constraints")}
-            className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${
-              activeSection === "constraints"
-                ? "bg-indigo-600/30 text-indigo-300 border border-indigo-500/40"
-                : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
-            }`}
-          >
-            <ListFilter className="h-3 w-3" />
-            <span>Constraints</span>
-          </button>
+          {hasConstraints && (
+            <button
+              type="button"
+              onClick={() => scrollToSection("section-constraints", "constraints")}
+              className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${
+                activeSection === "constraints"
+                  ? "bg-indigo-600/30 text-indigo-300 border border-indigo-500/40"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
+              }`}
+            >
+              <ListFilter className="h-3 w-3" />
+              <span>Constraints</span>
+            </button>
+          )}
 
-          {problem.hints && problem.hints.length > 0 && (
+          {hasHints && (
             <button
               type="button"
               onClick={() => scrollToSection("section-hints", "hints")}
@@ -157,124 +166,128 @@ export function DSAProblemPanel({ problem }: Props) {
         </div>
 
         {/* ── Examples Section ── */}
-        <div id="section-examples" className="space-y-3 pt-2">
-          <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-            <Code2 className="h-4 w-4 text-indigo-400" />
-            <span>Examples</span>
-          </h2>
+        {hasExamples && (
+          <div id="section-examples" className="space-y-3 pt-2">
+            <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <Code2 className="h-4 w-4 text-indigo-400" />
+              <span>Examples</span>
+            </h2>
 
-          <div className="space-y-3">
-            {problem.examples.map((example, idx) => (
-              <div
-                key={idx}
-                className="group relative rounded-xl border border-white/[0.08] bg-slate-900/70 p-3.5 transition-all hover:border-white/15"
-              >
-                {/* Header with Example # and Copy Input */}
-                <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/[0.06]">
-                  <span className="font-semibold text-xs text-slate-300">
-                    Example {idx + 1}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleCopyInput(example.input, idx)}
-                    className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-white/[0.06]"
-                    title="Copy input string"
-                  >
-                    {copiedIdx === idx ? (
-                      <>
-                        <Check className="h-3 w-3 text-emerald-400" />
-                        <span className="text-emerald-400 font-medium">Copied</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-3 w-3" />
-                        <span>Copy Input</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <div className="space-y-2 font-mono text-xs text-slate-300">
-                  {/* Input row */}
-                  <div className="flex items-baseline gap-2 bg-slate-950/60 rounded-lg px-2.5 py-1.5 border border-white/[0.04]">
-                    <span className="text-slate-500 font-sans text-xs font-medium w-14 shrink-0">Input:</span>
-                    <span className="text-indigo-300 font-medium break-all">{example.input}</span>
+            <div className="space-y-3">
+              {problem.examples.map((example, idx) => (
+                <div
+                  key={idx}
+                  className="group relative rounded-xl border border-white/[0.08] bg-slate-900/70 p-3.5 transition-all hover:border-white/15"
+                >
+                  {/* Header with Example # and Copy Input */}
+                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/[0.06]">
+                    <span className="font-semibold text-xs text-slate-300">
+                      Example {idx + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyInput(example.input, idx)}
+                      className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-white/[0.06]"
+                      title="Copy input string"
+                    >
+                      {copiedIdx === idx ? (
+                        <>
+                          <Check className="h-3 w-3 text-emerald-400" />
+                          <span className="text-emerald-400 font-medium">Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3 w-3" />
+                          <span>Copy Input</span>
+                        </>
+                      )}
+                    </button>
                   </div>
 
-                  {/* Output row */}
-                  <div className="flex items-baseline gap-2 bg-slate-950/60 rounded-lg px-2.5 py-1.5 border border-white/[0.04]">
-                    <span className="text-slate-500 font-sans text-xs font-medium w-14 shrink-0">Output:</span>
-                    <span className="text-emerald-300 font-semibold">{example.output}</span>
-                  </div>
-
-                  {/* Explanation row */}
-                  {example.explanation && (
-                    <div className="mt-2 pl-3 border-l-2 border-indigo-500/40 text-xs text-slate-400 font-sans leading-relaxed">
-                      <span className="font-medium text-slate-300">Explanation: </span>
-                      {example.explanation}
+                  <div className="space-y-2 font-mono text-xs text-slate-300">
+                    {/* Input row */}
+                    <div className="flex items-baseline gap-2 bg-slate-950/60 rounded-lg px-2.5 py-1.5 border border-white/[0.04]">
+                      <span className="text-slate-500 font-sans text-xs font-medium w-14 shrink-0">Input:</span>
+                      <span className="text-indigo-300 font-medium break-all">{example.input}</span>
                     </div>
-                  )}
+
+                    {/* Output row */}
+                    <div className="flex items-baseline gap-2 bg-slate-950/60 rounded-lg px-2.5 py-1.5 border border-white/[0.04]">
+                      <span className="text-slate-500 font-sans text-xs font-medium w-14 shrink-0">Output:</span>
+                      <span className="text-emerald-300 font-semibold">{example.output}</span>
+                    </div>
+
+                    {/* Explanation row */}
+                    {example.explanation && (
+                      <div className="mt-2 pl-3 border-l-2 border-indigo-500/40 text-xs text-slate-400 font-sans leading-relaxed">
+                        <span className="font-medium text-slate-300">Explanation: </span>
+                        {example.explanation}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ── Constraints Section ── */}
-        <div id="section-constraints" className="space-y-3 pt-2">
-          <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-            <ListFilter className="h-4 w-4 text-indigo-400" />
-            <span>Constraints</span>
-          </h2>
-          <div className="rounded-xl border border-white/[0.08] bg-slate-900/50 p-3">
-            <ul className="space-y-1.5 font-mono text-xs text-slate-300">
-              {problem.constraints.map((constraint, idx) => (
-                <li key={idx} className="flex items-start gap-2 leading-relaxed">
-                  <span className="text-indigo-400 font-sans select-none">•</span>
-                  <span className="bg-slate-950/70 border border-white/[0.04] px-1.5 py-0.5 rounded text-indigo-200">
-                    {constraint}
-                  </span>
-                </li>
-              ))}
-            </ul>
+        {hasConstraints && (
+          <div id="section-constraints" className="space-y-3 pt-2">
+            <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <ListFilter className="h-4 w-4 text-indigo-400" />
+              <span>Constraints</span>
+            </h2>
+            <div className="rounded-xl border border-white/[0.08] bg-slate-900/50 p-3">
+              <ul className="space-y-1.5 font-mono text-xs text-slate-300">
+                {problem.constraints.map((constraint, idx) => (
+                  <li key={idx} className="flex items-start gap-2 leading-relaxed">
+                    <span className="text-indigo-400 font-sans select-none">•</span>
+                    <span className="bg-slate-950/70 border border-white/[0.04] px-1.5 py-0.5 rounded text-indigo-200">
+                      {constraint}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ── Collapsible Hints Section ── */}
-        {problem.hints && problem.hints.length > 0 && (
+        {hasHints && (
           <div id="section-hints" className="space-y-3 pt-2 pb-4">
             <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
               <Lightbulb className="h-4 w-4 text-amber-400" />
               <span>Hints ({problem.hints.length})</span>
             </h2>
-
             <div className="space-y-2">
               {problem.hints.map((hint, idx) => {
-                const isOpen = openHints[idx];
+                const isOpen = openHints[idx] ?? false;
                 return (
                   <div
                     key={idx}
-                    className="overflow-hidden rounded-xl border border-white/[0.08] bg-slate-900/60 transition-colors"
+                    className="overflow-hidden rounded-xl border border-white/[0.08] bg-slate-900/50 transition-all hover:border-amber-500/20"
                   >
                     <button
                       type="button"
                       onClick={() => toggleHint(idx)}
-                      className="flex w-full items-center justify-between px-3.5 py-2.5 text-left text-xs font-medium text-slate-300 hover:bg-white/[0.03] transition-colors cursor-pointer"
+                      className="flex w-full items-center justify-between p-3 text-left text-xs font-semibold text-slate-300 transition-colors hover:text-white cursor-pointer"
                       aria-expanded={isOpen}
                     >
                       <span className="flex items-center gap-2">
-                        <AlertCircle className="h-3.5 w-3.5 text-amber-400" />
-                        <span className="font-semibold text-slate-200">Hint {idx + 1}</span>
+                        <span className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-500/10 text-[10px] font-bold text-amber-400">
+                          {idx + 1}
+                        </span>
+                        <span>Hint {idx + 1}</span>
                       </span>
                       <ChevronDown
-                        className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ${
+                        className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${
                           isOpen ? "rotate-180 text-amber-400" : ""
                         }`}
                       />
                     </button>
-
                     {isOpen && (
-                      <div className="border-t border-white/[0.06] px-3.5 py-2.5 text-xs leading-relaxed text-slate-300 bg-slate-950/40 font-sans">
+                      <div className="border-t border-white/[0.04] bg-slate-950/40 p-3 pt-2.5 text-xs text-slate-300 leading-relaxed font-sans">
                         {hint}
                       </div>
                     )}
@@ -288,4 +301,3 @@ export function DSAProblemPanel({ problem }: Props) {
     </div>
   );
 }
-

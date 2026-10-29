@@ -30,7 +30,7 @@ const INITIAL_CODING_STATE: CodingState = {
 };
 
 const INITIAL_STATE = {
-  interviewId: null as string | null,
+  interviewId: (typeof window !== 'undefined' ? sessionStorage.getItem('interview_id') : null) as string | null,
   status: "idle" as const,
 
   roundNumber: null as number | null,
@@ -84,27 +84,41 @@ export const useInterviewStore = create<InterviewState>((set) => ({
   ...INITIAL_STATE,
 
   setDsaProblem: (dsaProblem: import("@/types/interview.types").DSAPayload) =>
-    set((state) => ({
-      ...state,
-      dsaProblem,
-      status: "active",
-      roundNumber: dsaProblem.roundNumber ?? state.roundNumber,
-      questionNumber: dsaProblem.currentQuestionNumber ?? state.questionNumber,
-      currentRoundNumber: dsaProblem.roundNumber ?? state.currentRoundNumber,
-      currentQuestionNumber:
-        dsaProblem.currentQuestionNumber ?? state.currentQuestionNumber,
-      roundType: "DSA Round",
-    })),
+    set((state) => {
+      const id = dsaProblem.interviewId || state.interviewId || (typeof window !== "undefined" ? sessionStorage.getItem("interview_id") : null);
+      if (id && typeof window !== "undefined") {
+        sessionStorage.setItem("interview_id", id);
+      }
+      return {
+        ...state,
+        dsaProblem,
+        interviewId: id,
+        status: "active",
+        roundNumber: dsaProblem.roundNumber ?? state.roundNumber,
+        questionNumber: dsaProblem.currentQuestionNumber ?? state.questionNumber,
+        currentRoundNumber: dsaProblem.roundNumber ?? state.currentRoundNumber,
+        currentQuestionNumber:
+          dsaProblem.currentQuestionNumber ?? state.currentQuestionNumber,
+        roundType: "DSA Round",
+      };
+    }),
 
   initializeInterview: (config?: Partial<InterviewState>) =>
-    set((state) => ({
-      ...state,
-      ...config,
-      status: config?.status ?? "idle",
-      errorCode: null,
-      errorMessage: null,
-      error: null,
-    })),
+    set((state) => {
+      const id = config?.interviewId || state.interviewId || (typeof window !== "undefined" ? sessionStorage.getItem("interview_id") : null);
+      if (id && typeof window !== "undefined") {
+        sessionStorage.setItem("interview_id", id);
+      }
+      return {
+        ...state,
+        ...config,
+        interviewId: id,
+        status: config?.status ?? "idle",
+        errorCode: null,
+        errorMessage: null,
+        error: null,
+      };
+    }),
 
   setInterviewConfig: (config: {
     role?: string | null;

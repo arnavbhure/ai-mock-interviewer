@@ -10,7 +10,6 @@ import type {
   DSAProblem,
 } from "@/types/dsaInterview.types";
 import {
-  MOCK_DSA_PROBLEMS,
   DSA_STAGE_DIALOGUES,
   DEFAULT_LANGUAGE_BOILERPLATES,
 } from "@/data/dsaProblem.mock";
@@ -21,10 +20,19 @@ import { toastError } from "@/components/ui/toast";
 export function useDSAInterview() {
   const navigate = useNavigate();
   const dsaProblemState = useInterviewStore((s) => s.dsaProblem);
-  const interviewId = useInterviewStore((s) => s.interviewId);
-  const [problemIndex, setProblemIndex] = useState(0);
+  const interviewIdFromStore = useInterviewStore((s) => s.interviewId);
 
-  // Construct active problem object from real backend store data or mock fallback
+  // Securely resolve active interview ID (sessionStorage > store > payload), never "active_interview"
+  const activeInterviewId = useMemo(() => {
+    const id =
+      dsaProblemState?.interviewId ||
+      interviewIdFromStore ||
+      (typeof window !== "undefined" ? sessionStorage.getItem("interview_id") : null) ||
+      "";
+    return id === "active_interview" ? "" : id;
+  }, [dsaProblemState?.interviewId, interviewIdFromStore]);
+
+  // Construct active problem object from real backend store data
   const problem: DSAProblem = useMemo(() => {
     if (dsaProblemState) {
       let parsedTests: DSATestCase[] = [];
@@ -35,11 +43,21 @@ export function useDSAInterview() {
               ? JSON.parse(dsaProblemState.publicTestsSource)
               : dsaProblemState.publicTestsSource;
           if (Array.isArray(raw)) {
-            parsedTests = raw.map((t, idx) => ({
-              id: idx + 1,
-              input: t.input || "",
-              expectedOutput: t.expectedOutput || t.expected_output || "",
-            }));
+            parsedTests = raw.map((t, idx) => {
+              if (typeof t === "object" && t !== null && !Array.isArray(t)) {
+                return {
+                  id: idx + 1,
+                  input: typeof t.input === "string" ? t.input : JSON.stringify(t.input ?? t),
+                  expectedOutput: String(t.expectedOutput || t.expected_output || t.output || ""),
+                };
+              } else {
+                return {
+                  id: idx + 1,
+                  input: typeof t === "string" ? t : JSON.stringify(t),
+                  expectedOutput: "",
+                };
+              }
+            });
           }
         } catch {
           // ignore parse error
@@ -57,30 +75,44 @@ export function useDSAInterview() {
         ? [dsaProblemState.problemTopics]
         : ["Data Structures & Algorithms"];
 
-      const fallbackMock = MOCK_DSA_PROBLEMS[0];
-
       return {
-        id: String(dsaProblemState.problemId || "dsa_active"),
-        title: dsaProblemState.problemTitle || fallbackMock.title,
+        id: String(dsaProblemState.problemId || ""),
+        title: dsaProblemState.problemTitle || "DSA Coding Problem",
         roundTitle: `Round ${dsaProblemState.roundNumber || 2} · DSA Coding Interview`,
         questionNumber: dsaProblemState.currentQuestionNumber || 1,
         totalQuestions: 2,
         difficulty: diffCapitalized,
         tags,
-        description: dsaProblemState.problemDescription || fallbackMock.description,
-        examples: fallbackMock.examples,
-        constraints: fallbackMock.constraints,
-        hints: fallbackMock.hints,
+        description: dsaProblemState.problemDescription || "",
+        examples: [],
+        constraints: [],
+        hints: [],
         starterCode: {
           ...DEFAULT_LANGUAGE_BOILERPLATES,
-          ...(fallbackMock.starterCode || {}),
         },
-        testCases: parsedTests.length > 0 ? parsedTests : fallbackMock.testCases,
+        testCases: parsedTests,
       };
     }
 
-    return MOCK_DSA_PROBLEMS[problemIndex] ?? MOCK_DSA_PROBLEMS[0];
-  }, [dsaProblemState, problemIndex]);
+    // Default clean placeholder while loading from backend - NO mock problems
+    return {
+      id: "",
+      title: "Loading Problem...",
+      roundTitle: "Round 2 · DSA Coding Interview",
+      questionNumber: 1,
+      totalQuestions: 2,
+      difficulty: "Medium",
+      tags: ["Data Structures & Algorithms"],
+      description: "Loading DSA problem statement from interview session...",
+      examples: [],
+      constraints: [],
+      hints: [],
+      starterCode: {
+        ...DEFAULT_LANGUAGE_BOILERPLATES,
+      },
+      testCases: [],
+    };
+  }, [dsaProblemState]);
 
   const [language, setLanguage] = useState<DSALanguage>("cpp");
   const [codeMap, setCodeMap] = useState<Record<DSALanguage, string>>(() => ({
@@ -147,30 +179,9 @@ export function useDSAInterview() {
     }));
   }, [language, problem]);
 
-  // ─── Candidate Verbal / Text Discussion Response Handler ─────
-  const submitCandidateDiscussion = useCallback(
-    (textToSubmit?: string) => {
-      const responseText = (textToSubmit ?? candidateResponse).trim();
-      if (!responseText) return;
-
-      setIsAiThinking(true);
-
-      setTimeout(() => {
-        setIsAiThinking(false);
-        setCandidateResponse("");
-
-        if (stage === "APPROACH_DISCUSSION") {
-          setStage("APPROACH_EVALUATION");
-        } else if (stage === "APPROACH_EVALUATION") {
-          setStage("CODING");
-        } else if (stage === "POST_SUBMISSION_DISCUSSION") {
-          setStage("COMPLETED");
-          setIsCompleteModalOpen(true);
-        }
-      }, 1000);
-    },
-    [candidateResponse, stage],
-  );
+  const submitCandidateDiscussion = useCallback(() => {
+    // No-op for compatibility
+  }, []);
 
   // ─── Real Run Code Implementation ───────────────────────────
   const runCode = useCallback(async () => {
@@ -180,7 +191,6 @@ export function useDSAInterview() {
     setActiveTab("testcases");
 
     try {
-      const activeInterviewId = interviewId || "active_interview";
       const res = await runDsaCode({
         code: activeCode,
         language,
@@ -210,19 +220,11 @@ export function useDSAInterview() {
       setTestResults(results);
       setStage("TEST_RESULTS");
     } catch (err: unknown) {
-      console.warn("Run code API failed, using client simulation:", err);
-      // Client-side fallback
-      const results: DSATestCase[] = problem.testCases.map((tc, idx) => ({
-        ...tc,
-        actualOutput: tc.expectedOutput,
-        passed: true,
-        executionTime: `${28 + idx * 6} ms`,
-        memory: `${41.4 + idx * 0.3} MB`,
-      }));
-      setTestResults(results);
-      setStage("TEST_RESULTS");
+      console.warn("Run code API failed:", err);
+      toastError("Failed to execute code against tests.");
+      setStage("CODING");
     }
-  }, [stage, activeCode, language, interviewId, problem]);
+  }, [stage, activeCode, language, activeInterviewId, problem]);
 
   // ─── Real Submit Solution Implementation ────────────────────
   const submitSolution = useCallback(async () => {
@@ -232,7 +234,6 @@ export function useDSAInterview() {
     setActiveTab("submission");
 
     try {
-      const activeInterviewId = interviewId || "active_interview";
       const res = await submitDsaSolution({
         code: activeCode,
         language,
@@ -269,27 +270,15 @@ export function useDSAInterview() {
         setPendingGraphResult(res.graphResult);
       }
     } catch (err: unknown) {
-      console.warn("Submit code API error, using simulated summary:", err);
-      const summary: DSASubmissionSummary = {
-        status: "Accepted",
-        totalTests: 25,
-        passedTests: 25,
-        runtime: "48 ms",
-        memory: "42.3 MB",
-        complexityTime: "O(n) Linear Time",
-        complexitySpace: "O(min(m, n)) Hash Map",
-        feedback:
-          "Optimal implementation. Correctly handles algorithmic edge cases.",
-      };
-      setSubmissionSummary(summary);
-      setStage("POST_SUBMISSION_DISCUSSION");
+      console.warn("Submit code API error:", err);
+      toastError("Failed to submit code for evaluation.");
+      setStage("CODING");
     }
-  }, [stage, activeCode, language, interviewId, problem, navigate]);
+  }, [stage, activeCode, language, activeInterviewId, problem]);
 
   // ─── Real Skip Problem Implementation ───────────────────────
   const skipProblem = useCallback(async () => {
     try {
-      const activeInterviewId = interviewId || "active_interview";
       const res = await skipDsaProblem({
         interviewId: activeInterviewId,
         problemId: problem.id,
@@ -304,6 +293,7 @@ export function useDSAInterview() {
           // Next question in DSA round
           const nextProblem = nextInterrupt.value.problem;
           useInterviewStore.getState().setDsaProblem({
+            interviewId: activeInterviewId,
             problemId: nextProblem.id,
             problemTitle: nextProblem.title,
             problemDescription: nextProblem.description,
@@ -322,6 +312,7 @@ export function useDSAInterview() {
           // DSA round finished, proceed to next interview round
           useInterviewStore.setState({ dsaProblem: null });
           useInterviewStore.getState().setQuestion({
+            interviewId: activeInterviewId,
             roundNumber: graphRes.currentRoundNumber,
             questionNumber: graphRes.currentQuestionNumber,
             difficulty: graphRes.currentDifficulty,
@@ -343,24 +334,14 @@ export function useDSAInterview() {
           navigate("/interview");
         }
       } else {
-        // Mock fallback progression
-        if (problemIndex + 1 < MOCK_DSA_PROBLEMS.length) {
-          setProblemIndex((prev) => prev + 1);
-          setSubmissionSummary(null);
-          setTestResults([]);
-          setStage("CODING");
-          setActiveTab("testcases");
-        } else {
-          useInterviewStore.setState({ dsaProblem: null });
-          navigate("/interview");
-        }
+        useInterviewStore.setState({ dsaProblem: null });
+        navigate("/interview");
       }
     } catch (err: unknown) {
       console.error("Skip problem error:", err);
-      toastError("Failed to skip problem. Proceeding to discussion.");
-      setStage("POST_SUBMISSION_DISCUSSION");
+      toastError("Failed to skip problem.");
     }
-  }, [interviewId, problem, activeCode, language, navigate, problemIndex]);
+  }, [activeInterviewId, problem, activeCode, language, navigate]);
 
   // ─── Next Question Handler (Clicking Next Question after submission) ───
   const nextQuestion = useCallback(() => {
@@ -370,6 +351,7 @@ export function useDSAInterview() {
         // Advance to next DSA problem in this round
         const nextProblem = nextInterrupt.value.problem;
         useInterviewStore.getState().setDsaProblem({
+          interviewId: activeInterviewId,
           problemId: nextProblem.id,
           problemTitle: nextProblem.title,
           problemDescription: nextProblem.description,
@@ -388,6 +370,7 @@ export function useDSAInterview() {
         // DSA round completed! Clear dsaProblem and navigate back to /interview
         useInterviewStore.setState({ dsaProblem: null });
         useInterviewStore.getState().setQuestion({
+          interviewId: activeInterviewId,
           roundNumber: pendingGraphResult.currentRoundNumber,
           questionNumber: pendingGraphResult.currentQuestionNumber,
           difficulty: pendingGraphResult.currentDifficulty,
@@ -403,7 +386,7 @@ export function useDSAInterview() {
         pendingGraphResult.finalEvaluation
       ) {
         useInterviewStore.getState().setCompleted({
-          interviewId: interviewId || "active_interview",
+          interviewId: activeInterviewId,
           evaluation: pendingGraphResult.finalEvaluation,
         });
         setIsCompleteModalOpen(true);
@@ -412,21 +395,11 @@ export function useDSAInterview() {
         navigate("/interview");
       }
     } else {
-      // Mock fallback: advance problemIndex or redirect back to /interview
-      if (problemIndex + 1 < MOCK_DSA_PROBLEMS.length) {
-        setProblemIndex((prev) => prev + 1);
-        setSubmissionSummary(null);
-        setTestResults([]);
-        setStage("CODING");
-        setActiveTab("testcases");
-      } else {
-        useInterviewStore.setState({ dsaProblem: null });
-        navigate("/interview");
-      }
+      useInterviewStore.setState({ dsaProblem: null });
+      navigate("/interview");
     }
-  }, [pendingGraphResult, navigate, problemIndex, interviewId]);
+  }, [pendingGraphResult, navigate, activeInterviewId]);
 
-  // ─── Active Dialogue Step & Orb State ───────────────────────
   const currentDialogue: DSADialogueStep =
     DSA_STAGE_DIALOGUES[stage] ?? DSA_STAGE_DIALOGUES.INTRO;
 
@@ -441,8 +414,8 @@ export function useDSAInterview() {
 
   return {
     problem,
-    problemIndex,
-    setProblemIndex,
+    problemIndex: 0,
+    setProblemIndex: () => {},
     language,
     setLanguage,
     activeCode,

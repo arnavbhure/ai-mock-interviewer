@@ -2,8 +2,14 @@ const {
   checkInterviewModel,
 } = require("../../models/interview/checkInterviewModel");
 const {
+  getLatestInterviewByUserId,
+} = require("../../models/interview/getLatestInterviewOfCandidiate");
+const {
   codeExecutionService,
 } = require("../../services/dsa/codeExecution.service");
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const runCodeController = async (req, res) => {
   try {
@@ -11,7 +17,16 @@ const runCodeController = async (req, res) => {
     if (!user) {
       return res.status(401).json({ message: "Unauthorized", success: false });
     }
-    const { code, language, interviewId, problemId, test_cases } = req.body;
+    const { code, language, problemId, test_cases } = req.body;
+    let interviewId = req.body.interviewId;
+
+    if (!interviewId || !UUID_REGEX.test(String(interviewId))) {
+      const latest = await getLatestInterviewByUserId(user.id);
+      if (latest) {
+        interviewId = latest.id;
+      }
+    }
+
     if (!code || !language || !interviewId || !problemId || !test_cases) {
       return res.status(400).json({
         message:
@@ -37,6 +52,7 @@ const runCodeController = async (req, res) => {
       message: "Code executed successfully.",
       success: true,
       data: code_execution_result,
+      interviewId,
     });
   } catch (err) {
     console.log("Error in runCodeController : ", err);
