@@ -141,6 +141,36 @@ id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
 );
 
+# final_evaluations :
+
+    CREATE TABLE final_evaluations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    interview_id UUID NOT NULL UNIQUE
+        REFERENCES interviews(id) ON DELETE CASCADE,
+
+    overall_score NUMERIC(4,2) NOT NULL
+        CHECK (overall_score BETWEEN 0 AND 10),
+
+    hire_chance VARCHAR(20) NOT NULL
+        CHECK (hire_chance IN (
+            'Strong Hire',
+            'Hire',
+            'Weak Hire',
+            'No Hire'
+        )),
+
+    summary TEXT NOT NULL,
+
+    strengths JSONB NOT NULL DEFAULT '[]'::jsonb,
+    weaknesses JSONB NOT NULL DEFAULT '[]'::jsonb,
+    recommendations JSONB NOT NULL DEFAULT '[]'::jsonb,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+
+);
+
 # Indexes:
 
 CREATE INDEX idx_candidate_resumes_user_id

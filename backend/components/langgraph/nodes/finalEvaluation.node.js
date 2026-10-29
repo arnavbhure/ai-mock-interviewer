@@ -4,6 +4,9 @@ const {
 const {
   getEvaluationResultsFromDB,
 } = require("../../../models/evaluation/getEvaluationResultsFromDB.model");
+const {
+  saveFinalEvaluationToDB,
+} = require("../../../models/evaluation/saveFinalEvaluationToDB.model");
 const { finalEvaluationChain } = require("../chains/finalEvaluation.chain");
 
 const FinalEvaluationNode = async (state) => {
@@ -37,6 +40,8 @@ const FinalEvaluationNode = async (state) => {
     evaluations: JSON.stringify(evaluations),
     dsaEvaluations: JSON.stringify(dsaEvaluations),
   });
+
+  await saveFinalEvaluationToDB(state.interviewId, evaluationResult);
 
   return { finalEvaluation: evaluationResult, phase: "finalization" };
 };
