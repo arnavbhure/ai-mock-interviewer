@@ -2,9 +2,6 @@ const {
   saveDsaEvaluationResultModel,
 } = require("../../models/dsaProblems/saveDsaEvaluationResultModel");
 const {
-  saveDsaSubmissionModel,
-} = require("../../models/dsaProblems/saveDsaSubmissionModel");
-const {
   checkInterviewModel,
 } = require("../../models/interview/checkInterviewModel");
 const { main_graph } = require("../../components/langgraph/graph/main_graph");
@@ -52,21 +49,7 @@ const skipCodeController = async (req, res) => {
       problemId,
     });
 
-    // 2. Persist in dsa_submissions
-    await saveDsaSubmissionModel({
-      interviewId,
-      problemId,
-      code: code || "// Problem skipped by candidate",
-      language,
-      verdict: "skipped",
-      passedTests: 0,
-      totalTests: 0,
-      executionTime: "0.00s",
-      memory: "0MB",
-      isSkip: true,
-    });
-
-    // 3. Resume LangGraph thread with Command({ resume: ... })
+    // 2. Resume LangGraph thread with Command({ resume: ... })
     let graphResumeResult = null;
     try {
       graphResumeResult = await main_graph.invoke(
