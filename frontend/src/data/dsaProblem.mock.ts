@@ -1,4 +1,41 @@
-﻿import type { DSAProblem, DSALanguage, DSAInterviewStage, DSADialogueStep } from "@/types/dsaInterview.types";
+import type { DSAProblem, DSALanguage, DSAInterviewStage, DSADialogueStep } from "@/types/dsaInterview.types";
+
+export const DEFAULT_LANGUAGE_BOILERPLATES: Record<DSALanguage, string> = {
+  cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+    // your code here
+    
+    return 0;
+}`,
+  javascript: `const fs = require('fs');
+
+function main() {
+    // your code here
+    
+}
+
+main();`,
+  python: `import sys
+
+def main():
+    # your code here
+    pass
+
+if __name__ == "__main__":
+    main()`,
+  java: `import java.util.*;
+import java.io.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        // your code here
+        
+    }
+}`,
+};
 
 export const MOCK_DSA_PROBLEMS: DSAProblem[] = [
   {
@@ -39,87 +76,7 @@ A **substring** is a contiguous non-empty sequence of characters within a string
       "Track the maximum length observed so far: maxLen = max(maxLen, right - left + 1).",
     ],
     starterCode: {
-      javascript: `/**
- * @param {string} s
- * @return {number}
- */
-function lengthOfLongestSubstring(s) {
-  // Write your solution here
-  let maxLength = 0;
-  let left = 0;
-  const seen = new Map();
-
-  for (let right = 0; right < s.length; right++) {
-    const char = s[right];
-    if (seen.has(char) && seen.get(char) >= left) {
-      left = seen.get(char) + 1;
-    }
-    seen.set(char, right);
-    maxLength = Math.max(maxLength, right - left + 1);
-  }
-
-  return maxLength;
-}`,
-      python: `class Solution:
-    def lengthOfLongestSubstring(self, s: str) -> int:
-        # Write your solution here
-        seen = {}
-        left = 0
-        max_len = 0
-        
-        for right, char in enumerate(s):
-            if char in seen and seen[char] >= left:
-                left = seen[char] + 1
-            seen[char] = right
-            max_len = max(max_len, right - left + 1)
-            
-        return max_len`,
-      cpp: `#include <string>
-#include <unordered_map>
-#include <algorithm>
-
-class Solution {
-public:
-    int lengthOfLongestSubstring(std::string s) {
-        // Write your solution here
-        std::unordered_map<char, int> seen;
-        int left = 0;
-        int maxLen = 0;
-
-        for (int right = 0; right < s.length(); ++right) {
-            char c = s[right];
-            if (seen.find(c) != seen.end() && seen[c] >= left) {
-                left = seen[c] + 1;
-            }
-            seen[c] = right;
-            maxLen = std::max(maxLen, right - left + 1);
-        }
-
-        return maxLen;
-    }
-};`,
-      java: `import java.util.HashMap;
-import java.util.Map;
-
-class Solution {
-    public int lengthOfLongestSubstring(String s) {
-        // Write your solution here
-        Map<Character, Integer> seen = new HashMap<>();
-        int left = 0;
-        int maxLen = 0;
-
-        for (int right = 0; right < s.length(); right++) {
-            char c = s.charAt(right);
-            if (seen.containsKey(c) && seen.get(c) >= left) {
-                left = seen.get(c) + 1;
-            }
-            seen.put(c, right);
-            maxLen = Math.max(maxLen, right - left + 1);
-        }
-
-        return maxLen;
-    }
-}`,
+      ...DEFAULT_LANGUAGE_BOILERPLATES,
     },
     testCases: [
       {
@@ -148,36 +105,26 @@ class Solution {
 
 export const DSA_STAGE_DIALOGUES: Record<DSAInterviewStage, DSADialogueStep> = {
   INTRO: {
-    aiText: "Let's work through a coding problem. I'll first ask you to explain your approach before you start coding.",
-    stateLabel: "AI Interviewer Speaking",
-    orbState: "speaking",
+    aiText: "Let's work through a coding problem.",
+    stateLabel: "Candidate Ready",
+    orbState: "idle",
     requiresCandidateResponse: false,
   },
   APPROACH_DISCUSSION: {
-    aiText: "Take a moment to understand the problem. When you're ready, walk me through how you would approach it.",
-    stateLabel: "Listening for Candidate Approach",
-    orbState: "listening",
-    requiresCandidateResponse: true,
-    candidatePromptPlaceholder: "Explain your proposed algorithm (e.g., sliding window with two pointers)...",
-    suggestedAnswers: [
-      "I'll use a sliding window with two pointers (left & right) and a Hash Map to store character indexes.",
-      "A brute force approach would check all O(n²) substrings, but sliding window optimizes this to O(n).",
-    ],
+    aiText: "Coding phase active.",
+    stateLabel: "Coding",
+    orbState: "idle",
+    requiresCandidateResponse: false,
   },
   APPROACH_EVALUATION: {
-    aiText: "Good. Now let's think about the complexity of that approach. What would be the time and space complexity?",
-    stateLabel: "Listening for Complexity Analysis",
-    orbState: "listening",
-    requiresCandidateResponse: true,
-    candidatePromptPlaceholder: "State your expected time and space complexity (e.g., O(n) time, O(k) space)...",
-    suggestedAnswers: [
-      "Time complexity is O(n) because each character is visited at most twice. Space complexity is O(min(m, n)) for the hash set.",
-      "O(n) linear time with O(k) space, where k is the size of the charset.",
-    ],
+    aiText: "Coding phase active.",
+    stateLabel: "Coding",
+    orbState: "idle",
+    requiresCandidateResponse: false,
   },
   CODING: {
-    aiText: "Good. Go ahead and implement your approach. I'll be here if you need clarification.",
-    stateLabel: "Candidate Implementing Solution",
+    aiText: "Implement your solution below. Run your tests or submit when ready.",
+    stateLabel: "Coding Workspace",
     orbState: "idle",
     requiresCandidateResponse: false,
   },
@@ -188,39 +135,34 @@ export const DSA_STAGE_DIALOGUES: Record<DSAInterviewStage, DSADialogueStep> = {
     requiresCandidateResponse: false,
   },
   TEST_RESULTS: {
-    aiText: "Nice! All sample test cases passed. Ensure your logic covers edge cases like empty string and repeating characters, then submit.",
-    stateLabel: "Sample Test Cases Passed",
-    orbState: "speaking",
+    aiText: "Sample test execution finished. Review the results below.",
+    stateLabel: "Test Results",
+    orbState: "idle",
     requiresCandidateResponse: false,
   },
   SUBMITTING: {
-    aiText: "Evaluating your solution against all 25 hidden benchmark test suites...",
+    aiText: "Evaluating your solution against all hidden benchmark test suites...",
     stateLabel: "Evaluating Submission",
     orbState: "thinking",
     requiresCandidateResponse: false,
   },
   POST_SUBMISSION_DISCUSSION: {
-    aiText: "Your solution passes the test cases! Before we move on, explain the time and space complexity.",
-    stateLabel: "Listening for Final Complexity Verification",
-    orbState: "listening",
-    requiresCandidateResponse: true,
-    candidatePromptPlaceholder: "Confirm time & space complexity of your final code...",
-    suggestedAnswers: [
-      "Time: O(n) single pass with hash lookup in O(1); Space: O(min(m, n)) storing unique characters.",
-      "Optimal O(n) runtime and O(1) space if the alphabet is constrained to 128 ASCII symbols.",
-    ],
+    aiText: "Your solution evaluation is complete.",
+    stateLabel: "Submission Evaluated",
+    orbState: "idle",
+    requiresCandidateResponse: false,
   },
   COMPLETED: {
-    aiText: "Outstanding work! Your algorithmic reasoning, edge case handling, and implementation were top notch.",
+    aiText: "DSA Round Completed.",
     stateLabel: "Round Completed",
-    orbState: "speaking",
+    orbState: "idle",
     requiresCandidateResponse: false,
   },
 };
 
 export const LANGUAGE_OPTIONS: { id: DSALanguage; label: string; monacoLang: string }[] = [
-  { id: "javascript", label: "JavaScript (Node 20)", monacoLang: "javascript" },
-  { id: "python", label: "Python (3.11)", monacoLang: "python" },
   { id: "cpp", label: "C++ (GCC 14)", monacoLang: "cpp" },
+  { id: "python", label: "Python (3.11)", monacoLang: "python" },
   { id: "java", label: "Java (OpenJDK 21)", monacoLang: "java" },
+  { id: "javascript", label: "JavaScript (Node 20)", monacoLang: "javascript" },
 ];

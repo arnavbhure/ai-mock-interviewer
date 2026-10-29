@@ -1,10 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { BrainCircuit } from "lucide-react";
 import { useDSAInterview } from "@/hooks/useDSAInterview";
 import {
   DSAHeader,
-  DSAAIOrbPanel,
   DSAProblemPanel,
   DSACodingWorkspace,
   DSATestResultPanel,
@@ -17,12 +15,10 @@ import {
  *
  * Immersive dark workspace combining:
  * 1. Full problem statement with constraints & hints (spacious, high-readability column)
- * 2. Monaco Editor workspace and test execution suite (properly proportioned center column)
- * 3. AI Interviewer Orb with dynamic speech transcript & discussion dock (right companion panel)
+ * 2. Monaco Editor workspace and test execution suite (properly proportioned code column)
  */
 export function DSAInterviewPage() {
   const navigate = useNavigate();
-  const [isAiPanelOpen, setIsAiPanelOpen] = useState(true);
 
   const {
     problem,
@@ -32,13 +28,6 @@ export function DSAInterviewPage() {
     handleCodeChange,
     resetCode,
     stage,
-    setStage,
-    candidateResponse,
-    setCandidateResponse,
-    isAiThinking,
-    submitCandidateDiscussion,
-    orbVisualState,
-    currentDialogue,
     testResults,
     submissionSummary,
     selectedTestCaseId,
@@ -94,21 +83,19 @@ export function DSAInterviewPage() {
         difficulty={problem.difficulty}
         formattedTime={formattedTime}
         onEndInterview={() => setIsEndModalOpen(true)}
-        isAiPanelOpen={isAiPanelOpen}
-        onToggleAiPanel={() => setIsAiPanelOpen((prev) => !prev)}
       />
 
-      {/* ── 2. Workspace Body (3-Panel Adaptive Grid) ── */}
+      {/* ── 2. Workspace Body (2-Panel Split: Problem on Left, Code & Tests on Right) ── */}
       <main className="relative z-10 flex flex-1 overflow-hidden p-2.5 sm:p-3 gap-2.5 sm:gap-3 min-h-0">
-        {/* Left Column: Problem Statement (Full Height, Generous Width) */}
+        {/* Left Column: Problem Statement (42% width, min 340px, max 620px) */}
         <section
           aria-label="Problem Statement"
-          className="flex h-full flex-col overflow-hidden min-h-0 transition-all duration-300 w-[40%] lg:w-[42%] min-w-[340px] max-w-[620px] shrink-0"
+          className="flex h-full flex-col overflow-hidden min-h-0 w-[42%] min-w-[340px] max-w-[620px] shrink-0"
         >
           <DSAProblemPanel problem={problem} />
         </section>
 
-        {/* Center Column: Monaco Coding Editor + Test Result Panel */}
+        {/* Right Column: Monaco Coding Editor + Test Result Panel */}
         <section
           aria-label="Coding Workspace and Tests"
           className="flex h-full flex-1 flex-col gap-2.5 sm:gap-3 overflow-hidden min-w-[380px] min-h-0"
@@ -126,7 +113,6 @@ export function DSAInterviewPage() {
               onSkipProblem={skipProblem}
               onNextQuestion={nextQuestion}
               isSubmitted={isSubmitted}
-              onSkipToCoding={() => setStage("CODING")}
               stage={stage}
             />
           </div>
@@ -146,39 +132,6 @@ export function DSAInterviewPage() {
             />
           </div>
         </section>
-
-        {/* Right Column: AI Interviewer Orb Panel & Discussion Dock */}
-        {isAiPanelOpen ? (
-          <aside
-            aria-label="AI Interviewer"
-            className="flex h-full w-[280px] lg:w-[320px] xl:w-[340px] flex-col overflow-hidden min-h-0 shrink-0 transition-all duration-300"
-          >
-            <DSAAIOrbPanel
-              visualState={orbVisualState}
-              dialogue={currentDialogue}
-              isAiThinking={isAiThinking}
-              candidateResponse={candidateResponse}
-              onCandidateResponseChange={setCandidateResponse}
-              onSubmitCandidateResponse={submitCandidateDiscussion}
-              stage={stage}
-              onToggleCollapse={() => setIsAiPanelOpen(false)}
-            />
-          </aside>
-        ) : (
-          /* Sleek Collapsed Bar on the Right */
-          <div className="flex flex-col items-center justify-start shrink-0">
-            <button
-              type="button"
-              onClick={() => setIsAiPanelOpen(true)}
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-900/90 hover:bg-slate-800 p-2 text-xs font-medium text-slate-300 shadow-xl transition-all cursor-pointer [writing-mode:vertical-rl] rotate-180"
-              title="Expand AI Interviewer Panel"
-              aria-label="Expand AI Interviewer Panel"
-            >
-              <BrainCircuit className="h-4 w-4 text-indigo-400 rotate-90" />
-              <span>AI Interviewer</span>
-            </button>
-          </div>
-        )}
       </main>
 
       {/* ── Modals ── */}

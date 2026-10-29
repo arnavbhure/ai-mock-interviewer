@@ -16,7 +16,6 @@ type Props = {
   onSkipProblem?: () => void;
   onNextQuestion?: () => void;
   isSubmitted?: boolean;
-  onSkipToCoding?: () => void;
   stage: DSAInterviewStage;
 };
 
@@ -34,12 +33,10 @@ export function DSACodingWorkspace({
   onSkipProblem,
   onNextQuestion,
   isSubmitted,
-  onSkipToCoding,
   stage,
 }: Props) {
   const isRunning = stage === "RUNNING_CODE";
   const isSubmitting = stage === "SUBMITTING";
-  const isDiscussion = stage === "INTRO" || stage === "APPROACH_DISCUSSION" || stage === "APPROACH_EVALUATION";
   const isBusy = isRunning || isSubmitting;
 
   const currentLangConfig = LANGUAGE_OPTIONS.find((l) => l.id === language) ?? LANGUAGE_OPTIONS[0];
@@ -170,23 +167,6 @@ export function DSACodingWorkspace({
           </Button>
         </div>
       </div>
-
-      {/* ── Discussion Phase Guidance Banner ── */}
-      {isDiscussion && (
-        <div className="flex items-center justify-between border-b border-indigo-500/20 bg-indigo-500/[0.07] px-3.5 py-1.5 text-xs text-indigo-300">
-          <span>💡 Walk through your approach with the interviewer on the right first.</span>
-          {onSkipToCoding ? (
-            <button
-              type="button"
-              onClick={onSkipToCoding}
-              className="flex items-center gap-1 font-semibold text-indigo-200 hover:text-white underline underline-offset-2"
-            >
-              <span>Skip to Coding</span>
-              <ArrowRight className="h-3 w-3" />
-            </button>
-          ) : null}
-        </div>
-      )}
 
       {/* ── Monaco Editor Surface ── */}
       <div className="relative flex-1 w-full overflow-hidden bg-[#1e1e1e]">

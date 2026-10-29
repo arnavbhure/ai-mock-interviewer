@@ -10,9 +10,11 @@ const AnswerEvaluationSchema = z.object({
   feedback: z
     .preprocess((val) => {
       if (typeof val === "string") return val.slice(0, 1000);
-      return "Good response.";
+      return val;
     }, z.string().min(1))
-    .catch("The candidate provided a relevant response addressing the question."),
+    .catch(
+      "The candidate provided a relevant response addressing the question.",
+    ),
   strengths: z
     .preprocess((val) => (Array.isArray(val) ? val : []), z.array(z.string()))
     .default([])

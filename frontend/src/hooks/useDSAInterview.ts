@@ -12,6 +12,7 @@ import type {
 import {
   MOCK_DSA_PROBLEMS,
   DSA_STAGE_DIALOGUES,
+  DEFAULT_LANGUAGE_BOILERPLATES,
 } from "@/data/dsaProblem.mock";
 import { useInterviewStore } from "@/store/interview.store";
 import { runDsaCode, submitDsaSolution, skipDsaProblem } from "@/api/dsa/dsa.api";
@@ -70,7 +71,10 @@ export function useDSAInterview() {
         examples: fallbackMock.examples,
         constraints: fallbackMock.constraints,
         hints: fallbackMock.hints,
-        starterCode: fallbackMock.starterCode,
+        starterCode: {
+          ...DEFAULT_LANGUAGE_BOILERPLATES,
+          ...(fallbackMock.starterCode || {}),
+        },
         testCases: parsedTests.length > 0 ? parsedTests : fallbackMock.testCases,
       };
     }
@@ -78,17 +82,21 @@ export function useDSAInterview() {
     return MOCK_DSA_PROBLEMS[problemIndex] ?? MOCK_DSA_PROBLEMS[0];
   }, [dsaProblemState, problemIndex]);
 
-  const [language, setLanguage] = useState<DSALanguage>("javascript");
+  const [language, setLanguage] = useState<DSALanguage>("cpp");
   const [codeMap, setCodeMap] = useState<Record<DSALanguage, string>>(() => ({
+    ...DEFAULT_LANGUAGE_BOILERPLATES,
     ...problem.starterCode,
   }));
 
   // Update starter code when problem changes
   useEffect(() => {
-    setCodeMap({ ...problem.starterCode });
+    setCodeMap({
+      ...DEFAULT_LANGUAGE_BOILERPLATES,
+      ...problem.starterCode,
+    });
   }, [problem]);
 
-  const [stage, setStage] = useState<DSAInterviewStage>("INTRO");
+  const [stage, setStage] = useState<DSAInterviewStage>("CODING");
   const [candidateResponse, setCandidateResponse] = useState<string>("");
   const [isAiThinking, setIsAiThinking] = useState(false);
 
@@ -115,16 +123,6 @@ export function useDSAInterview() {
     };
   }, []);
 
-  // ─── Initial INTRO -> APPROACH_DISCUSSION Auto-Transition ───
-  useEffect(() => {
-    if (stage === "INTRO") {
-      const timer = setTimeout(() => {
-        setStage("APPROACH_DISCUSSION");
-      }, 3500);
-      return () => clearTimeout(timer);
-    }
-  }, [stage]);
-
   // Current code for active language
   const activeCode = codeMap[language] ?? "";
 
@@ -142,7 +140,10 @@ export function useDSAInterview() {
   const resetCode = useCallback(() => {
     setCodeMap((prev) => ({
       ...prev,
-      [language]: problem.starterCode[language] ?? "",
+      [language]:
+        problem.starterCode[language] ||
+        DEFAULT_LANGUAGE_BOILERPLATES[language] ||
+        "",
     }));
   }, [language, problem]);
 

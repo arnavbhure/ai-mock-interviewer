@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { Clock, LogOut, BrainCircuit } from "lucide-react";
+import { Clock, LogOut } from "lucide-react";
 import logoMark from "@/public/Logo.png";
 
 type Props = {
@@ -9,8 +9,6 @@ type Props = {
   difficulty: "Easy" | "Medium" | "Hard";
   formattedTime: string;
   onEndInterview: () => void;
-  isAiPanelOpen?: boolean;
-  onToggleAiPanel?: () => void;
 };
 
 /**
@@ -23,8 +21,6 @@ export function DSAHeader({
   difficulty,
   formattedTime,
   onEndInterview,
-  isAiPanelOpen = true,
-  onToggleAiPanel,
 }: Props) {
   const reduced = useReducedMotion();
 
@@ -63,7 +59,7 @@ export function DSAHeader({
         </div>
       </div>
 
-      {/* ── Right: Live Status, Timer, Question Count, AI Toggle, Exit ── */}
+      {/* ── Right: Live Status, Timer, Question Count, Exit ── */}
       <div className="flex items-center gap-2.5 sm:gap-3.5">
         {/* Live indicator badge */}
         <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-400">
@@ -85,24 +81,6 @@ export function DSAHeader({
           <span className="text-white font-semibold">Q{questionNumber}</span>
           <span className="text-slate-500 font-sans"> of {totalQuestions}</span>
         </div>
-
-        {/* AI Interviewer Toggle */}
-        {onToggleAiPanel && (
-          <button
-            type="button"
-            onClick={onToggleAiPanel}
-            className={`flex h-7.5 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium transition-colors cursor-pointer ${
-              isAiPanelOpen
-                ? "border-indigo-500/40 bg-indigo-500/15 text-indigo-200 hover:bg-indigo-500/25"
-                : "border-white/[0.08] bg-white/[0.02] text-slate-400 hover:text-slate-200 hover:bg-white/[0.06]"
-            }`}
-            title={isAiPanelOpen ? "Hide AI Interviewer Panel" : "Show AI Interviewer Panel"}
-            aria-label="Toggle AI Interviewer Panel"
-          >
-            <BrainCircuit className="h-3.5 w-3.5 text-indigo-400" />
-            <span className="hidden lg:inline">AI Panel</span>
-          </button>
-        )}
 
         {/* End Round Action */}
         <button
