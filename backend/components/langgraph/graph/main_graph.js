@@ -10,12 +10,14 @@ const { waitForCandidate } = require("../nodes/waitForCandidate");
 const { evaluateAnswerNode } = require("../nodes/evaluateAnswer.node");
 const { advanceInterviewNode } = require("../nodes/advanceInterview.node");
 const { FinalEvaluationNode } = require("../nodes/finalEvaluation.node");
-const { routeAfterAdvance } = require("../utils/routeAfterAdvance");
-const { getCheckpointer } = require("../config/checkpointer");
+const {
+  routeAfterAdvance,
+  routeInitialRound,
+} = require("../utils/routeAfterAdvance");
+const { checkpointerProxy } = require("../config/checkpointer");
+const { dsaRoundNode } = require("../nodes/dsaRoundNode");
 
 const workflow = new StateGraph(InterviewGraphAnnotation);
-
-const checkpointer = getCheckpointer();
 
 /**
  * Route after question generation:
@@ -39,6 +41,7 @@ const routeAfterQuestionGeneration = (state) => {
 
 // Adding nodes
 workflow.addNode("generate_question", generateQuestionNode);
+workflow.addNode("dsa_round_node", dsaRoundNode);
 workflow.addNode("tools", new ToolNode(availableTools));
 workflow.addNode("wait_for_answer", waitForCandidate);
 workflow.addNode("evaluate_answer", evaluateAnswerNode);
@@ -46,7 +49,10 @@ workflow.addNode("advance_interview", advanceInterviewNode);
 workflow.addNode("final_evaluation", FinalEvaluationNode);
 
 // Adding edges
-workflow.addEdge(START, "generate_question");
+workflow.addConditionalEdges(START, routeInitialRound, {
+  dsa_round_node: "dsa_round_node",
+  generate_question: "generate_question",
+});
 
 // Conditional routing from generate_question:
 // Either into the tool execution loop or to candidate wait interrupt
@@ -67,10 +73,12 @@ workflow.addEdge("wait_for_answer", "evaluate_answer");
 workflow.addEdge("evaluate_answer", "advance_interview");
 workflow.addConditionalEdges("advance_interview", routeAfterAdvance, {
   final_evaluation: "final_evaluation",
+  dsa_round_node: "dsa_round_node",
   generate_question: "generate_question",
 });
+workflow.addEdge("dsa_round_node", "advance_interview");
 workflow.addEdge("final_evaluation", END);
 
-const main_graph = workflow.compile({ checkpointer });
+const main_graph = workflow.compile({ checkpointer: checkpointerProxy });
 
 module.exports = { main_graph, routeAfterQuestionGeneration };

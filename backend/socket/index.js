@@ -8,6 +8,9 @@ const registerSocketHandlers = (io) => {
   io.use(socketAuthMiddleware);
 
   io.on("connection", (socket) => {
+    if (socket.interview?.interview_id) {
+      socket.join(String(socket.interview.interview_id));
+    }
     registerInterviewSocket(socket);
   });
 };

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import Editor from "@monaco-editor/react";
-import { Play, Send, RotateCcw, Loader2, Code2, ArrowRight } from "lucide-react";
+import { Play, Send, RotateCcw, Loader2, Code2, ArrowRight, FastForward } from "lucide-react";
 import type { DSALanguage, DSAInterviewStage } from "@/types/dsaInterview.types";
 import { LANGUAGE_OPTIONS } from "@/data/dsaProblem.mock";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ type Props = {
   onResetCode: () => void;
   onRunCode: () => void;
   onSubmitSolution: () => void;
+  onSkipProblem?: () => void;
   onSkipToCoding?: () => void;
   stage: DSAInterviewStage;
 };
@@ -28,6 +29,7 @@ export function DSACodingWorkspace({
   onResetCode,
   onRunCode,
   onSubmitSolution,
+  onSkipProblem,
   onSkipToCoding,
   stage,
 }: Props) {
@@ -89,6 +91,22 @@ export function DSACodingWorkspace({
             <RotateCcw className="h-3 w-3" />
             <span className="hidden md:inline">Reset</span>
           </button>
+
+          {/* Skip Problem */}
+          {onSkipProblem && (
+            <Button
+              type="button"
+              onClick={onSkipProblem}
+              disabled={isBusy}
+              size="sm"
+              variant="ghost"
+              className="h-7.5 gap-1 text-xs font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-500/10"
+              title="Skip this problem and proceed"
+            >
+              <FastForward className="h-3 w-3" />
+              <span className="hidden sm:inline">Skip</span>
+            </Button>
+          )}
 
           {/* Run Code */}
           <Button

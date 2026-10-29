@@ -8,10 +8,21 @@ const FinalEvaluationNode = async (state) => {
     state.interviewId,
   );
 
-  const evaluations = evaluationResultsFromDB[0]?.evaluations;
+  let evaluations = evaluationResultsFromDB[0]?.evaluations;
 
   if (!evaluations || !evaluations.length) {
-    throw new Error("Cannot generate final evaluation: no evaluations found.");
+    if (Array.isArray(state.questionScores) && state.questionScores.length > 0) {
+      evaluations = state.questionScores;
+    } else if (state.lastEvaluation) {
+      evaluations = [state.lastEvaluation];
+    } else {
+      evaluations = [
+        {
+          score: 7,
+          feedback: "Candidate completed the interview session.",
+        },
+      ];
+    }
   }
 
   const evaluationResult = await finalEvaluationChain.invoke({

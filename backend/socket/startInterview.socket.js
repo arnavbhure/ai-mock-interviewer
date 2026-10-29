@@ -22,21 +22,51 @@ const registerInterviewSocket = async (socket) => {
       const interviewGraphResponse = await startInterviewService(interview);
 
       if (interviewGraphResponse.interrupted) {
-        const roundNumber = interviewGraphResponse.result.currentRoundNumber;
-        const questionNumber =
-          interviewGraphResponse.result.currentQuestionNumber;
+        const result = interviewGraphResponse.result;
+        const interrupts = result?.__interrupt__ || interviewGraphResponse.__interrupt__;
+        const interruptInfo = interrupts?.[0];
+
+        /* For DSA round interruption */
+        if (interruptInfo?.value?.type === "dsa_round") {
+          const DSAproblem = interruptInfo.value.problem;
+          const dsaData = {
+            problemId: DSAproblem.id,
+            problemTitle: DSAproblem.title,
+            problemDescription: DSAproblem.description,
+            problemDifficulty: DSAproblem.difficulty,
+            problemTopics: DSAproblem.topics,
+            publicTestsSource: DSAproblem.public_tests_source,
+            roundNumber: result.currentRoundNumber,
+            currentQuestionNumber: result.currentQuestionNumber,
+          };
+
+          socket.emit("interview:dsa", dsaData);
+          socket.emit("interview:dsa_round", dsaData);
+          return;
+        }
+
+        /* For normal graph interruption */
+        const roundNumber = result.currentRoundNumber;
+        const questionNumber = result.currentQuestionNumber;
+        const questionObj = result.currentQuestion;
+        const questionText =
+          typeof questionObj === "string"
+            ? questionObj
+            : questionObj?.question || questionObj?.text || "";
 
         socket.emit("interview:question", {
           roundNumber: roundNumber,
           questionNumber: questionNumber,
-          difficulty: interviewGraphResponse.result.currentDifficulty,
-          question: interviewGraphResponse.result.currentQuestion.question,
+          difficulty: result.currentDifficulty,
+          question: questionText,
         });
 
-        void streamQuestionAudio(socket, {
-          questionId: `${interviewGraphResponse.threadId}:${roundNumber}:${questionNumber}`,
-          questionText: interviewGraphResponse.result.currentQuestion.question,
-        });
+        if (questionText) {
+          void streamQuestionAudio(socket, {
+            questionId: `${interviewGraphResponse.threadId}:${roundNumber}:${questionNumber}`,
+            questionText: questionText,
+          });
+        }
 
         return;
       }
@@ -71,25 +101,49 @@ const registerInterviewSocket = async (socket) => {
 
       if (interviewGraphResponse.interrupted) {
         const result = interviewGraphResponse.result;
+        const interrupts = result?.__interrupt__ || interviewGraphResponse.__interrupt__;
+        const interruptInfo = interrupts?.[0];
+
+        /* If transition leads to DSA round */
+        if (interruptInfo?.value?.type === "dsa_round") {
+          const DSAproblem = interruptInfo.value.problem;
+          const dsaData = {
+            problemId: DSAproblem.id,
+            problemTitle: DSAproblem.title,
+            problemDescription: DSAproblem.description,
+            problemDifficulty: DSAproblem.difficulty,
+            problemTopics: DSAproblem.topics,
+            publicTestsSource: DSAproblem.public_tests_source,
+            roundNumber: result.currentRoundNumber,
+            currentQuestionNumber: result.currentQuestionNumber,
+          };
+
+          socket.emit("interview:dsa", dsaData);
+          socket.emit("interview:dsa_round", dsaData);
+          return;
+        }
+
         const roundNumber = result.currentRoundNumber;
         const questionNumber = result.currentQuestionNumber;
-        const questionObj = interviewGraphResponse.result.currentQuestion;
+        const questionObj = result.currentQuestion;
         const questionText =
           typeof questionObj === "string"
             ? questionObj
             : questionObj?.question || questionObj?.text || "";
 
         socket.emit("interview:question", {
-          roundNumber: interviewGraphResponse.result.currentRoundNumber,
-          questionNumber: interviewGraphResponse.result.currentQuestionNumber,
-          difficulty: interviewGraphResponse.result.currentDifficulty,
+          roundNumber: roundNumber,
+          questionNumber: questionNumber,
+          difficulty: result.currentDifficulty,
           question: questionText,
         });
 
-        void streamQuestionAudio(socket, {
-          questionId: `${interviewGraphResponse.threadId}:${roundNumber}:${questionNumber}`,
-          questionText: questionText,
-        });
+        if (questionText) {
+          void streamQuestionAudio(socket, {
+            questionId: `${interviewGraphResponse.threadId}:${roundNumber}:${questionNumber}`,
+            questionText: questionText,
+          });
+        }
 
         return;
       }

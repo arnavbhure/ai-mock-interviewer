@@ -158,6 +158,9 @@ const InterviewState = z.object({
 
   shouldContinue: z.boolean(),
 
+  /* DSA round reserved questions array */
+  DSAreservedQuestionsID: z.array(z.union([z.string(), z.number()])).default([]),
+
   /* Error handling */
 
   error: InterviewErrorSchema.nullable(),

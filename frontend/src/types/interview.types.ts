@@ -103,6 +103,18 @@ export interface AnswerPayload {
   answer: string;
 }
 
+/** Backend -> Frontend: "interview:dsa" payload */
+export interface DSAPayload {
+  problemId: string | number;
+  problemTitle: string;
+  problemDescription: string;
+  problemDifficulty: string;
+  problemTopics?: string[] | string;
+  publicTestsSource?: string;
+  roundNumber?: number;
+  currentQuestionNumber?: number;
+}
+
 // ─── Audio Streaming Payloads (Backend → Frontend) ───────────
 
 /** Backend -> Frontend: "interview:audio:start" */
@@ -173,6 +185,7 @@ export interface InterviewState {
   resumeId: string | null;
 
   codingState: CodingState;
+  dsaProblem: DSAPayload | null;
 
   evaluation: FinalEvaluation | null;
 
@@ -186,6 +199,7 @@ export interface InterviewState {
 
   // Actions
   initializeInterview: (config?: Partial<InterviewState>) => void;
+  setDsaProblem: (problem: DSAPayload) => void;
   setInterviewConfig: (config: {
     role?: string | null;
     difficulty?: InterviewDifficulty | null;

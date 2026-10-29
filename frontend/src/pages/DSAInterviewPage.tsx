@@ -47,6 +47,7 @@ export function DSAInterviewPage() {
     setActiveTab,
     runCode,
     submitSolution,
+    skipProblem,
     formattedTime,
     isEndModalOpen,
     setIsEndModalOpen,
@@ -108,6 +109,7 @@ export function DSAInterviewPage() {
               onResetCode={resetCode}
               onRunCode={runCode}
               onSubmitSolution={submitSolution}
+              onSkipProblem={skipProblem}
               onSkipToCoding={() => setStage("CODING")}
               stage={stage}
             />

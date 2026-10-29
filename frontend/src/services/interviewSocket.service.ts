@@ -23,6 +23,16 @@ const handleQuestion = (data: QuestionPayload) => {
   useInterviewStore.getState().setQuestion(data);
 };
 
+const handleDsa = (data: import("@/types/interview.types").DSAPayload) => {
+  if (import.meta.env.DEV) {
+    console.log("[InterviewSocket] interview:dsa received", data);
+  }
+  useInterviewStore.getState().setDsaProblem(data);
+  if (window.location.pathname !== "/interview/dsa") {
+    window.location.href = "/interview/dsa";
+  }
+};
+
 const handleCompleted = (data: CompletedPayload) => {
   if (import.meta.env.DEV) {
     console.log("[InterviewSocket] interview:completed received", data);
@@ -88,6 +98,8 @@ export function initializeInterviewSocketListeners(): () => void {
       console.log("[InterviewSocket] initializing listeners");
     }
     socket.on("interview:question", handleQuestion);
+    socket.on("interview:dsa", handleDsa);
+    socket.on("interview:dsa_round", handleDsa);
     socket.on("interview:completed", handleCompleted);
     socket.on("interview:error", handleError);
 
@@ -111,6 +123,8 @@ export function cleanupInterviewSocketListeners(): void {
     console.log("[InterviewSocket] cleaning up listeners");
   }
   socket.off("interview:question", handleQuestion);
+  socket.off("interview:dsa", handleDsa);
+  socket.off("interview:dsa_round", handleDsa);
   socket.off("interview:completed", handleCompleted);
   socket.off("interview:error", handleError);
 

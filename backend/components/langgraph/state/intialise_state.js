@@ -20,6 +20,8 @@ const initialState = (interview) => {
     status: "active",
     shouldContinue: true,
 
+    DSAreservedQuestionsID: [],
+
     error: null,
     retryCount: 0,
 

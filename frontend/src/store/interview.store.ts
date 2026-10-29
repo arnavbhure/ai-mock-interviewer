@@ -61,6 +61,7 @@ const INITIAL_STATE = {
   errorMessage: null as string | null,
 
   codingState: INITIAL_CODING_STATE,
+  dsaProblem: null as import("@/types/interview.types").DSAPayload | null,
 
   // Aliases for compatibility
   answer: "",
@@ -81,6 +82,19 @@ function normalizeAIState(state: AIInterviewState | OrbState): AIInterviewState 
 
 export const useInterviewStore = create<InterviewState>((set) => ({
   ...INITIAL_STATE,
+
+  setDsaProblem: (dsaProblem: import("@/types/interview.types").DSAPayload) =>
+    set((state) => ({
+      ...state,
+      dsaProblem,
+      status: "active",
+      roundNumber: dsaProblem.roundNumber ?? state.roundNumber,
+      questionNumber: dsaProblem.currentQuestionNumber ?? state.questionNumber,
+      currentRoundNumber: dsaProblem.roundNumber ?? state.currentRoundNumber,
+      currentQuestionNumber:
+        dsaProblem.currentQuestionNumber ?? state.currentQuestionNumber,
+      roundType: "DSA Round",
+    })),
 
   initializeInterview: (config?: Partial<InterviewState>) =>
     set((state) => ({
