@@ -131,6 +131,7 @@ export function useDSAInterview() {
   const [stage, setStage] = useState<DSAInterviewStage>("CODING");
   const [candidateResponse, setCandidateResponse] = useState<string>("");
   const [isAiThinking, setIsAiThinking] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
 
   const [testResults, setTestResults] = useState<DSATestCase[]>([]);
   const [submissionSummary, setSubmissionSummary] = useState<DSASubmissionSummary | null>(null);
@@ -185,7 +186,7 @@ export function useDSAInterview() {
 
   // ─── Real Run Code Implementation ───────────────────────────
   const runCode = useCallback(async () => {
-    if (stage === "RUNNING_CODE" || stage === "SUBMITTING") return;
+    if (stage === "RUNNING_CODE" || stage === "SUBMITTING" || isSkipping) return;
 
     setStage("RUNNING_CODE");
     setActiveTab("testcases");
@@ -224,11 +225,11 @@ export function useDSAInterview() {
       toastError("Failed to execute code against tests.");
       setStage("CODING");
     }
-  }, [stage, activeCode, language, activeInterviewId, problem]);
+  }, [stage, activeCode, language, activeInterviewId, problem, isSkipping]);
 
   // ─── Real Submit Solution Implementation ────────────────────
   const submitSolution = useCallback(async () => {
-    if (stage === "SUBMITTING" || stage === "RUNNING_CODE") return;
+    if (stage === "SUBMITTING" || stage === "RUNNING_CODE" || isSkipping) return;
 
     setStage("SUBMITTING");
     setActiveTab("submission");
@@ -274,10 +275,13 @@ export function useDSAInterview() {
       toastError("Failed to submit code for evaluation.");
       setStage("CODING");
     }
-  }, [stage, activeCode, language, activeInterviewId, problem]);
+  }, [stage, activeCode, language, activeInterviewId, problem, isSkipping]);
 
-  // ─── Real Skip Problem Implementation ───────────────────────
+  // ─── Real Skip Problem Implementation with Loading State ────
   const skipProblem = useCallback(async () => {
+    if (isSkipping || stage === "SUBMITTING" || stage === "RUNNING_CODE") return;
+
+    setIsSkipping(true);
     try {
       const res = await skipDsaProblem({
         interviewId: activeInterviewId,
@@ -340,8 +344,10 @@ export function useDSAInterview() {
     } catch (err: unknown) {
       console.error("Skip problem error:", err);
       toastError("Failed to skip problem.");
+    } finally {
+      setIsSkipping(false);
     }
-  }, [activeInterviewId, problem, activeCode, language, navigate]);
+  }, [activeInterviewId, problem, activeCode, language, navigate, isSkipping, stage]);
 
   // ─── Next Question Handler (Clicking Next Question after submission) ───
   const nextQuestion = useCallback(() => {
@@ -426,6 +432,7 @@ export function useDSAInterview() {
     candidateResponse,
     setCandidateResponse,
     isAiThinking,
+    isSkipping,
     submitCandidateDiscussion,
     orbVisualState,
     currentDialogue,

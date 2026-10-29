@@ -39,6 +39,7 @@ export function DSAInterviewPage() {
     skipProblem,
     nextQuestion,
     isSubmitted,
+    isSkipping,
     formattedTime,
     isEndModalOpen,
     setIsEndModalOpen,
@@ -113,6 +114,7 @@ export function DSAInterviewPage() {
               onSkipProblem={skipProblem}
               onNextQuestion={nextQuestion}
               isSubmitted={isSubmitted}
+              isSkipping={isSkipping}
               stage={stage}
             />
           </div>

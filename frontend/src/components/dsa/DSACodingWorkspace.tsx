@@ -16,6 +16,7 @@ type Props = {
   onSkipProblem?: () => void;
   onNextQuestion?: () => void;
   isSubmitted?: boolean;
+  isSkipping?: boolean;
   stage: DSAInterviewStage;
 };
 
@@ -33,11 +34,12 @@ export function DSACodingWorkspace({
   onSkipProblem,
   onNextQuestion,
   isSubmitted,
+  isSkipping,
   stage,
 }: Props) {
   const isRunning = stage === "RUNNING_CODE";
   const isSubmitting = stage === "SUBMITTING";
-  const isBusy = isRunning || isSubmitting;
+  const isBusy = isRunning || isSubmitting || Boolean(isSkipping);
 
   const currentLangConfig = LANGUAGE_OPTIONS.find((l) => l.id === language) ?? LANGUAGE_OPTIONS[0];
 
@@ -114,11 +116,20 @@ export function DSACodingWorkspace({
               disabled={isBusy}
               size="sm"
               variant="ghost"
-              className="h-7.5 gap-1 text-xs font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-500/10"
+              className="h-7.5 gap-1.5 text-xs font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 disabled:opacity-50"
               title="Skip this problem and proceed"
             >
-              <FastForward className="h-3 w-3" />
-              <span className="hidden sm:inline">Skip</span>
+              {isSkipping ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin text-rose-400" />
+                  <span>Skipping...</span>
+                </>
+              ) : (
+                <>
+                  <FastForward className="h-3 w-3" />
+                  <span className="hidden sm:inline">Skip</span>
+                </>
+              )}
             </Button>
           ) : null}
 
