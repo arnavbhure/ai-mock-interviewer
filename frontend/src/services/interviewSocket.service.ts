@@ -20,7 +20,11 @@ const handleQuestion = (data: QuestionPayload) => {
   if (import.meta.env.DEV) {
     console.log("[InterviewSocket] interview:question received", data);
   }
+  useInterviewStore.setState({ dsaProblem: null });
   useInterviewStore.getState().setQuestion(data);
+  window.dispatchEvent(
+    new CustomEvent("interview:navigate", { detail: { path: "/interview" } }),
+  );
 };
 
 const handleDsa = (data: import("@/types/interview.types").DSAPayload) => {
@@ -29,7 +33,9 @@ const handleDsa = (data: import("@/types/interview.types").DSAPayload) => {
   }
   useInterviewStore.getState().setDsaProblem(data);
   if (window.location.pathname !== "/interview/dsa") {
-    window.location.href = "/interview/dsa";
+    window.dispatchEvent(
+      new CustomEvent("interview:navigate", { detail: { path: "/interview/dsa" } }),
+    );
   }
 };
 

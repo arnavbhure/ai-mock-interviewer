@@ -14,6 +14,8 @@ type Props = {
   onRunCode: () => void;
   onSubmitSolution: () => void;
   onSkipProblem?: () => void;
+  onNextQuestion?: () => void;
+  isSubmitted?: boolean;
   onSkipToCoding?: () => void;
   stage: DSAInterviewStage;
 };
@@ -30,6 +32,8 @@ export function DSACodingWorkspace({
   onRunCode,
   onSubmitSolution,
   onSkipProblem,
+  onNextQuestion,
+  isSubmitted,
   onSkipToCoding,
   stage,
 }: Props) {
@@ -92,8 +96,21 @@ export function DSACodingWorkspace({
             <span className="hidden md:inline">Reset</span>
           </button>
 
-          {/* Skip Problem */}
-          {onSkipProblem && (
+          {/* Next Question (after submission) OR Skip Question (before submission) */}
+          {isSubmitted ? (
+            <Button
+              type="button"
+              onClick={onNextQuestion}
+              disabled={isBusy}
+              size="sm"
+              className="h-7.5 gap-1.5 bg-emerald-600 px-3 text-xs font-semibold text-white shadow-md shadow-emerald-950 hover:bg-emerald-500"
+              title="Proceed to next question or round"
+            >
+              <span>Next Question</span>
+              <ArrowRight className="h-3 w-3" />
+            </Button>
+          ) :
+          onSkipProblem ? (
             <Button
               type="button"
               onClick={onSkipProblem}
@@ -106,7 +123,7 @@ export function DSACodingWorkspace({
               <FastForward className="h-3 w-3" />
               <span className="hidden sm:inline">Skip</span>
             </Button>
-          )}
+          ) : null}
 
           {/* Run Code */}
           <Button
@@ -158,7 +175,7 @@ export function DSACodingWorkspace({
       {isDiscussion && (
         <div className="flex items-center justify-between border-b border-indigo-500/20 bg-indigo-500/[0.07] px-3.5 py-1.5 text-xs text-indigo-300">
           <span>💡 Walk through your approach with the interviewer on the right first.</span>
-          {onSkipToCoding && (
+          {onSkipToCoding ? (
             <button
               type="button"
               onClick={onSkipToCoding}
@@ -167,7 +184,7 @@ export function DSACodingWorkspace({
               <span>Skip to Coding</span>
               <ArrowRight className="h-3 w-3" />
             </button>
-          )}
+          ) : null}
         </div>
       )}
 

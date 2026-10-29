@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BrainCircuit } from "lucide-react";
 import { useDSAInterview } from "@/hooks/useDSAInterview";
@@ -48,12 +48,26 @@ export function DSAInterviewPage() {
     runCode,
     submitSolution,
     skipProblem,
+    nextQuestion,
+    isSubmitted,
     formattedTime,
     isEndModalOpen,
     setIsEndModalOpen,
     isCompleteModalOpen,
     setIsCompleteModalOpen,
   } = useDSAInterview();
+
+  // Listen to navigation events (e.g. when round changes or finishes)
+  useEffect(() => {
+    const handleNav = (e: Event) => {
+      const custom = e as CustomEvent<{ path: string }>;
+      if (custom?.detail?.path) {
+        navigate(custom.detail.path);
+      }
+    };
+    window.addEventListener("interview:navigate", handleNav);
+    return () => window.removeEventListener("interview:navigate", handleNav);
+  }, [navigate]);
 
   const handleEndConfirm = () => {
     setIsEndModalOpen(false);
@@ -110,6 +124,8 @@ export function DSAInterviewPage() {
               onRunCode={runCode}
               onSubmitSolution={submitSolution}
               onSkipProblem={skipProblem}
+              onNextQuestion={nextQuestion}
+              isSubmitted={isSubmitted}
               onSkipToCoding={() => setStage("CODING")}
               stage={stage}
             />
@@ -181,3 +197,5 @@ export function DSAInterviewPage() {
     </div>
   );
 }
+
+export default DSAInterviewPage;

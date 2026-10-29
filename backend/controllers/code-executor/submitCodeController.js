@@ -15,7 +15,6 @@ const {
 } = require("../../services/dsa/codeExecution.service");
 const { main_graph } = require("../../components/langgraph/graph/main_graph");
 const { Command } = require("@langchain/langgraph");
-const { io } = require("../../config/socket");
 
 const submitCodeController = async (req, res) => {
   try {
@@ -91,44 +90,6 @@ const submitCodeController = async (req, res) => {
           },
         },
       );
-
-      // Handle real-time Socket.IO emission to candidate
-      if (io && interviewId) {
-        if (graphResumeResult.__interrupt__) {
-          const nextInterrupt = graphResumeResult.__interrupt__[0];
-          if (nextInterrupt?.value?.type === "dsa_round") {
-            const nextProblem = nextInterrupt.value.problem;
-            io.to(interviewId).emit("interview:dsa", {
-              problemId: nextProblem.id,
-              problemTitle: nextProblem.title,
-              problemDescription: nextProblem.description,
-              problemDifficulty: nextProblem.difficulty,
-              problemTopics: nextProblem.topics,
-              publicTestsSource: nextProblem.public_tests_source,
-              currentQuestionNumber: graphResumeResult.currentQuestionNumber,
-              roundNumber: graphResumeResult.currentRoundNumber,
-            });
-          } else if (nextInterrupt?.value?.type === "wait_for_answer") {
-            io.to(interviewId).emit("interview:question", {
-              roundNumber: graphResumeResult.currentRoundNumber,
-              questionNumber: graphResumeResult.currentQuestionNumber,
-              difficulty: graphResumeResult.currentDifficulty,
-              question:
-                graphResumeResult.currentQuestion?.question ||
-                graphResumeResult.currentQuestion ||
-                "",
-            });
-          }
-        } else if (
-          graphResumeResult.phase === "finalization" ||
-          graphResumeResult.finalEvaluation
-        ) {
-          io.to(interviewId).emit("interview:completed", {
-            interviewId,
-            evaluation: graphResumeResult.finalEvaluation,
-          });
-        }
-      }
     } catch (resumeErr) {
       console.error(
         "Failed to resume LangGraph thread after submission:",

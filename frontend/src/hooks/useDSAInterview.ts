@@ -94,6 +94,7 @@ export function useDSAInterview() {
 
   const [testResults, setTestResults] = useState<DSATestCase[]>([]);
   const [submissionSummary, setSubmissionSummary] = useState<DSASubmissionSummary | null>(null);
+  const [pendingGraphResult, setPendingGraphResult] = useState<any>(null);
   const [selectedTestCaseId, setSelectedTestCaseId] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<"testcases" | "output" | "submission">("testcases");
 
@@ -262,15 +263,9 @@ export function useDSAInterview() {
       setSubmissionSummary(summary);
       setStage("POST_SUBMISSION_DISCUSSION");
 
-      // Check graph progression from backend
-      const graphRes = res?.graphResult;
-      if (graphRes) {
-        if (!graphRes.__interrupt__ && graphRes.phase === "finalization") {
-          setIsCompleteModalOpen(true);
-        } else if (graphRes.__interrupt__?.[0]?.value?.type === "wait_for_answer") {
-          // Transitioned to next non-DSA round
-          navigate("/interview");
-        }
+      // Save graph result so clicking Next Question proceeds smoothly
+      if (res?.graphResult) {
+        setPendingGraphResult(res.graphResult);
       }
     } catch (err: unknown) {
       console.warn("Submit code API error, using simulated summary:", err);
@@ -303,21 +298,132 @@ export function useDSAInterview() {
 
       const graphRes = res?.graphResult;
       if (graphRes) {
-        if (!graphRes.__interrupt__ && graphRes.phase === "finalization") {
+        const nextInterrupt = graphRes.__interrupt__?.[0];
+        if (nextInterrupt?.value?.type === "dsa_round") {
+          // Next question in DSA round
+          const nextProblem = nextInterrupt.value.problem;
+          useInterviewStore.getState().setDsaProblem({
+            problemId: nextProblem.id,
+            problemTitle: nextProblem.title,
+            problemDescription: nextProblem.description,
+            problemDifficulty: nextProblem.difficulty,
+            problemTopics: nextProblem.topics,
+            publicTestsSource: nextProblem.public_tests_source,
+            roundNumber: graphRes.currentRoundNumber,
+            currentQuestionNumber: graphRes.currentQuestionNumber,
+          });
+          setSubmissionSummary(null);
+          setPendingGraphResult(null);
+          setTestResults([]);
+          setStage("CODING");
+          setActiveTab("testcases");
+        } else if (nextInterrupt?.value?.type === "wait_for_answer") {
+          // DSA round finished, proceed to next interview round
+          useInterviewStore.setState({ dsaProblem: null });
+          useInterviewStore.getState().setQuestion({
+            roundNumber: graphRes.currentRoundNumber,
+            questionNumber: graphRes.currentQuestionNumber,
+            difficulty: graphRes.currentDifficulty,
+            question:
+              graphRes.currentQuestion?.question ||
+              graphRes.currentQuestion?.text ||
+              graphRes.currentQuestion ||
+              "",
+          });
+          navigate("/interview");
+        } else if (graphRes.phase === "finalization" || graphRes.finalEvaluation) {
+          useInterviewStore.getState().setCompleted({
+            interviewId: activeInterviewId,
+            evaluation: graphRes.finalEvaluation,
+          });
           setIsCompleteModalOpen(true);
-        } else if (graphRes.__interrupt__?.[0]?.value?.type === "wait_for_answer") {
+        } else {
+          useInterviewStore.setState({ dsaProblem: null });
           navigate("/interview");
         }
       } else {
-        setStage("COMPLETED");
-        setIsCompleteModalOpen(true);
+        // Mock fallback progression
+        if (problemIndex + 1 < MOCK_DSA_PROBLEMS.length) {
+          setProblemIndex((prev) => prev + 1);
+          setSubmissionSummary(null);
+          setTestResults([]);
+          setStage("CODING");
+          setActiveTab("testcases");
+        } else {
+          useInterviewStore.setState({ dsaProblem: null });
+          navigate("/interview");
+        }
       }
     } catch (err: unknown) {
       console.error("Skip problem error:", err);
       toastError("Failed to skip problem. Proceeding to discussion.");
       setStage("POST_SUBMISSION_DISCUSSION");
     }
-  }, [interviewId, problem, activeCode, language, navigate]);
+  }, [interviewId, problem, activeCode, language, navigate, problemIndex]);
+
+  // ─── Next Question Handler (Clicking Next Question after submission) ───
+  const nextQuestion = useCallback(() => {
+    if (pendingGraphResult) {
+      const nextInterrupt = pendingGraphResult.__interrupt__?.[0];
+      if (nextInterrupt?.value?.type === "dsa_round") {
+        // Advance to next DSA problem in this round
+        const nextProblem = nextInterrupt.value.problem;
+        useInterviewStore.getState().setDsaProblem({
+          problemId: nextProblem.id,
+          problemTitle: nextProblem.title,
+          problemDescription: nextProblem.description,
+          problemDifficulty: nextProblem.difficulty,
+          problemTopics: nextProblem.topics,
+          publicTestsSource: nextProblem.public_tests_source,
+          roundNumber: pendingGraphResult.currentRoundNumber,
+          currentQuestionNumber: pendingGraphResult.currentQuestionNumber,
+        });
+        setSubmissionSummary(null);
+        setPendingGraphResult(null);
+        setTestResults([]);
+        setStage("CODING");
+        setActiveTab("testcases");
+      } else if (nextInterrupt?.value?.type === "wait_for_answer") {
+        // DSA round completed! Clear dsaProblem and navigate back to /interview
+        useInterviewStore.setState({ dsaProblem: null });
+        useInterviewStore.getState().setQuestion({
+          roundNumber: pendingGraphResult.currentRoundNumber,
+          questionNumber: pendingGraphResult.currentQuestionNumber,
+          difficulty: pendingGraphResult.currentDifficulty,
+          question:
+            pendingGraphResult.currentQuestion?.question ||
+            pendingGraphResult.currentQuestion?.text ||
+            pendingGraphResult.currentQuestion ||
+            "",
+        });
+        navigate("/interview");
+      } else if (
+        pendingGraphResult.phase === "finalization" ||
+        pendingGraphResult.finalEvaluation
+      ) {
+        useInterviewStore.getState().setCompleted({
+          interviewId: interviewId || "active_interview",
+          evaluation: pendingGraphResult.finalEvaluation,
+        });
+        setIsCompleteModalOpen(true);
+      } else {
+        useInterviewStore.setState({ dsaProblem: null });
+        navigate("/interview");
+      }
+    } else {
+      // Mock fallback: advance problemIndex or redirect back to /interview
+      if (problemIndex + 1 < MOCK_DSA_PROBLEMS.length) {
+        setProblemIndex((prev) => prev + 1);
+        setSubmissionSummary(null);
+        setTestResults([]);
+        setStage("CODING");
+        setActiveTab("testcases");
+      } else {
+        useInterviewStore.setState({ dsaProblem: null });
+        navigate("/interview");
+      }
+    }
+  }, [pendingGraphResult, navigate, problemIndex, interviewId]);
 
   // ─── Active Dialogue Step & Orb State ───────────────────────
   const currentDialogue: DSADialogueStep =
@@ -358,6 +464,8 @@ export function useDSAInterview() {
     runCode,
     submitSolution,
     skipProblem,
+    nextQuestion,
+    isSubmitted: Boolean(submissionSummary),
     elapsedSeconds,
     formattedTime,
     isEndModalOpen,

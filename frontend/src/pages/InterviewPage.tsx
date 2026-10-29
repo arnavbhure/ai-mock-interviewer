@@ -162,6 +162,25 @@ export function InterviewPage() {
   const navigate = useNavigate();
   const status = useInterviewStore((s) => s.status);
   const currentQuestion = useInterviewStore((s) => s.currentQuestion);
+  const dsaProblem = useInterviewStore((s) => s.dsaProblem);
+
+  // ── Auto-redirect to DSA route when DSA problem arrives ──
+  useEffect(() => {
+    if (dsaProblem) {
+      navigate("/interview/dsa");
+    }
+  }, [dsaProblem, navigate]);
+
+  useEffect(() => {
+    const handleNav = (e: Event) => {
+      const custom = e as CustomEvent<{ path: string }>;
+      if (custom?.detail?.path) {
+        navigate(custom.detail.path);
+      }
+    };
+    window.addEventListener("interview:navigate", handleNav);
+    return () => window.removeEventListener("interview:navigate", handleNav);
+  }, [navigate]);
 
   const hasStartedRef = useRef(false);
 
