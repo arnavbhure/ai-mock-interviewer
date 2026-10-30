@@ -35,6 +35,7 @@ app.use("/api/auth", authRouter);
 
 //interview route
 app.use("/api/interview", authMiddleware, interviewRouter);
+app.use("/api/interviews", authMiddleware, interviewRouter);
 
 // code executor route
 app.use("/api/execute-code", authMiddleware, codeExecutorRouter);

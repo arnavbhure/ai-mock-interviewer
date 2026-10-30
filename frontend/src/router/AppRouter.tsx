@@ -1,5 +1,5 @@
 import { Route, Routes } from "react-router-dom";
-import { Briefcase, HelpCircle, TrendingUp } from "lucide-react";
+import { HelpCircle, TrendingUp } from "lucide-react";
 import { LoginPage } from "@/auth/login";
 import { RegisterPage } from "@/auth/register";
 import { VerifyOtpPage } from "@/auth/verify-otp";
@@ -13,6 +13,7 @@ import { SetupInterviewPage } from "@/pages/SetupInterviewPage";
 import { InterviewPage } from "@/pages/InterviewPage";
 import { DSAInterviewPage } from "@/pages/DSAInterviewPage";
 import { ReportsPage } from "@/pages/ReportsPage";
+import { InterviewsPage } from "@/pages/InterviewsPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -33,16 +34,7 @@ export function AppRouter() {
         <Route element={<DashboardLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/dashboard/new" element={<SetupInterviewPage />} />
-          <Route
-            path="/interviews"
-            element={
-              <FeaturePlaceholderPage
-                title="Interviews"
-                description="Your complete interview history and upcoming sessions will live here."
-                icon={Briefcase}
-              />
-            }
-          />
+          <Route path="/interviews" element={<InterviewsPage />} />
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/reports/:interviewId" element={<ReportsPage />} />
           <Route
