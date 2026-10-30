@@ -13,6 +13,7 @@ const { authRouter } = require("./routes/auth.router");
 const { interviewRouter } = require("./routes/interview.router");
 const { authMiddleware } = require("./middlewares/auth.middleware");
 const { codeExecutorRouter } = require("./routes/code.executer.router");
+const { dashboardRouter } = require("./routes/dashboard.router");
 
 dotenv.config();
 
@@ -36,6 +37,9 @@ app.use("/api/interview", authMiddleware, interviewRouter);
 
 // code executor route
 app.use("/api/execute-code", authMiddleware, codeExecutorRouter);
+
+// dashboard stats route
+app.use("/api", authMiddleware, dashboardRouter);
 
 app.get("/ping", (req, res) => {
   res.send("ok");
