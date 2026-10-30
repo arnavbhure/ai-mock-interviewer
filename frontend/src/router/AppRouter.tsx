@@ -1,5 +1,5 @@
-﻿import { Route, Routes } from "react-router-dom";
-import { Briefcase, FileText, HelpCircle, TrendingUp } from "lucide-react";
+import { Route, Routes } from "react-router-dom";
+import { Briefcase, HelpCircle, TrendingUp } from "lucide-react";
 import { LoginPage } from "@/auth/login";
 import { RegisterPage } from "@/auth/register";
 import { VerifyOtpPage } from "@/auth/verify-otp";
@@ -12,6 +12,7 @@ import { NotFoundPage } from "@/pages/NotFoundPage";
 import { SetupInterviewPage } from "@/pages/SetupInterviewPage";
 import { InterviewPage } from "@/pages/InterviewPage";
 import { DSAInterviewPage } from "@/pages/DSAInterviewPage";
+import { ReportsPage } from "@/pages/ReportsPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -42,16 +43,8 @@ export function AppRouter() {
               />
             }
           />
-          <Route
-            path="/reports"
-            element={
-              <FeaturePlaceholderPage
-                title="Reports"
-                description="Deep-dive performance breakdowns for every interview you've completed."
-                icon={FileText}
-              />
-            }
-          />
+          <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/reports/:interviewId" element={<ReportsPage />} />
           <Route
             path="/progress"
             element={

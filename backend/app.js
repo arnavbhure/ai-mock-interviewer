@@ -14,6 +14,7 @@ const { interviewRouter } = require("./routes/interview.router");
 const { authMiddleware } = require("./middlewares/auth.middleware");
 const { codeExecutorRouter } = require("./routes/code.executer.router");
 const { dashboardRouter } = require("./routes/dashboard.router");
+const { reportRouter } = require("./routes/report.router");
 
 dotenv.config();
 
@@ -40,6 +41,9 @@ app.use("/api/execute-code", authMiddleware, codeExecutorRouter);
 
 // dashboard stats route
 app.use("/api", authMiddleware, dashboardRouter);
+
+// performance report route
+app.use("/api", authMiddleware, reportRouter);
 
 app.get("/ping", (req, res) => {
   res.send("ok");

@@ -142,7 +142,7 @@ function InterviewRow({ interview }: { interview: ParsedInterviewStat }) {
       {/* Action */}
       <td className="py-3.5 text-right">
         <Link
-          to={isCompleted ? "/reports" : "/interview"}
+          to={isCompleted ? (interview.id ? `/reports?interviewId=${interview.id}` : "/reports") : "/interview"}
           className="text-sm font-medium text-primary transition-colors duration-base ease-premium hover:text-primary-bright"
         >
           {isCompleted ? "Report" : "Continue"}
