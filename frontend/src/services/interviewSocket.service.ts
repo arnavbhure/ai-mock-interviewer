@@ -1,5 +1,6 @@
 import socket from "@/socket/socket";
 import { useInterviewStore } from "@/store/interview.store";
+import { invalidateAllApiCaches } from "@/store/api.store";
 import { toastError } from "@/components/ui/toast";
 import { interviewAudioPlayer } from "@/services/interviewAudioPlayer.service";
 import type {
@@ -44,6 +45,7 @@ const handleCompleted = (data: CompletedPayload) => {
     console.log("[InterviewSocket] interview:completed received", data);
   }
   useInterviewStore.getState().setCompleted(data);
+  invalidateAllApiCaches();
 };
 
 const handleError = (data: ErrorPayload) => {

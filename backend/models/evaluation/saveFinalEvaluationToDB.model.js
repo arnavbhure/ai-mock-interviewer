@@ -1,3 +1,5 @@
+const { pool } = require("../../config/db");
+
 const saveFinalEvaluationToDB = async (interviewId, finalEvaluation) => {
   const query = `
   INSERT INTO final_evaluations (

@@ -13,7 +13,7 @@ import {
   RotateCcw,
   SlidersHorizontal,
 } from "lucide-react";
-import { getInterviewHistory, type HistoryInterviewItem } from "@/api/interview/history.api";
+import { useInterviewHistoryStore } from "@/store/interviewHistory.store";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -99,31 +99,17 @@ function DifficultyBadge({ difficulty }: { difficulty: string }) {
 export function InterviewsPage() {
   const reduced = useReducedMotion();
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [interviews, setInterviews] = useState<HistoryInterviewItem[]>([]);
+  const interviews = useInterviewHistoryStore((s) => s.interviews);
+  const isLoading = useInterviewHistoryStore((s) => s.isLoading);
+  const fetchInterviews = useInterviewHistoryStore((s) => s.fetchInterviews);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
 
   useEffect(() => {
-    let mounted = true;
-    setIsLoading(true);
-
-    getInterviewHistory()
-      .then((res) => {
-        if (mounted) setInterviews(res);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch interview history:", err);
-      })
-      .finally(() => {
-        if (mounted) setIsLoading(false);
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    fetchInterviews();
+  }, [fetchInterviews]);
 
   const filteredInterviews = useMemo(() => {
     return interviews.filter((item) => {
@@ -356,4 +342,3 @@ export function InterviewsPage() {
     </div>
   );
 }
-

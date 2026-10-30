@@ -1,8 +1,8 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useUserStore } from "@/store/user.store";
-import { getDashboardData } from "@/api/dashboard/dashboard.api";
-import type { ParsedDashboardData, TrendPoint } from "@/types/dashboard.types";
+import { useDashboardStore } from "@/store/dashboard.store";
+import type { TrendPoint } from "@/types/dashboard.types";
 import {
   DashboardHeader,
   PerformanceTrendCard,
@@ -17,33 +17,13 @@ export function DashboardPage() {
   const reduced = useReducedMotion();
   const user = useUserStore((state) => state.user);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [data, setData] = useState<ParsedDashboardData | null>(null);
+  const data = useDashboardStore((s) => s.data);
+  const isLoading = useDashboardStore((s) => s.isLoading);
+  const fetchDashboardData = useDashboardStore((s) => s.fetchDashboardData);
 
   useEffect(() => {
-    let mounted = true;
-
-    async function loadStats() {
-      try {
-        setIsLoading(true);
-        const result = await getDashboardData();
-        if (mounted) {
-          setData(result);
-        }
-      } catch (err) {
-        console.error("Failed to load dashboard statistics:", err);
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    loadStats();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   // Extract user's first name, full name, or fallback
   const displayName =

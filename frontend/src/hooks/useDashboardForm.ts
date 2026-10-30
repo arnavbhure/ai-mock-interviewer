@@ -7,6 +7,7 @@ import { MAX_FILE_SIZE, ACCEPTED_FILE_TYPES } from "@/types/dashboard.types";
 import { uploadResume } from "@/api/resume/resume.api";
 import { createInterview } from "@/api/interview/interview.api";
 import { useInterviewStore } from "@/store/interview.store";
+import { invalidateAllApiCaches } from "@/store/api.store";
 import { toastError } from "@/components/ui/toast";
 
 function getApiErrorMessage(error: unknown): string {
@@ -198,6 +199,7 @@ export function useDashboardForm() {
         setIsSubmitting(false);
         setIsProcessingResume(false);
 
+        invalidateAllApiCaches();
         navigate("/interview");
       } catch (error) {
         const errorMsg = getApiErrorMessage(error);

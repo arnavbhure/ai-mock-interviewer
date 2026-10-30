@@ -15,8 +15,7 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
-import { getReportData } from "@/api/report/report.api";
-import type { ReportData } from "@/types/report.types";
+import { useReportStore } from "@/store/report.store";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -72,37 +71,20 @@ export function ReportsPage() {
 
   const activeInterviewId = params.interviewId || searchParams.get("interviewId") || undefined;
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [data, setData] = useState<ReportData | null>(null);
+  const data = useReportStore((s) => s.data);
+  const isLoading = useReportStore((s) => s.isLoading);
+  const fetchReport = useReportStore((s) => s.fetchReport);
+
   const [activeTab, setActiveTab] = useState<"overview" | "questions" | "dsa">("overview");
 
   useEffect(() => {
-    let isMounted = true;
-    setIsLoading(true);
-
-    getReportData(activeInterviewId)
-      .then((res) => {
-        if (isMounted) {
-          setData(res);
-          // If the URL didn't have an ID and we received an interview, sync URL gently
-          if (!activeInterviewId && res?.interview?.id) {
-            setSearchParams({ interviewId: res.interview.id }, { replace: true });
-          }
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to load interview report:", err);
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [activeInterviewId, setSearchParams]);
+    fetchReport(activeInterviewId).then((res) => {
+      // If the URL didn't have an ID and we received an interview, sync URL gently
+      if (!activeInterviewId && res?.interview?.id) {
+        setSearchParams({ interviewId: res.interview.id }, { replace: true });
+      }
+    });
+  }, [activeInterviewId, fetchReport, setSearchParams]);
 
   const interview = data?.interview;
   const finalEval = data?.finalEvaluation;
@@ -511,4 +493,3 @@ export function ReportsPage() {
     </div>
   );
 }
-

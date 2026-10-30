@@ -19,6 +19,7 @@ import { useUserStore } from "@/store/user.store";
 import { Button } from "@/components/ui/button";
 import { logout } from "@/api/auth/auth.api";
 import { useInterviewStore } from "@/store/interview.store";
+import { resetAllApiStores } from "@/store/api.store";
 
 function formatDate(isoDate?: string): string {
   if (!isoDate) return "Recently created";
@@ -72,6 +73,7 @@ export function SettingsPage() {
     } finally {
       clearUser();
       useInterviewStore.getState().resetInterview();
+      resetAllApiStores();
       navigate("/");
     }
   };
