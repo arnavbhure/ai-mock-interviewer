@@ -37,31 +37,31 @@ export const DIFFICULTY_OPTIONS: {
   label: string;
   description: string;
 }[] = [
-    {
-      value: "easy",
-      label: "Easy",
-      description: "Foundational questions",
-    },
-    {
-      value: "medium",
-      label: "Medium",
-      description: "Real interview level",
-    },
-    {
-      value: "hard",
-      label: "Hard",
-      description: "Challenging questions",
-    },
-  ];
+  {
+    value: "easy",
+    label: "Easy",
+    description: "Foundational questions",
+  },
+  {
+    value: "medium",
+    label: "Medium",
+    description: "Real interview level",
+  },
+  {
+    value: "hard",
+    label: "Hard",
+    description: "Challenging questions",
+  },
+];
 
 export const MAX_FILE_SIZE = 6 * 1024 * 1024; // 6MB
 export const ACCEPTED_FILE_TYPES = ["application/pdf"];
 
 /* =========================================================
-   DASHBOARD ANALYTICS
+   DASHBOARD ANALYTICS & API
    ========================================================= */
 
-export type InterviewStatus = "completed" | "in_progress" | "scheduled";
+export type InterviewStatus = "completed" | "in_progress" | "active" | "scheduled";
 
 export type SkillName =
   | "Technical Knowledge"
@@ -86,16 +86,75 @@ export interface DashboardSkill {
 export interface RecentInterview {
   id: string;
   role: string;
-  /** e.g. "Technical + Behavioral" */
-  type: string;
-  /** Human-readable relative date, e.g. "2 days ago". */
+  type?: string;
+  difficulty?: string;
   date: string;
-  /** 0–100 for completed interviews, null while still in progress. */
   score: number | null;
-  status: InterviewStatus;
+  hireChance?: string | null;
+  status: InterviewStatus | string;
 }
 
 export interface TrendPoint {
   label: string;
   score: number;
+}
+
+/* ─── Real Backend /api/dashboard Response Types ─── */
+
+export interface RawDashboardStats {
+  totalInterviews?: number;
+  total_interviews?: number;
+  completedInterviews?: number;
+  completed_interviews?: number;
+  activeInterviews?: number;
+  active_interviews?: number;
+  averageScore?: number | string;
+  average_score?: number | string;
+  strongHireCount?: number;
+  strong_hire_count?: number;
+}
+
+export interface RawInterviewStat {
+  id: string;
+  role: string;
+  status: string;
+  difficulty: "easy" | "medium" | "hard" | string;
+  overallScore?: number | string | null;
+  overall_score?: number | string | null;
+  hireChance?: string | null;
+  hire_chance?: string | null;
+  createdAt?: string;
+  created_at?: string;
+}
+
+export interface DashboardApiResponse {
+  success: boolean;
+  message?: string;
+  data: {
+    dashboardStats: RawDashboardStats;
+    interviewStats: RawInterviewStat[];
+  };
+}
+
+export interface ParsedDashboardStats {
+  totalInterviews: number;
+  completedInterviews: number;
+  activeInterviews: number;
+  averageScore: number;
+  strongHireCount: number;
+}
+
+export interface ParsedInterviewStat {
+  id: string;
+  role: string;
+  status: string;
+  difficulty: string;
+  overallScore: number | null;
+  hireChance: string | null;
+  createdAt: string;
+}
+
+export interface ParsedDashboardData {
+  dashboardStats: ParsedDashboardStats;
+  interviewStats: ParsedInterviewStat[];
 }

@@ -1,3 +1,5 @@
+const { pool } = require("../../config/db");
+
 const getInterviewStats = async (userId) => {
   const query = `SELECT
     i.id,

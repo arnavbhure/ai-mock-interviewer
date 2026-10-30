@@ -9,5 +9,6 @@ export { StatCards } from "./StatCards";
 export { StartInterviewPanel } from "./StartInterviewPanel";
 export { RecentInterviewsCard } from "./RecentInterviewsCard";
 export { SkillProgressCard } from "./SkillProgressCard";
+export { PerformanceSummaryCard } from "./PerformanceSummaryCard";
 export { PerformanceTrendCard } from "./PerformanceTrendCard";
 export { TopBar } from "./TopBar";

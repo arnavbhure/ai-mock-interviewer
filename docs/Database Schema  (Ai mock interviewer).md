@@ -193,3 +193,6 @@ ON public.interviews(resume_id);
 
 CREATE INDEX idx_interviews_status
 ON public.interviews(status);
+
+CREATE INDEX idx_interviews_user_created
+ON interviews(user_id, created_at DESC);
