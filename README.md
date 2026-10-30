@@ -1,46 +1,66 @@
 <p align="center">
-  <img src="docs/Logo.png" alt="InterviewAI Logo" width="160" />
+  <a href="#">
+    <img src="docs/Logo.png" alt="InterviewAI Brand Logo" width="260" />
+  </a>
 </p>
 
 <h1 align="center">InterviewAI</h1>
 
 <p align="center">
-  <strong>Autonomous Multi-Agent AI Mock Interviewer & Adaptive Technical Evaluation Platform</strong>
+  <strong>Autonomous Multi-Agent AI Mock Interviewer & Adaptive Technical Evaluation Platform</strong><br>
+  <em>Simulate high-stakes Tier-1 engineering interview loops powered by stateful AI agents, real-time voice streaming, and sandboxed code execution.</em>
 </p>
 
 <p align="center">
-  <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black" alt="React 19" /></a>
-  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white" alt="TypeScript" /></a>
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-20+-339933?logo=nodedotjs&logoColor=white" alt="Node.js" /></a>
-  <a href="https://expressjs.com/"><img src="https://img.shields.io/badge/Express-5.x-000000?logo=express&logoColor=white" alt="Express" /></a>
-  <a href="https://js.langchain.com/docs/concepts/langgraph/"><img src="https://img.shields.io/badge/LangGraph-StateGraph-FF9900?logo=langchain&logoColor=black" alt="LangGraph" /></a>
-  <a href="https://www.postgresql.org/"><img src="https://img.shields.io/badge/PostgreSQL-pgvector-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL" /></a>
-  <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/TailwindCSS-v4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS" /></a>
-  <a href="https://socket.io/"><img src="https://img.shields.io/badge/Socket.IO-4.8-010101?logo=socketdotio&logoColor=white" alt="Socket.IO" /></a>
+  <a href="#-overview">Overview</a> •
+  <a href="#-key-features">Key Features</a> •
+  <a href="#-system-architecture">System Architecture</a> •
+  <a href="#-langgraph-multi-agent-workflow">Agent Workflow</a> •
+  <a href="#-dsa--code-execution-pipeline">Code Sandbox</a> •
+  <a href="#-step-by-step-installation--setup">Quickstart</a>
 </p>
+
+<p align="center">
+  <a href="https://react.dev/"><img src="https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React 19" /></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript_5.9-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" /></a>
+  <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/TailwindCSS_v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS" /></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js_20+-339933?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js" /></a>
+  <a href="https://expressjs.com/"><img src="https://img.shields.io/badge/Express_5.x-000000?style=flat-square&logo=express&logoColor=white" alt="Express" /></a>
+  <a href="https://js.langchain.com/docs/concepts/langgraph/"><img src="https://img.shields.io/badge/LangGraph-StateGraph-FF9900?style=flat-square&logo=langchain&logoColor=black" alt="LangGraph" /></a>
+  <a href="https://www.postgresql.org/"><img src="https://img.shields.io/badge/PostgreSQL-pgvector-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL" /></a>
+  <a href="https://socket.io/"><img src="https://img.shields.io/badge/Socket.IO_4.8-010101?style=flat-square&logo=socketdotio&logoColor=white" alt="Socket.IO" /></a>
+</p>
+
+<div align="center">
+
+| 🎙️ Real-Time Voice Streaming | 🧠 Stateful LangGraph Engine | 💻 Sandboxed DSA Execution | 📊 Executive Scorecard |
+| :---: | :---: | :---: | :---: |
+| Chunked PCM audio & Web Speech STT | Resume RAG with pgvector checkpoints | Multi-language judge & hidden tests | Hiring chance & skill analytics |
+
+</div>
 
 ---
 
 ## 📌 Table of Contents
 
-- [Overview](#-overview)
-- [Key Features](#-key-features)
-- [System Architecture](#-system-architecture)
-- [LangGraph Multi-Agent Workflow](#-langgraph-multi-agent-workflow)
+- [💡 Overview](#-overview)
+- [🚀 Key Features](#-key-features)
+- [🏗️ System Architecture](#-system-architecture)
+- [🤖 LangGraph Multi-Agent Workflow](#-langgraph-multi-agent-workflow)
   - [State Machine Graph Structure](#state-machine-graph-structure)
   - [Detailed Node-by-Node Breakdown](#detailed-node-by-node-breakdown)
   - [State & Checkpointer Resilience](#state--checkpointer-resilience)
-- [DSA & Code Execution Pipeline](#-dsa--code-execution-pipeline)
+- [💻 DSA & Code Execution Pipeline](#-dsa--code-execution-pipeline)
   - [Execution Flowchart](#execution-flowchart)
   - [Public Test Run vs. Hidden Test Evaluation](#public-test-run-vs-hidden-test-evaluation)
   - [Human-in-the-Loop Interruption & Resumption](#human-in-the-loop-interruption--resumption)
-- [Real-Time Audio & Speech Pipeline](#-real-time-audio--speech-pipeline)
-- [Frontend Caching Architecture](#-frontend-caching-architecture)
-- [Database Schema & DDL](#-database-schema--ddl)
-- [Environment Variables](#-environment-variables)
-- [Step-by-Step Installation & Setup](#-step-by-step-installation--setup)
-- [API Route Endpoints](#-api-route-endpoints)
-- [Contributing & License](#-contributing--license)
+- [🔊 Real-Time Audio & Speech Pipeline](#-real-time-audio--speech-pipeline)
+- [🗃️ Frontend Caching Architecture](#-frontend-caching-architecture)
+- [📊 Database Schema & DDL](#-database-schema--ddl)
+- [🔑 Environment Variables](#-environment-variables)
+- [🚀 Step-by-Step Installation & Setup](#-step-by-step-installation--setup)
+- [🌐 API Route Endpoints](#-api-route-endpoints)
+- [🤝 Contributing & License](#-contributing--license)
 
 ---
 
