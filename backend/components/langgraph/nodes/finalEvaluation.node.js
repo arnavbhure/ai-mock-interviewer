@@ -8,6 +8,7 @@ const {
   saveFinalEvaluationToDB,
 } = require("../../../models/evaluation/saveFinalEvaluationToDB.model");
 const { finalEvaluationChain } = require("../chains/finalEvaluation.chain");
+const { updateInterviewToCompleted } = require("../../../models/interview/updateInterviewStatus.model");
 
 const FinalEvaluationNode = async (state) => {
   const [evaluationResultsFromDB, dsaEvaluations] = await Promise.all([
@@ -42,6 +43,7 @@ const FinalEvaluationNode = async (state) => {
   });
 
   await saveFinalEvaluationToDB(state.interviewId, evaluationResult);
+  await updateInterviewToCompleted(state.interviewId);
 
   return { finalEvaluation: evaluationResult, phase: "finalization" };
 };

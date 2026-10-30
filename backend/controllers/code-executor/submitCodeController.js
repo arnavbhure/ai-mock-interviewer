@@ -5,6 +5,9 @@ const {
   getProblemStatementDeatils,
 } = require("../../models/dsaProblems/getProblemStatement");
 const {
+  getHiddenTestCases,
+} = require("../../models/dsaProblems/getProblemTestCases");
+const {
   saveDsaEvaluationResultModel,
 } = require("../../models/dsaProblems/saveDsaEvaluationResultModel");
 const {
@@ -53,26 +56,75 @@ const submitCodeController = async (req, res) => {
       });
     }
 
-    /*
-        todo : here we have to fetch the hidden test cases from the db with 
-        there expected output and then we have to run the code 
-    */
+    const problemDetails = await getProblemStatementDeatils(problemId);
+    if (!problemDetails) {
+      return res.status(404).json({
+        message: "Problem statement not found.",
+        success: false,
+      });
+    }
 
-    const test_cases = []; // dummy for now
-    const expected_output = []; // dummy for now untill implementation of fetching hidden test cases from db is done
+    // 1. Fetch hidden test cases from problem_test_cases table
+    let rawTestCases = await getHiddenTestCases(problemId, 8);
 
-    const code_execution_result = await codeExecutionService({
-      code,
-      language,
-      test_cases: test_cases.map((test, index) => ({
-        // check the implementation of this mapping first
-        input: test.input ?? "",
-        expected_output: expected_output[index] ?? "",
+    // 2. Fallback to public test cases if problem_test_cases has none
+    if (!rawTestCases || rawTestCases.length === 0) {
+      if (problemDetails.public_tests_source) {
+        try {
+          const parsed =
+            typeof problemDetails.public_tests_source === "string"
+              ? JSON.parse(problemDetails.public_tests_source)
+              : problemDetails.public_tests_source;
+          if (Array.isArray(parsed)) {
+            rawTestCases = parsed.map((t) => ({
+              input_data: t.input ?? t,
+              expected_output: t.expectedOutput ?? t.expected_output ?? t.output ?? "",
+              visibility: "hidden",
+            }));
+          }
+        } catch {
+          // ignore json parse error
+        }
+      }
+    }
+
+    const test_cases = (rawTestCases || []).map((t) => {
+      let inputStr = "";
+      if (t.stdin_input) {
+        inputStr = String(t.stdin_input);
+      } else if (typeof t.input_data === "string") {
+        inputStr = t.input_data;
+      } else if (t.input_data !== undefined && t.input_data !== null) {
+        inputStr = JSON.stringify(t.input_data);
+      }
+
+      let expectedStr = "";
+      if (t.expected_stdout) {
+        expectedStr = String(t.expected_stdout);
+      } else if (typeof t.expected_output === "string") {
+        expectedStr = t.expected_output;
+      } else if (t.expected_output !== undefined && t.expected_output !== null) {
+        expectedStr =
+          typeof t.expected_output === "object"
+            ? JSON.stringify(t.expected_output)
+            : String(t.expected_output);
+      }
+
+      return {
+        input: inputStr,
+        expectedOutput: expectedStr,
         hidden: true,
-      })),
+      };
     });
 
-    const problemDetails = await getProblemStatementDeatils(problemId);
+    let code_execution_result = null;
+    if (test_cases.length > 0) {
+      code_execution_result = await codeExecutionService({
+        code,
+        language,
+        test_cases,
+      });
+    }
 
     const { title, description } = problemDetails;
 

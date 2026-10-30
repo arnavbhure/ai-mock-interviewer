@@ -15,6 +15,7 @@ const { authMiddleware } = require("./middlewares/auth.middleware");
 const { codeExecutorRouter } = require("./routes/code.executer.router");
 const { dashboardRouter } = require("./routes/dashboard.router");
 const { reportRouter } = require("./routes/report.router");
+const { progressRouter } = require("./routes/progress.router");
 
 dotenv.config();
 
@@ -45,6 +46,9 @@ app.use("/api", authMiddleware, dashboardRouter);
 
 // performance report route
 app.use("/api", authMiddleware, reportRouter);
+
+// progress metrics route
+app.use("/api", authMiddleware, progressRouter);
 
 app.get("/ping", (req, res) => {
   res.send("ok");

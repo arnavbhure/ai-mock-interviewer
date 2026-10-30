@@ -1,12 +1,10 @@
 import { Route, Routes } from "react-router-dom";
-import { HelpCircle, TrendingUp } from "lucide-react";
 import { LoginPage } from "@/auth/login";
 import { RegisterPage } from "@/auth/register";
 import { VerifyOtpPage } from "@/auth/verify-otp";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { DashboardPage } from "@/pages/DashboardPage";
-import { FeaturePlaceholderPage } from "@/pages/FeaturePlaceholderPage";
 import { FoundationStatusPage } from "@/pages/FoundationStatusPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { SetupInterviewPage } from "@/pages/SetupInterviewPage";
@@ -14,6 +12,8 @@ import { InterviewPage } from "@/pages/InterviewPage";
 import { DSAInterviewPage } from "@/pages/DSAInterviewPage";
 import { ReportsPage } from "@/pages/ReportsPage";
 import { InterviewsPage } from "@/pages/InterviewsPage";
+import { ProgressPage } from "@/pages/ProgressPage";
+import { HelpPage } from "@/pages/HelpPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -37,27 +37,9 @@ export function AppRouter() {
           <Route path="/interviews" element={<InterviewsPage />} />
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/reports/:interviewId" element={<ReportsPage />} />
-          <Route
-            path="/progress"
-            element={
-              <FeaturePlaceholderPage
-                title="Progress"
-                description="Follow how each skill grows over time and decide where to focus next."
-                icon={TrendingUp}
-              />
-            }
-          />
+          <Route path="/progress" element={<ProgressPage />} />
           <Route path="/settings" element={<SettingsPage />} />
-          <Route
-            path="/help"
-            element={
-              <FeaturePlaceholderPage
-                title="Help & support"
-                description="Guides and answers to help you get the most out of InterviewAI."
-                icon={HelpCircle}
-              />
-            }
-          />
+          <Route path="/help" element={<HelpPage />} />
         </Route>
       </Route>
     </Routes>

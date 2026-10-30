@@ -2,6 +2,10 @@ const {
   getLatestInterviewByInterviewId,
 } = require("../models/interview/getLatestInterviewOfCandidiate");
 const {
+  updateInterviewToActive,
+  updateInterviewToCompleted,
+} = require("../models/interview/updateInterviewStatus.model");
+const {
   startInterviewService,
 } = require("../services/interview/startInterview.services");
 const {
@@ -18,6 +22,8 @@ const registerInterviewSocket = async (socket) => {
       if (!interview) {
         throw new Error("Interview not found");
       }
+
+      await updateInterviewToActive(interviewId);
 
       const interviewGraphResponse = await startInterviewService(interview);
 
@@ -73,6 +79,7 @@ const registerInterviewSocket = async (socket) => {
         return;
       }
 
+      await updateInterviewToCompleted(interviewId);
       socket.emit("interview:completed", {
         interviewId: interviewGraphResponse.threadId,
         evaluation: interviewGraphResponse.result.finalEvaluation,
@@ -153,6 +160,7 @@ const registerInterviewSocket = async (socket) => {
         return;
       }
 
+      await updateInterviewToCompleted(interviewId);
       socket.emit("interview:completed", {
         interviewId: interviewGraphResponse.threadId,
         evaluation: interviewGraphResponse.result.finalEvaluation,

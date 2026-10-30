@@ -38,7 +38,7 @@ const codeExecutionService = async ({ code, language, test_cases }) => {
         code,
         tests: test_cases.map((test) => ({
           input: test.input ?? "",
-          expected_output: test.expectedOutput,
+          expected_output: test.expectedOutput ?? test.expected_output ?? "",
           hidden: Boolean(test.hidden),
         })),
         time_limit: 2,
