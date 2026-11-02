@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useInterviewStore } from "@/store/interview.store";
 import type { OrbState } from "@/types/interview.types";
 import type { CandidateInputMode } from "@/types/speechRecognition.types";
@@ -32,6 +33,8 @@ export function useInterviewSession() {
     setIsReplayingAudio,
     resetInterview,
   } = useInterviewStore();
+
+  const navigate = useNavigate();
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [answerSeconds, setAnswerSeconds] = useState(0);
@@ -386,7 +389,8 @@ export function useInterviewSession() {
     interviewAudioPlayer.stopPlayback();
     setIsEndDialogOpen(false);
     resetInterview();
-  }, [speech, resetInterview, stopReplayAudio]);
+    navigate("/dashboard");
+  }, [speech, resetInterview, stopReplayAudio, navigate]);
 
   const formattedTime = `${String(Math.floor(elapsedSeconds / 60)).padStart(2, "0")}:${String(
     elapsedSeconds % 60,
