@@ -235,7 +235,21 @@ export const useInterviewStore = create<InterviewState>((set) => ({
         }
       }
 
+      let qId = "";
+      if (typeof data === "object" && data !== null) {
+        const raw = data as Record<string, unknown>;
+        if (typeof raw.id === "string" && raw.id) qId = raw.id;
+        else if (typeof raw.questionId === "string" && raw.questionId) qId = raw.questionId;
+        else if (typeof raw.interviewId === "string" && raw.interviewId) {
+          qId = `${raw.interviewId}:${roundNum}:${questionNum}`;
+        }
+      }
+      if (!qId) {
+        qId = `q_${roundNum}_${questionNum}`;
+      }
+
       const questionObj: InterviewQuestion = {
+        id: qId,
         text: questionText,
         topic,
         questionNumber: questionNum ?? undefined,

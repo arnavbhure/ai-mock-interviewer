@@ -22,6 +22,7 @@ const handleQuestion = (data: QuestionPayload) => {
     console.log("[InterviewSocket] interview:question received", data);
   }
   useInterviewStore.setState({ dsaProblem: null });
+  interviewAudioPlayer.clearCurrentAudio();
   useInterviewStore.getState().setQuestion(data);
   window.dispatchEvent(
     new CustomEvent("interview:navigate", { detail: { path: "/interview" } }),
@@ -88,7 +89,22 @@ const handleAudioError = (data: AudioErrorPayload) => {
   }
   interviewAudioPlayer.handleStreamError(data);
   useInterviewStore.getState().setAIAudioStatus("error");
-  useInterviewStore.getState().setAIState("listening");
+  // Automatic browser SpeechSynthesis fallback so candidate never experiences silence
+  const currentQ = useInterviewStore.getState().currentQuestion;
+  if (currentQ?.text && typeof window !== "undefined" && "speechSynthesis" in window) {
+    useInterviewStore.getState().setAIState("speaking");
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(currentQ.text);
+    utterance.onend = () => {
+      useInterviewStore.getState().setAIState("listening");
+    };
+    utterance.onerror = () => {
+      useInterviewStore.getState().setAIState("listening");
+    };
+    window.speechSynthesis.speak(utterance);
+  } else {
+    useInterviewStore.getState().setAIState("listening");
+  }
   useInterviewStore.getState().setCanReplayAudio(true);
 };
 

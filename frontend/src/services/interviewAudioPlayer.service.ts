@@ -289,8 +289,21 @@ class InterviewAudioPlayer {
 
     console.error("[AudioPlayer] stream error:", payload.message);
     this.stopPlayback();
+    this.stopReplay();
+    this.lastAudioBuffer = null;
+    this.lastQuestionId = null;
     this.setStatus("error");
     this.callbacks.onError?.(payload.message);
+  }
+
+  /**
+   * Clears any active audio buffer when switching questions so stale audio never plays.
+   */
+  clearCurrentAudio(): void {
+    this.stopPlayback();
+    this.stopReplay();
+    this.lastAudioBuffer = null;
+    this.lastQuestionId = null;
   }
 
   /**
@@ -335,9 +348,11 @@ class InterviewAudioPlayer {
     this.stopPlayback();
     this.stopReplay();
 
-    const buffer =
-      (questionId && this.cachedAudioBuffers.get(questionId)) ||
-      this.lastAudioBuffer;
+    // Guard: only replay if we have a buffer explicitly matching this question
+    const buffer = questionId
+      ? this.cachedAudioBuffers.get(questionId) ||
+        (this.lastQuestionId === questionId ? this.lastAudioBuffer : null)
+      : this.lastAudioBuffer;
 
     if (!buffer) {
       if (import.meta.env.DEV) {
