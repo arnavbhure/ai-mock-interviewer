@@ -14,6 +14,7 @@
 <p align="center">
   <a href="#-overview">Overview</a> •
   <a href="#-key-features">Key Features</a> •
+  <a href="#-platform-walkthrough--screenshots">Screenshots</a> •
   <a href="#-system-architecture">System Architecture</a> •
   <a href="#-langgraph-multi-agent-workflow">Agent Workflow</a> •
   <a href="#-dsa--code-execution-pipeline">Code Sandbox</a> •
@@ -39,12 +40,17 @@
 
 </div>
 
+<p align="center">
+  <img src="docs/home-page.png" alt="InterviewAI Platform Interface" width="98%" />
+</p>
+
 ---
 
 ## 📌 Table of Contents
 
 - [💡 Overview](#-overview)
 - [🚀 Key Features](#-key-features)
+- [📸 Platform Walkthrough & Screenshots](#-platform-walkthrough--screenshots)
 - [🏗️ System Architecture](#-system-architecture)
 - [🤖 LangGraph Multi-Agent Workflow](#-langgraph-multi-agent-workflow)
   - [State Machine Graph Structure](#state-machine-graph-structure)
@@ -84,6 +90,71 @@ The agent parses candidate resumes, vectors experience chunks into a PostgreSQL 
   - **`/progress`**: Long-term mastery benchmarks across *Technical Knowledge*, *Problem Solving*, *Communication*, *Code Efficiency*, and *System Design*.
   - **`/interviews`**: Searchable and filterable interview archive.
 - **Deduplicated In-Memory API Store (Zustand):** Client-side caching prevents redundant network queries on navigation.
+
+---
+
+## 📸 Platform Walkthrough & Screenshots
+
+### 1. Interactive Simulation Setup & Vector Processing
+*Real-time resume vectorization into 1024-d pgvector embeddings with live status milestones, elapsed timer, and dynamic role-aware candidate coaching tips.*
+
+<p align="center">
+  <img src="docs/interview-ready.png" alt="Simulation Setup & Preparation Lab" width="96%" />
+</p>
+
+---
+
+### 2. Real-Time Conversational Voice Interview Room
+*Bidirectional Socket.IO voice stream, pulsing reactive 3D-styled AI Orb, live interim speech-to-text transcriptions, and instant keyboard toggle.*
+
+<p align="center">
+  <img src="docs/interview-room.png" alt="Conversational Voice Room" width="96%" />
+</p>
+
+---
+
+### 3. Monaco-Powered In-Browser DSA Coding Workspace
+*Multi-language code editor supporting C++ (GCC 15), Python (3.14), Java (OpenJDK 25), and JavaScript (Node 24). Includes public test runs and private hidden test suite validation in an isolated online judge sandbox.*
+
+<p align="center">
+  <img src="docs/code_editor.png" alt="Monaco Code Editor Workspace" width="96%" />
+</p>
+
+---
+
+### 4. Candidate Analytics & Session Management Dashboard
+*Live interview readiness metrics, performance trajectory curves, recent mock interviews history, and one-click session creation.*
+
+<p align="center">
+  <img src="docs/dashboard.png" alt="Candidate Dashboard" width="96%" />
+</p>
+
+---
+
+### 5. Detailed Executive Performance Scorecard (`/reports`)
+*Comprehensive evaluation breakdown: Executive hiring recommendation (Strong Hire, Hire, Weak Hire, No Hire), Big-O time and space complexity ratings, strengths, improvement areas, and question transcripts.*
+
+<p align="center">
+  <img src="docs/reports.png" alt="Performance Report Scorecard" width="96%" />
+</p>
+
+---
+
+### 6. Longitudinal Competency Analytics (`/progress`)
+*Long-term competency radar and category benchmarks across Technical Knowledge, Problem Solving, Communication, Code Efficiency, and System Design.*
+
+<p align="center">
+  <img src="docs/progress.png" alt="Skill Progress Analytics" width="96%" />
+</p>
+
+---
+
+### 7. Interview Archive & Historical Audits (`/interviews`)
+*Searchable and filterable record of all completed, active, and past interview sessions.*
+
+<p align="center">
+  <img src="docs/interviews.png" alt="Interview History Archive" width="96%" />
+</p>
 
 ---
 
@@ -151,6 +222,10 @@ flowchart TB
 ## 🤖 LangGraph Multi-Agent Workflow
 
 ### State Machine Graph Structure
+
+<p align="center">
+  <img src="docs/langgraph.png" alt="LangGraph Cyclic State Machine Architecture" width="90%" />
+</p>
 
 The entire interview is modeled as a cyclic state machine with persistence and human interrupts:
 
