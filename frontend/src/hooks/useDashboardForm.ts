@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -9,6 +9,13 @@ import { createInterview } from "@/api/interview/interview.api";
 import { useInterviewStore } from "@/store/interview.store";
 import { invalidateAllApiCaches } from "@/store/api.store";
 import { toastError } from "@/components/ui/toast";
+
+export type PreparationPhase =
+  | "idle"
+  | "uploading_resume"
+  | "creating_plan"
+  | "complete"
+  | "error";
 
 function getApiErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
@@ -72,6 +79,13 @@ export function useDashboardForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isProcessingResume, setIsProcessingResume] = useState(false);
   const [resumeError, setResumeError] = useState<string | null>(null);
+  const [preparationPhase, setPreparationPhase] = useState<PreparationPhase>("idle");
+
+  useEffect(() => {
+    if (resumeError) {
+      setPreparationPhase("error");
+    }
+  }, [resumeError]);
 
   const navigate = useNavigate();
 
@@ -121,6 +135,7 @@ export function useDashboardForm() {
       setIsSubmitting(true);
       setIsProcessingResume(true);
       setResumeError(null);
+      setPreparationPhase("uploading_resume");
 
       // Reset any previous interview state & errors in Zustand store
       useInterviewStore.getState().initializeInterview({ status: "idle" });
@@ -131,7 +146,7 @@ export function useDashboardForm() {
       });
 
       try {
-        // ── Step 1: Upload the resume ──
+        // ── Step 1: Upload and vectorize resume ──
         const uploadResponse = await uploadResume(file);
 
         if (!isApiSuccess(uploadResponse)) {
@@ -144,12 +159,12 @@ export function useDashboardForm() {
                 : "Failed to process resume.";
 
           setResumeError(errorMsg);
+          setPreparationPhase("error");
           toastError(errorMsg);
           setIsSubmitting(false);
           return;
         }
 
-        // Store resume ID if present
         const resumeId = extractId(uploadResponse, ["resumeId", "resume_id", "id"]);
         if (resumeId) {
           useInterviewStore.getState().setInterviewConfig({
@@ -157,7 +172,8 @@ export function useDashboardForm() {
           });
         }
 
-        // ── Step 2: Create the interview plan ──
+        // ── Step 2: Create adaptive interview plan ──
+        setPreparationPhase("creating_plan");
         try {
           const interviewResponse = await createInterview({ role, difficulty });
 
@@ -171,12 +187,12 @@ export function useDashboardForm() {
                   : "Failed to create interview plan.";
 
             setResumeError(errorMsg);
+            setPreparationPhase("error");
             toastError(errorMsg);
             setIsSubmitting(false);
             return;
           }
 
-          // Store the interview ID if returned
           const interviewId = extractId(interviewResponse, ["interview_id", "interviewId", "id"]);
           if (interviewId) {
             useInterviewStore.getState().initializeInterview({
@@ -189,21 +205,26 @@ export function useDashboardForm() {
         } catch (interviewError) {
           const errorMsg = getApiErrorMessage(interviewError);
           setResumeError(errorMsg);
+          setPreparationPhase("error");
           toastError(errorMsg);
           setIsSubmitting(false);
           return;
         }
 
-        // ── Both steps succeeded — navigate to interview ──
+        // ── Both steps succeeded: complete phase with brief visual confirmation ──
         setResumeError(null);
-        setIsSubmitting(false);
-        setIsProcessingResume(false);
-
+        setPreparationPhase("complete");
         invalidateAllApiCaches();
-        navigate("/interview");
+
+        setTimeout(() => {
+          setIsSubmitting(false);
+          setIsProcessingResume(false);
+          navigate("/interview");
+        }, 1200);
       } catch (error) {
         const errorMsg = getApiErrorMessage(error);
         setResumeError(errorMsg);
+        setPreparationPhase("error");
         toastError(errorMsg);
         setIsSubmitting(false);
       }
@@ -238,6 +259,7 @@ export function useDashboardForm() {
     } else {
       setIsProcessingResume(false);
       setResumeError(null);
+      setPreparationPhase("idle");
       setIsSubmitting(false);
     }
   }, [executeResumeUpload, form]);
@@ -245,6 +267,7 @@ export function useDashboardForm() {
   const handleBackToSetup = useCallback(() => {
     setIsProcessingResume(false);
     setResumeError(null);
+    setPreparationPhase("idle");
     setIsSubmitting(false);
   }, []);
 
@@ -260,6 +283,7 @@ export function useDashboardForm() {
     form,
     isSubmitting,
     isProcessingResume,
+    preparationPhase,
     resumeError,
     handleFileChange,
     removeFile,

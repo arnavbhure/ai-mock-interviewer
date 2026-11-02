@@ -33,6 +33,7 @@ export function SetupInterviewPage() {
     form,
     isSubmitting,
     isProcessingResume,
+    preparationPhase,
     resumeError,
     handleFileChange,
     removeFile,
@@ -62,6 +63,7 @@ export function SetupInterviewPage() {
               role={watchedRole}
               difficulty={watchedDifficulty}
               resumeFileName={watchedResume?.name}
+              preparationPhase={preparationPhase}
               preparationError={resumeError}
               isProcessing={isProcessingResume}
               onRetry={handleRetryUpload}
