@@ -7,7 +7,7 @@
 <h1 align="center">InterviewAI</h1>
 
 <p align="center">
-  <strong>Autonomous Multi-Agent AI Mock Interviewer & Adaptive Technical Evaluation Platform</strong><br>
+  <strong>Autonomous AI Mock Interviewer & Adaptive Technical Evaluation Platform</strong><br>
   <em>Simulate high-stakes Tier-1 engineering interview loops powered by stateful AI agents, real-time voice streaming, and sandboxed code execution.</em>
 </p>
 
